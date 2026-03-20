@@ -3,7 +3,7 @@
  * Plugin Name: PédagoLens Student Twin
  * Plugin URI:  https://pedagolens.ca
  * Description: Jumeau numérique étudiant — interface de conversation IA avec garde-fous pédagogiques.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author:      PédagoLens
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PL_TWIN_VERSION',    '1.1.0' );
+define( 'PL_TWIN_VERSION',    '1.2.0' );
 define( 'PL_TWIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PL_TWIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

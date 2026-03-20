@@ -36,7 +36,7 @@
         var $followUps    = $( '#pl-twin-follow-ups' );
         var $newSession   = $( '#pl-twin-new-session' );
         var $endSession   = $( '#pl-twin-end-session' );
-        var $courseSelect = $( '#pl-twin-course-select' );
+        var $courseSelect  = $( '#pl-twin-course-select' );
         var twinName      = plTwin.twinName || 'Léa';
         var introMsg      = plTwin.introMessage || 'Bonjour !';
         var i18n          = plTwin.i18n || {};
@@ -136,3 +136,194 @@
                 } )
                 .fail( function() { $typing.remove(); addBubble( 'system', i18n.networkError || 'Erreur réseau.' ); } );
         } );
+
+        // =====================================================================
+        // HELPER FUNCTIONS — Front-end dashboard
+        // =====================================================================
+
+        function addBubble( type, content, isHtml ) {
+            var cls = 'pl-twin-bubble pl-twin-bubble--' + type;
+            var $bubble = $( '<div>', { 'class': cls } );
+            if ( isHtml ) {
+                $bubble.html( content );
+            } else {
+                $bubble.text( content );
+            }
+            $messages.append( $bubble );
+            scrollToBottom();
+            return $bubble;
+        }
+
+        function showTypingIndicator() {
+            var label = twinName + ' ' + ( i18n.typing || 'est en train d\'écrire…' );
+            var $typing = $(
+                '<div class="pl-twin-typing">' +
+                    '<span class="pl-twin-typing-label">' + escHtml( label ) + '</span>' +
+                    '<span class="pl-twin-typing-dots">' +
+                        '<span></span><span></span><span></span>' +
+                    '</span>' +
+                '</div>'
+            );
+            $messages.append( $typing );
+            scrollToBottom();
+            return $typing;
+        }
+
+        function renderFollowUps( questions ) {
+            $followUps.empty();
+            if ( ! questions || ! questions.length ) return;
+            questions.forEach( function( q ) {
+                var $btn = $( '<button>', {
+                    'class': 'pl-twin-follow-btn',
+                    'type':  'button',
+                    'text':  q
+                } );
+                $followUps.append( $btn );
+            } );
+        }
+
+        function enableChat( enabled ) {
+            $input.prop( 'disabled', ! enabled );
+            $sendBtn.prop( 'disabled', ! enabled );
+            if ( enabled ) {
+                $input.trigger( 'focus' );
+            }
+        }
+
+        function shakeElement( $el ) {
+            $el.addClass( 'pl-twin-shake' );
+            setTimeout( function() { $el.removeClass( 'pl-twin-shake' ); }, 500 );
+        }
+
+        function scrollToBottom() {
+            var el = $messages[0];
+            if ( el ) {
+                setTimeout( function() {
+                    el.scrollTop = el.scrollHeight;
+                }, 50 );
+            }
+        }
+
+    } // end if $dashboard.length
+
+    // =========================================================================
+    // ADMIN DEMO TAB
+    // =========================================================================
+
+    var $startBtn  = $( '#pl-twin-start' );
+    var $endBtn    = $( '#pl-twin-end' );
+    var $chatBox   = $( '#pl-twin-chat' );
+    var $chatMsgs  = $( '#pl-chat-messages' );
+    var $chatInput = $( '#pl-chat-input' );
+    var $chatSend  = $( '#pl-chat-send' );
+    var $chatFU    = $( '#pl-chat-follow-ups' );
+    var adminSessionId = null;
+
+    if ( $startBtn.length ) {
+
+        $startBtn.on( 'click', function() {
+            var courseId = parseInt( $( '#pl-demo-course' ).val(), 10 );
+            if ( ! courseId ) { alert( 'Sélectionnez un cours.' ); return; }
+            $startBtn.prop( 'disabled', true );
+            ajax( 'pl_twin_start_session', { course_id: courseId } )
+                .done( function( res ) {
+                    if ( res.success ) {
+                        adminSessionId = res.data.session_id;
+                        $chatBox.slideDown( 200 );
+                        $chatMsgs.find( '.pl-chat-bubble' ).not( ':first' ).remove();
+                        $chatFU.empty();
+                        $chatInput.prop( 'disabled', false ).trigger( 'focus' );
+                        $chatSend.prop( 'disabled', false );
+                    } else {
+                        alert( ( res.data && res.data.message ) || 'Erreur.' );
+                    }
+                } )
+                .fail( function() { alert( 'Erreur réseau.' ); } )
+                .always( function() { $startBtn.prop( 'disabled', false ); } );
+        } );
+
+        $endBtn.on( 'click', function() {
+            if ( ! adminSessionId ) return;
+            ajax( 'pl_twin_end_session', { session_id: adminSessionId } )
+                .done( function() {
+                    adminAddBubble( 'system', '✓ Session terminée.' );
+                    adminSessionId = null;
+                    $chatInput.prop( 'disabled', true );
+                    $chatSend.prop( 'disabled', true );
+                    $chatFU.empty();
+                } );
+        } );
+
+        $chatSend.on( 'click', adminSendMessage );
+        $chatInput.on( 'keydown', function( e ) {
+            if ( e.key === 'Enter' && ! e.shiftKey ) { e.preventDefault(); adminSendMessage(); }
+        } );
+
+        $chatFU.on( 'click', '.pl-follow-up-btn', function() {
+            $chatInput.val( $( this ).text() );
+            adminSendMessage();
+        } );
+
+        function adminSendMessage() {
+            if ( ! adminSessionId ) return;
+            var msg = $chatInput.val().trim();
+            if ( ! msg ) return;
+            $chatInput.val( '' );
+            adminAddBubble( 'user', escHtml( msg ) );
+            $chatFU.empty();
+            $chatInput.prop( 'disabled', true );
+            $chatSend.prop( 'disabled', true );
+            var $typing = adminShowTyping();
+            ajax( 'pl_twin_send_message', { session_id: adminSessionId, message: msg } )
+                .done( function( res ) {
+                    $typing.remove();
+                    if ( res.success ) {
+                        adminAddBubble( 'assistant', escHtml( res.data.reply ) );
+                        if ( res.data.guardrail_triggered ) {
+                            adminAddBubble( 'system',
+                                'Garde-fou : ' + escHtml( res.data.guardrail_reason || '' ) );
+                        }
+                        adminRenderFollowUps( res.data.follow_up_questions || [] );
+                    } else {
+                        adminAddBubble( 'system', ( res.data && res.data.message ) || 'Erreur.' );
+                    }
+                } )
+                .fail( function() { $typing.remove(); adminAddBubble( 'system', 'Erreur réseau.' ); } )
+                .always( function() {
+                    $chatInput.prop( 'disabled', false ).trigger( 'focus' );
+                    $chatSend.prop( 'disabled', false );
+                } );
+        }
+
+        function adminAddBubble( role, content ) {
+            var cls = 'pl-chat-bubble pl-bubble-' + role;
+            var $b = $( '<div>', { 'class': cls } ).html( content );
+            $chatMsgs.append( $b );
+            $chatMsgs[0].scrollTop = $chatMsgs[0].scrollHeight;
+            return $b;
+        }
+
+        function adminShowTyping() {
+            var $t = $(
+                '<div class="pl-chat-bubble pl-bubble-typing">' +
+                    '<span class="pl-typing-dots"><span></span><span></span><span></span></span>' +
+                '</div>'
+            );
+            $chatMsgs.append( $t );
+            $chatMsgs[0].scrollTop = $chatMsgs[0].scrollHeight;
+            return $t;
+        }
+
+        function adminRenderFollowUps( questions ) {
+            $chatFU.empty();
+            if ( ! questions || ! questions.length ) return;
+            questions.forEach( function( q ) {
+                $chatFU.append(
+                    $( '<button>', { 'class': 'button pl-follow-up-btn', 'type': 'button', 'text': q } )
+                );
+            } );
+        }
+
+    } // end if $startBtn.length (admin demo)
+
+} )( jQuery );

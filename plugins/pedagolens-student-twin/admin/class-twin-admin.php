@@ -394,10 +394,12 @@ class PedagoLens_Twin_Admin {
             ?>
             <div class="pl-twin-dashboard pl-twin-logged-out">
                 <div class="pl-twin-logged-out-card">
-                    <span class="pl-twin-lock-icon">🔒</span>
+                    <span class="pl-twin-lock-icon" aria-hidden="true">🔒</span>
                     <h2><?php esc_html_e( 'Accès restreint', 'pedagolens-student-twin' ); ?></h2>
-                    <p><?php esc_html_e( 'Connectez-vous pour accéder au jumeau numérique.', 'pedagolens-student-twin' ); ?></p>
-                    <a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="pl-twin-login-btn"><?php esc_html_e( 'Se connecter', 'pedagolens-student-twin' ); ?></a>
+                    <p><?php esc_html_e( 'Connectez-vous pour accéder à votre jumeau numérique et commencer à apprendre.', 'pedagolens-student-twin' ); ?></p>
+                    <a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>" class="pl-twin-login-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg><?php esc_html_e( 'Se connecter', 'pedagolens-student-twin' ); ?>
+                    </a>
                 </div>
             </div>
             <?php
@@ -446,7 +448,7 @@ class PedagoLens_Twin_Admin {
                     <span class="pl-twin-robot-icon" aria-hidden="true">🤖</span>
                     <div>
                         <h1 class="pl-twin-title"><?php esc_html_e( 'Mon Jumeau Numérique', 'pedagolens-student-twin' ); ?></h1>
-                        <span class="pl-twin-subtitle"><?php echo $twin_name; ?></span>
+                        <span class="pl-twin-subtitle"><?php echo $twin_name; ?> · <span class="pl-twin-status-dot" aria-hidden="true"></span> <?php esc_html_e( 'En ligne', 'pedagolens-student-twin' ); ?></span>
                     </div>
                 </div>
                 <div class="pl-twin-header-right">
