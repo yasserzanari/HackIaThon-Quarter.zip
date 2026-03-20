@@ -383,3 +383,134 @@ html { scroll-behavior:smooth; }
   .pl-quick-links { grid-template-columns:1fr 1fr; }
   .pl-account-avatar-img { width:72px; height:72px; }
 }
+
+
+/* ============================================================
+   18. LOGIN / REGISTER PAGE
+   ============================================================ */
+.pl-login-page { font-family:var(--pl-font); color:var(--pl-text); background:var(--pl-bg); line-height:1.6; overflow-x:hidden; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; min-height:100vh; display:flex; flex-direction:column; }
+.pl-login-page *,.pl-login-page *::before,.pl-login-page *::after { box-sizing:border-box; }
+.pl-login-page a { text-decoration:none; color:inherit; }
+.pl-login-page h1,.pl-login-page h2,.pl-login-page h3,.pl-login-page h4 { margin:0 0 0.5em; line-height:1.2; font-weight:700; }
+.pl-login-page p { margin:0 0 1em; }
+
+.pl-login-wrapper { flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:100px 24px 80px; overflow:hidden; }
+.pl-login-orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; will-change:transform; }
+.pl-login-orb--cyan { width:500px; height:500px; background:radial-gradient(circle,rgba(0,212,255,0.18) 0%,transparent 70%); top:-150px; right:-100px; animation:pl-orb-drift 20s ease-in-out infinite; }
+.pl-login-orb--accent { width:400px; height:400px; background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%); bottom:-150px; left:-80px; animation:pl-orb-drift-reverse 25s ease-in-out infinite; }
+
+/* Card glassmorphism */
+.pl-login-card { position:relative; z-index:2; width:100%; max-width:520px; background:rgba(255,255,255,0.03); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(0,212,255,0.1); border-radius:var(--pl-radius-xl); padding:40px 36px; box-shadow:0 12px 48px rgba(0,0,0,0.5),0 0 80px rgba(0,212,255,0.04); animation:pl-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* Tabs */
+.pl-login-tabs { display:flex; gap:0; margin-bottom:32px; border-bottom:2px solid rgba(255,255,255,0.06); }
+.pl-login-tab { flex:1; padding:12px 0; font-size:0.95rem; font-weight:600; color:var(--pl-text-muted); background:none; border:none; cursor:pointer; position:relative; transition:color var(--pl-transition); font-family:var(--pl-font); }
+.pl-login-tab::after { content:''; position:absolute; bottom:-2px; left:0; width:100%; height:2px; background:transparent; transition:background var(--pl-transition); }
+.pl-login-tab--active { color:var(--pl-cyan); }
+.pl-login-tab--active::after { background:linear-gradient(90deg,var(--pl-cyan),var(--pl-accent-light)); }
+.pl-login-tab:hover { color:var(--pl-cyan-light); }
+
+/* Panels */
+.pl-login-panel { display:none; }
+.pl-login-panel--active { display:block; animation:pl-fade-in 0.3s ease; }
+
+/* Messages */
+.pl-login-msg { padding:10px 16px; border-radius:var(--pl-radius); font-size:0.88rem; margin-bottom:16px; }
+.pl-login-msg--error { background:rgba(214,54,56,0.12); color:#ff6b6b; border:1px solid rgba(214,54,56,0.25); }
+.pl-login-msg--success { background:rgba(0,212,255,0.08); color:var(--pl-cyan-light); border:1px solid rgba(0,212,255,0.2); }
+
+/* Form fields */
+.pl-login-field { margin-bottom:20px; }
+.pl-login-field label { display:block; font-size:0.85rem; font-weight:600; color:var(--pl-text-muted); margin-bottom:8px; }
+.pl-login-field input[type="text"],
+.pl-login-field input[type="email"],
+.pl-login-field input[type="password"] { width:100%; padding:13px 16px; font-size:0.95rem; font-family:var(--pl-font); color:var(--pl-text); background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.1); border-radius:var(--pl-radius); transition:border-color var(--pl-transition),box-shadow var(--pl-transition); box-sizing:border-box; }
+.pl-login-field input::placeholder { color:rgba(148,163,184,0.5); }
+.pl-login-field input:focus { outline:none; border-color:var(--pl-cyan); box-shadow:0 0 0 3px rgba(0,212,255,0.12),0 0 20px rgba(0,212,255,0.06); }
+
+/* Submit button */
+.pl-login-submit { width:100%; padding:14px; font-size:1rem; font-weight:700; font-family:var(--pl-font); color:var(--pl-bg); background:linear-gradient(135deg,var(--pl-cyan),var(--pl-cyan-dark)); border:none; border-radius:50px; cursor:pointer; transition:transform var(--pl-transition),box-shadow var(--pl-transition); box-shadow:0 4px 24px rgba(0,212,255,0.3); position:relative; overflow:hidden; }
+.pl-login-submit::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,transparent 0%,rgba(255,255,255,0.2) 50%,transparent 100%); transform:translateX(-100%); transition:transform 0.5s ease; }
+.pl-login-submit:hover::before { transform:translateX(100%); }
+.pl-login-submit:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,212,255,0.45); }
+.pl-login-submit:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+/* Role cards */
+.pl-register-prompt { text-align:center; font-size:1.1rem; color:var(--pl-text-muted); margin-bottom:24px; }
+.pl-role-cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.pl-role-card { display:flex; flex-direction:column; align-items:center; gap:8px; padding:32px 20px; background:rgba(255,255,255,0.03); border:1.5px solid rgba(255,255,255,0.08); border-radius:var(--pl-radius-lg); cursor:pointer; transition:all var(--pl-transition); font-family:var(--pl-font); color:var(--pl-text); position:relative; overflow:hidden; }
+.pl-role-card::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 0%,rgba(0,212,255,0.06) 0%,transparent 60%); opacity:0; transition:opacity var(--pl-transition); pointer-events:none; }
+.pl-role-card:hover { border-color:rgba(0,212,255,0.3); transform:translateY(-4px); box-shadow:0 8px 32px rgba(0,212,255,0.12),0 0 40px rgba(0,212,255,0.04); }
+.pl-role-card:hover::before { opacity:1; }
+.pl-role-card-icon { font-size:2.4rem; }
+.pl-role-card-label { font-size:1.1rem; font-weight:700; }
+.pl-role-card-desc { font-size:0.8rem; color:var(--pl-text-muted); text-align:center; }
+
+/* Back button */
+.pl-register-back { background:none; border:none; color:var(--pl-text-muted); font-size:0.88rem; font-family:var(--pl-font); cursor:pointer; padding:0; margin-bottom:20px; transition:color var(--pl-transition); }
+.pl-register-back:hover { color:var(--pl-cyan); }
+
+/* Custom checkbox (login page) */
+.pl-login-checkbox-row { display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.92rem; position:relative; }
+.pl-login-checkbox-row input[type="checkbox"] { position:absolute; opacity:0; width:0; height:0; }
+.pl-login-cb-custom { width:20px; height:20px; border:2px solid rgba(255,255,255,0.15); border-radius:5px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:background var(--pl-transition),border-color var(--pl-transition); }
+.pl-login-cb-custom::after { content:''; width:10px; height:10px; border-radius:2px; background:transparent; transition:background var(--pl-transition); }
+.pl-login-checkbox-row input:checked ~ .pl-login-cb-custom { border-color:var(--pl-cyan); background:var(--pl-cyan); }
+.pl-login-checkbox-row input:checked ~ .pl-login-cb-custom::after { background:#fff; }
+
+
+/* ============================================================
+   19. DIFFICULTIES MODAL
+   ============================================================ */
+.pl-diff-modal { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; }
+.pl-diff-modal-backdrop { position:absolute; inset:0; background:rgba(3,10,24,0.8); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.pl-diff-modal-content { position:relative; z-index:2; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; background:rgba(15,23,42,0.95); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(0,212,255,0.12); border-radius:var(--pl-radius-xl); padding:36px 32px; box-shadow:0 24px 64px rgba(0,0,0,0.6),0 0 80px rgba(0,212,255,0.06); animation:pl-modal-enter 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes pl-modal-enter { from { opacity:0; transform:scale(0.92) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.pl-diff-modal-close { position:absolute; top:16px; right:16px; background:none; border:none; color:var(--pl-text-muted); font-size:1.5rem; cursor:pointer; transition:color var(--pl-transition); line-height:1; padding:4px; }
+.pl-diff-modal-close:hover { color:var(--pl-cyan); }
+.pl-diff-modal-content h3 { font-size:1.2rem; color:#fff; margin-bottom:8px; }
+.pl-diff-modal-desc { font-size:0.88rem; color:var(--pl-text-muted); margin-bottom:24px; }
+
+/* Difficulty options (custom checkboxes) */
+.pl-diff-options { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+.pl-diff-option { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:var(--pl-radius); background:rgba(255,255,255,0.03); cursor:pointer; transition:background var(--pl-transition),box-shadow var(--pl-transition); font-size:0.92rem; position:relative; }
+.pl-diff-option:hover { background:rgba(0,212,255,0.06); box-shadow:0 0 12px rgba(0,212,255,0.06); }
+.pl-diff-option input[type="checkbox"] { position:absolute; opacity:0; width:0; height:0; }
+.pl-diff-cb { width:20px; height:20px; border:2px solid rgba(255,255,255,0.15); border-radius:5px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:background var(--pl-transition),border-color var(--pl-transition); }
+.pl-diff-cb::after { content:''; width:10px; height:10px; border-radius:2px; background:transparent; transition:background var(--pl-transition); }
+.pl-diff-option input:checked ~ .pl-diff-cb { border-color:var(--pl-cyan); background:var(--pl-cyan); }
+.pl-diff-option input:checked ~ .pl-diff-cb::after { background:#fff; }
+
+.pl-diff-autre-field { padding-left:44px; }
+.pl-diff-autre-field input { width:100%; padding:10px 14px; font-size:0.9rem; font-family:var(--pl-font); color:var(--pl-text); background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.1); border-radius:var(--pl-radius); box-sizing:border-box; transition:border-color var(--pl-transition); }
+.pl-diff-autre-field input:focus { outline:none; border-color:var(--pl-cyan); box-shadow:0 0 0 3px rgba(0,212,255,0.12); }
+
+/* More context */
+.pl-diff-more { margin-bottom:16px; }
+.pl-diff-more label { display:block; font-size:0.85rem; font-weight:600; color:var(--pl-text-muted); margin-bottom:8px; }
+.pl-diff-more textarea { width:100%; padding:12px 14px; font-size:0.9rem; font-family:var(--pl-font); color:var(--pl-text); background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.1); border-radius:var(--pl-radius); resize:vertical; box-sizing:border-box; transition:border-color var(--pl-transition); }
+.pl-diff-more textarea:focus { outline:none; border-color:var(--pl-cyan); box-shadow:0 0 0 3px rgba(0,212,255,0.12); }
+
+.pl-diff-more-btn { display:block; width:100%; padding:10px; font-size:0.88rem; font-weight:600; font-family:var(--pl-font); color:var(--pl-cyan); background:rgba(0,212,255,0.04); border:1px solid rgba(0,212,255,0.15); border-radius:var(--pl-radius); cursor:pointer; transition:all var(--pl-transition); margin-bottom:16px; text-align:center; }
+.pl-diff-more-btn:hover { background:rgba(0,212,255,0.1); border-color:var(--pl-cyan); }
+.pl-diff-more-btn.pl-hidden { display:none; }
+
+.pl-diff-modal-save { margin-top:8px; }
+
+/* Scrollbar for modal */
+.pl-diff-modal-content::-webkit-scrollbar { width:6px; }
+.pl-diff-modal-content::-webkit-scrollbar-track { background:transparent; }
+.pl-diff-modal-content::-webkit-scrollbar-thumb { background:rgba(0,212,255,0.2); border-radius:3px; }
+
+/* ============================================================
+   20. LOGIN PAGE — RESPONSIVE
+   ============================================================ */
+@media (max-width:600px) {
+  .pl-login-wrapper { padding:80px 16px 40px; }
+  .pl-login-card { padding:28px 20px; border-radius:var(--pl-radius-lg); }
+  .pl-role-cards { grid-template-columns:1fr; }
+  .pl-role-card { padding:24px 16px; }
+  .pl-login-orb--cyan { width:300px; height:300px; top:-100px; right:-80px; }
+  .pl-login-orb--accent { width:250px; height:250px; }
+  .pl-diff-modal-content { padding:28px 20px; margin:16px; }
+}

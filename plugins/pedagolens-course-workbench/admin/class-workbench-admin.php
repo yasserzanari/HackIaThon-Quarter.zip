@@ -28,6 +28,7 @@ class PedagoLens_Workbench_Admin {
         add_action( 'wp_ajax_pl_save_section',               [ self::class, 'ajax_save_section' ] );
         add_action( 'wp_ajax_pl_get_versions',               [ self::class, 'ajax_get_versions' ] );
         add_action( 'wp_ajax_pl_add_section',                [ self::class, 'ajax_add_section' ] );
+        add_action( 'wp_ajax_pl_upload_file',                [ self::class, 'ajax_upload_file' ] );
         add_action( 'admin_enqueue_scripts',                 [ self::class, 'enqueue_assets' ] );
     }
 
@@ -96,7 +97,7 @@ class PedagoLens_Workbench_Admin {
     // -------------------------------------------------------------------------
 
     public static function render_page(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'edit_posts' ) ) {
             wp_die( esc_html__( 'Accès refusé.', 'pedagolens-course-workbench' ) );
         }
 
@@ -558,7 +559,14 @@ class PedagoLens_Workbench_Admin {
     // -------------------------------------------------------------------------
 
     private static function verify_nonce(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        // Allow teachers and admins (front-end + admin)
+        $user  = wp_get_current_user();
+        $roles = (array) $user->roles;
+        $allowed = in_array( 'administrator', $roles, true )
+                || in_array( 'pedagolens_teacher', $roles, true )
+                || current_user_can( 'manage_options' );
+
+        if ( ! $allowed ) {
             wp_send_json_error( [ 'message' => 'Accès refusé.' ], 403 );
         }
         check_ajax_referer( self::NONCE_AJAX, 'nonce' );
@@ -569,5 +577,506 @@ class PedagoLens_Workbench_Admin {
         if ( $score >= 60 ) return '#2271b1';
         if ( $score >= 40 ) return '#dba617';
         return '#d63638';
+    }
+
+    // -------------------------------------------------------------------------
+    // Rendu front-end (shortcode délégué depuis pedagolens-landing)
+    // -------------------------------------------------------------------------
+
+    public static function render_front( int $project_id ): string {
+        $project = get_post( $project_id );
+        if ( ! $project || $project->post_type !== 'pl_project' ) {
+            return '<div class="pl-notice pl-notice-error"><p>Projet introuvable.</p></div>';
+        }
+
+        // Enqueue workbench assets on front-end
+        wp_enqueue_style(
+            'pl-workbench-front',
+            PL_WORKBENCH_PLUGIN_URL . 'assets/css/workbench-admin.css',
+            [],
+            PL_WORKBENCH_VERSION
+        );
+        wp_enqueue_script(
+            'pl-workbench-front',
+            PL_WORKBENCH_PLUGIN_URL . 'assets/js/workbench-admin.js',
+            [ 'jquery' ],
+            PL_WORKBENCH_VERSION,
+            true
+        );
+        wp_localize_script( 'pl-workbench-front', 'plWorkbench', [
+            'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+            'nonce'     => wp_create_nonce( self::NONCE_AJAX ),
+            'projectId' => $project_id,
+        ] );
+
+        $project_type = get_post_meta( $project_id, '_pl_project_type', true ) ?: 'magistral';
+        $sections     = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+        $raw_scores   = get_post_meta( $project_id, '_pl_profile_scores', true );
+        $scores       = is_string( $raw_scores ) ? (array) json_decode( $raw_scores, true ) : [];
+        $raw_files    = get_post_meta( $project_id, '_pl_uploaded_files', true );
+        $files        = is_string( $raw_files ) ? (array) json_decode( $raw_files, true ) : [];
+        $summary      = get_post_meta( $project_id, '_pl_summary', true ) ?: '';
+
+        $courses_page = get_page_by_path( 'cours-projets' );
+        $back_url     = $courses_page ? get_permalink( $courses_page ) : home_url( '/' );
+
+        $type_labels = [
+            'magistral'      => 'Magistral',
+            'exercice'       => 'Exercice',
+            'travail_equipe' => 'Travail d\'équipe',
+            'evaluation'     => 'Évaluation',
+        ];
+        $type_icons = [
+            'magistral'      => '🎓',
+            'exercice'       => '📝',
+            'travail_equipe' => '👥',
+            'evaluation'     => '📋',
+        ];
+
+        ob_start();
+        ?>
+        <div class="pl-front-workbench-page">
+
+            <!-- ===== WORKBENCH HEADER ===== -->
+            <div class="pl-wb-header">
+                <div class="pl-wb-header-left">
+                    <a href="<?php echo esc_url( $back_url ); ?>" class="pl-wb-back">← Retour aux cours</a>
+                    <h1 class="pl-wb-title"><?php echo esc_html( $project->post_title ); ?></h1>
+                    <span class="pl-wb-type-badge pl-type-<?php echo esc_attr( $project_type ); ?>">
+                        <?php echo esc_html( ( $type_icons[ $project_type ] ?? '📄' ) . ' ' . ( $type_labels[ $project_type ] ?? $project_type ) ); ?>
+                    </span>
+                </div>
+                <div class="pl-wb-header-right">
+                    <button type="button" id="pl-upload-trigger" class="pl-wb-btn pl-wb-btn-accent">
+                        📎 Importer un fichier
+                    </button>
+                    <button type="button" id="pl-add-section" class="pl-wb-btn pl-wb-btn-outline">
+                        + Ajouter une section
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== UPLOAD ZONE (hidden by default) ===== -->
+            <div id="pl-upload-zone" class="pl-upload-zone" style="display:none;">
+                <div class="pl-upload-dropzone" id="pl-dropzone">
+                    <div class="pl-upload-icon">📁</div>
+                    <p class="pl-upload-text">Glissez vos fichiers ici ou <label for="pl-file-input" class="pl-upload-browse">parcourez</label></p>
+                    <p class="pl-upload-hint">PowerPoint (.pptx), Word (.docx), PDF (.pdf)</p>
+                    <input type="file" id="pl-file-input" accept=".pptx,.docx,.pdf" multiple style="display:none;" />
+                </div>
+                <div id="pl-upload-progress" class="pl-upload-progress" style="display:none;">
+                    <div class="pl-progress-bar-wrap">
+                        <div class="pl-progress-bar" id="pl-progress-bar"></div>
+                    </div>
+                    <span class="pl-progress-text" id="pl-progress-text">Téléversement…</span>
+                </div>
+                <div id="pl-upload-result" class="pl-upload-result" style="display:none;"></div>
+            </div>
+
+            <!-- ===== MAIN LAYOUT ===== -->
+            <div class="pl-wb-layout">
+
+                <!-- Colonne principale : sections -->
+                <div class="pl-workbench-main pl-wb-main">
+                    <?php if ( empty( $sections ) ) : ?>
+                        <div class="pl-wb-empty">
+                            <div class="pl-wb-empty-icon">📄</div>
+                            <p>Aucune section. Importez un fichier ou ajoutez du contenu pour commencer.</p>
+                        </div>
+                    <?php else : ?>
+                        <?php foreach ( $sections as $section ) : ?>
+                            <?php self::render_front_section( $section, $project_id ); ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Panneau latéral -->
+                <div class="pl-wb-sidebar">
+
+                    <!-- Scores par profil -->
+                    <div class="pl-wb-sidebar-card">
+                        <h3>📊 Scores par profil</h3>
+                        <div id="pl-sidebar-scores">
+                            <?php if ( empty( $scores ) ) : ?>
+                                <p class="pl-wb-sidebar-empty">Analysez une section pour voir les scores.</p>
+                            <?php else : ?>
+                                <?php self::render_front_score_bars( $scores ); ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <?php if ( $summary ) : ?>
+                    <!-- Résumé -->
+                    <div class="pl-wb-sidebar-card">
+                        <h3>📋 Résumé</h3>
+                        <p class="pl-wb-summary-text"><?php echo esc_html( $summary ); ?></p>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Fichiers uploadés -->
+                    <div class="pl-wb-sidebar-card">
+                        <h3>📁 Fichiers du projet</h3>
+                        <div id="pl-files-list">
+                            <?php if ( empty( $files ) ) : ?>
+                                <p class="pl-wb-sidebar-empty">Aucun fichier importé.</p>
+                            <?php else : ?>
+                                <?php foreach ( $files as $f ) :
+                                    $ext  = strtolower( pathinfo( $f['name'] ?? '', PATHINFO_EXTENSION ) );
+                                    $icon = match( $ext ) {
+                                        'pptx' => '📊',
+                                        'docx' => '📝',
+                                        'pdf'  => '📕',
+                                        default => '📄',
+                                    };
+                                ?>
+                                    <div class="pl-file-row">
+                                        <span class="pl-file-icon"><?php echo $icon; ?></span>
+                                        <span class="pl-file-name"><?php echo esc_html( $f['name'] ?? '' ); ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Analyser tout -->
+                    <div class="pl-wb-sidebar-card">
+                        <button type="button" id="pl-analyze-all" class="pl-wb-btn pl-wb-btn-glow pl-wb-btn-full">
+                            🔍 Analyser tout le projet
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Modale historique des versions -->
+            <div id="pl-versions-modal" style="display:none;">
+                <div class="pl-modal-overlay pl-wb-modal-overlay">
+                    <div class="pl-modal-box pl-wb-modal-box">
+                        <h2>Historique des versions</h2>
+                        <div id="pl-versions-content"></div>
+                        <button type="button" id="pl-versions-close" class="pl-wb-btn pl-wb-btn-outline">Fermer</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render a single section block for front-end workbench.
+     */
+    private static function render_front_section( array $section, int $project_id ): void {
+        $section_id = esc_attr( $section['id'] ?? '' );
+        $title      = esc_html( $section['title'] ?? 'Section' );
+        $content    = esc_textarea( $section['content'] ?? '' );
+        ?>
+        <div class="pl-section-block pl-wb-section" id="pl-section-<?php echo $section_id; ?>" data-section-id="<?php echo $section_id; ?>">
+            <div class="pl-section-header pl-wb-section-header">
+                <h2 class="pl-section-title pl-wb-section-title"><?php echo $title; ?></h2>
+                <div class="pl-section-actions pl-wb-section-actions">
+                    <button type="button" class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-accent pl-btn-suggestions" data-section-id="<?php echo $section_id; ?>">
+                        💡 Suggestions IA
+                    </button>
+                    <button type="button" class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-outline pl-btn-history" data-section-id="<?php echo $section_id; ?>">
+                        🕐 Historique
+                    </button>
+                </div>
+            </div>
+            <div class="pl-section-editor pl-wb-section-editor">
+                <textarea class="pl-section-content pl-wb-textarea" data-section-id="<?php echo $section_id; ?>" rows="6"><?php echo $content; ?></textarea>
+                <div class="pl-section-save-row pl-wb-save-row">
+                    <button type="button" class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-primary pl-btn-save-section" data-section-id="<?php echo $section_id; ?>">
+                        Enregistrer
+                    </button>
+                    <span class="pl-save-status"></span>
+                </div>
+            </div>
+            <div class="pl-suggestions-zone" id="pl-suggestions-<?php echo $section_id; ?>" style="display:none;"></div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render animated score bars for front-end sidebar.
+     */
+    public static function render_front_score_bars( array $scores ): void {
+        foreach ( $scores as $slug => $score ) :
+            $score = max( 0, min( 100, (int) $score ) );
+            $color_class = $score >= 80 ? 'pl-score-high' : ( $score >= 60 ? 'pl-score-mid' : ( $score >= 40 ? 'pl-score-warn' : 'pl-score-low' ) );
+            ?>
+            <div class="pl-wb-score-row">
+                <span class="pl-wb-score-label"><?php echo esc_html( $slug ); ?></span>
+                <div class="pl-wb-score-bar-wrap">
+                    <div class="pl-wb-score-bar <?php echo $color_class; ?>" style="--score-w:<?php echo $score; ?>%;"></div>
+                </div>
+                <span class="pl-wb-score-value"><?php echo $score; ?></span>
+            </div>
+        <?php endforeach;
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Upload de fichier + extraction de texte
+    // -------------------------------------------------------------------------
+
+    public static function ajax_upload_file(): void {
+        self::verify_nonce();
+
+        $project_id = (int) ( $_POST['project_id'] ?? 0 );
+        if ( ! $project_id ) {
+            wp_send_json_error( [ 'message' => 'ID de projet manquant.' ] );
+        }
+
+        $project = get_post( $project_id );
+        if ( ! $project || $project->post_type !== 'pl_project' ) {
+            wp_send_json_error( [ 'message' => 'Projet introuvable.' ] );
+        }
+
+        if ( empty( $_FILES['file'] ) ) {
+            wp_send_json_error( [ 'message' => 'Aucun fichier reçu.' ] );
+        }
+
+        $file = $_FILES['file'];
+        $ext  = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
+
+        $allowed = [ 'pptx', 'docx', 'pdf' ];
+        if ( ! in_array( $ext, $allowed, true ) ) {
+            wp_send_json_error( [ 'message' => 'Type de fichier non supporté. Acceptés : .pptx, .docx, .pdf' ] );
+        }
+
+        // Upload as WP attachment
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $upload = wp_handle_upload( $file, [ 'test_form' => false ] );
+        if ( isset( $upload['error'] ) ) {
+            wp_send_json_error( [ 'message' => $upload['error'] ] );
+        }
+
+        $attachment_id = wp_insert_attachment( [
+            'post_title'     => sanitize_file_name( $file['name'] ),
+            'post_mime_type' => $upload['type'],
+            'post_status'    => 'inherit',
+            'post_parent'    => $project_id,
+        ], $upload['file'] );
+
+        // Extract text
+        $extracted_sections = [];
+        $filepath = $upload['file'];
+
+        switch ( $ext ) {
+            case 'pptx':
+                $extracted_sections = self::extract_pptx( $filepath );
+                break;
+            case 'docx':
+                $extracted_sections = self::extract_docx( $filepath );
+                break;
+            case 'pdf':
+                $extracted_sections = self::extract_pdf( $filepath );
+                break;
+        }
+
+        // Merge new sections into project
+        $existing = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+        foreach ( $extracted_sections as $sec ) {
+            $existing[] = $sec;
+        }
+        PedagoLens_Course_Workbench::save_content_sections( $project_id, $existing );
+
+        // Track uploaded files
+        $raw_files = get_post_meta( $project_id, '_pl_uploaded_files', true );
+        $files     = is_string( $raw_files ) ? (array) json_decode( $raw_files, true ) : [];
+        $files[]   = [
+            'name'          => $file['name'],
+            'attachment_id' => $attachment_id,
+            'ext'           => $ext,
+            'uploaded_at'   => gmdate( 'c' ),
+        ];
+        update_post_meta( $project_id, '_pl_uploaded_files', wp_json_encode( $files ) );
+
+        // Build HTML for new sections
+        ob_start();
+        foreach ( $extracted_sections as $sec ) {
+            self::render_front_section( $sec, $project_id );
+        }
+        $sections_html = ob_get_clean();
+
+        // Build file row HTML
+        $icon = match( $ext ) {
+            'pptx' => '📊',
+            'docx' => '📝',
+            'pdf'  => '📕',
+            default => '📄',
+        };
+        $file_html = '<div class="pl-file-row"><span class="pl-file-icon">' . $icon . '</span><span class="pl-file-name">' . esc_html( $file['name'] ) . '</span></div>';
+
+        wp_send_json_success( [
+            'message'       => count( $extracted_sections ) . ' section(s) extraite(s) de ' . esc_html( $file['name'] ),
+            'sections_html' => $sections_html,
+            'file_html'     => $file_html,
+            'count'         => count( $extracted_sections ),
+        ] );
+    }
+
+    /**
+     * Extract text from PowerPoint (.pptx) — reads slide XML for <a:t> tags.
+     */
+    private static function extract_pptx( string $filepath ): array {
+        $sections = [];
+        $zip = new \ZipArchive();
+
+        if ( $zip->open( $filepath ) !== true ) {
+            return $sections;
+        }
+
+        $slide_num = 1;
+        while ( true ) {
+            $xml_content = $zip->getFromName( "ppt/slides/slide{$slide_num}.xml" );
+            if ( $xml_content === false ) {
+                break;
+            }
+
+            $text = self::extract_xml_tags( $xml_content, 'a:t' );
+            if ( trim( $text ) !== '' ) {
+                $sections[] = [
+                    'id'      => 'section_' . uniqid(),
+                    'title'   => "Diapositive {$slide_num}",
+                    'content' => trim( $text ),
+                ];
+            }
+            $slide_num++;
+        }
+
+        $zip->close();
+        return $sections;
+    }
+
+    /**
+     * Extract text from Word (.docx) — reads document.xml for <w:t> tags.
+     */
+    private static function extract_docx( string $filepath ): array {
+        $sections = [];
+        $zip = new \ZipArchive();
+
+        if ( $zip->open( $filepath ) !== true ) {
+            return $sections;
+        }
+
+        $xml_content = $zip->getFromName( 'word/document.xml' );
+        $zip->close();
+
+        if ( $xml_content === false ) {
+            return $sections;
+        }
+
+        $text = self::extract_xml_tags( $xml_content, 'w:t' );
+        if ( trim( $text ) === '' ) {
+            return $sections;
+        }
+
+        // Split into paragraphs/sections by double newlines or large chunks
+        $paragraphs = preg_split( '/\n{2,}/', $text );
+        $chunk      = '';
+        $chunk_num  = 1;
+
+        foreach ( $paragraphs as $para ) {
+            $para = trim( $para );
+            if ( $para === '' ) continue;
+
+            $chunk .= $para . "\n\n";
+
+            // Create a section every ~500 chars or at the end
+            if ( mb_strlen( $chunk ) > 500 ) {
+                $sections[] = [
+                    'id'      => 'section_' . uniqid(),
+                    'title'   => "Section {$chunk_num}",
+                    'content' => trim( $chunk ),
+                ];
+                $chunk = '';
+                $chunk_num++;
+            }
+        }
+
+        if ( trim( $chunk ) !== '' ) {
+            $sections[] = [
+                'id'      => 'section_' . uniqid(),
+                'title'   => "Section {$chunk_num}",
+                'content' => trim( $chunk ),
+            ];
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Extract text from PDF using pdftotext if available.
+     */
+    private static function extract_pdf( string $filepath ): array {
+        $sections = [];
+        $text     = '';
+
+        // Try pdftotext
+        $pdftotext = trim( (string) shell_exec( 'which pdftotext 2>/dev/null' ) );
+        if ( $pdftotext ) {
+            $escaped = escapeshellarg( $filepath );
+            $text    = (string) shell_exec( "{$pdftotext} {$escaped} - 2>/dev/null" );
+        }
+
+        if ( trim( $text ) === '' ) {
+            // Fallback: just create one section noting the file was uploaded
+            $sections[] = [
+                'id'      => 'section_' . uniqid(),
+                'title'   => 'Document PDF importé',
+                'content' => '(Extraction automatique non disponible — pdftotext requis. Le fichier a été sauvegardé.)',
+            ];
+            return $sections;
+        }
+
+        // Split by page breaks or large chunks
+        $pages = preg_split( '/\f/', $text );
+        $page_num = 1;
+        foreach ( $pages as $page ) {
+            $page = trim( $page );
+            if ( $page === '' ) continue;
+            $sections[] = [
+                'id'      => 'section_' . uniqid(),
+                'title'   => "Page {$page_num}",
+                'content' => $page,
+            ];
+            $page_num++;
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Extract text content from XML by tag name.
+     */
+    private static function extract_xml_tags( string $xml, string $tag ): string {
+        $text = '';
+        $dom  = new \DOMDocument();
+
+        // Suppress warnings for malformed XML
+        libxml_use_internal_errors( true );
+        $dom->loadXML( $xml );
+        libxml_clear_errors();
+
+        // Use regex as fallback-friendly approach for namespaced tags
+        if ( preg_match_all( '/<' . preg_quote( $tag, '/' ) . '[^>]*>(.*?)<\/' . preg_quote( $tag, '/' ) . '>/s', $xml, $matches ) ) {
+            $last_was_newline = false;
+            foreach ( $matches[1] as $i => $t ) {
+                $decoded = html_entity_decode( $t, ENT_QUOTES | ENT_XML1, 'UTF-8' );
+                $text .= $decoded . ' ';
+
+                // Add newline between paragraphs (heuristic: after each run of text)
+                if ( $i > 0 && $i % 8 === 0 ) {
+                    $text .= "\n";
+                }
+            }
+        }
+
+        return $text;
     }
 }

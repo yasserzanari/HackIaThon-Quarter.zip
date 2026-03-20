@@ -28,6 +28,7 @@ class PedagoLens_Landing {
         add_shortcode( 'pedagolens_courses',           [ self::class, 'shortcode_courses' ] );
         add_shortcode( 'pedagolens_workbench',         [ self::class, 'shortcode_workbench' ] );
         add_shortcode( 'pedagolens_account',           [ self::class, 'shortcode_account' ] );
+        add_shortcode( 'pedagolens_login',             [ self::class, 'shortcode_login' ] );
 
         add_action( 'wp_enqueue_scripts', [ self::class, 'enqueue_front_assets' ] );
 
@@ -43,6 +44,15 @@ class PedagoLens_Landing {
         }
         if ( ! has_action( 'wp_ajax_pl_save_section' ) ) {
             add_action( 'wp_ajax_pl_save_section',      [ 'PedagoLens_Workbench_Admin', 'ajax_save_section' ] );
+        }
+        if ( ! has_action( 'wp_ajax_pl_add_section' ) ) {
+            add_action( 'wp_ajax_pl_add_section',       [ 'PedagoLens_Workbench_Admin', 'ajax_add_section' ] );
+        }
+        if ( ! has_action( 'wp_ajax_pl_get_versions' ) ) {
+            add_action( 'wp_ajax_pl_get_versions',      [ 'PedagoLens_Workbench_Admin', 'ajax_get_versions' ] );
+        }
+        if ( ! has_action( 'wp_ajax_pl_upload_file' ) ) {
+            add_action( 'wp_ajax_pl_upload_file',       [ 'PedagoLens_Workbench_Admin', 'ajax_upload_file' ] );
         }
         // AJAX front-end pour sauvegarde profil compte
         if ( ! has_action( 'wp_ajax_pl_save_account_profile' ) ) {
@@ -60,6 +70,16 @@ class PedagoLens_Landing {
         }
         if ( ! has_action( 'wp_ajax_pl_create_project' ) ) {
             add_action( 'wp_ajax_pl_create_project',    [ 'PedagoLens_Dashboard_Admin', 'ajax_create_project' ] );
+        }
+
+        // AJAX login / register (accessible aux visiteurs ET aux connectés)
+        if ( ! has_action( 'wp_ajax_nopriv_pl_login' ) ) {
+            add_action( 'wp_ajax_nopriv_pl_login',    [ self::class, 'ajax_login' ] );
+            add_action( 'wp_ajax_pl_login',           [ self::class, 'ajax_login' ] );
+        }
+        if ( ! has_action( 'wp_ajax_nopriv_pl_register' ) ) {
+            add_action( 'wp_ajax_nopriv_pl_register', [ self::class, 'ajax_register' ] );
+            add_action( 'wp_ajax_pl_register',        [ self::class, 'ajax_register' ] );
         }
     }
 
@@ -94,6 +114,8 @@ class PedagoLens_Landing {
                 'dashboard' => $has_dashboard ? wp_create_nonce( 'pl_dashboard_ajax' ) : '',
                 'twin'      => $has_twin      ? wp_create_nonce( 'pl_twin_ajax' )      : '',
                 'workbench' => $has_workbench ? wp_create_nonce( 'pl_workbench_ajax' ) : '',
+                'login'     => wp_create_nonce( 'pl_login_nonce' ),
+                'register'  => wp_create_nonce( 'pl_register_nonce' ),
             ],
             'i18n' => [
                 'analyzing'    => 'Analyse en cours…',
@@ -1058,6 +1080,397 @@ class PedagoLens_Landing {
         }
 
         wp_send_json_success( [ 'message' => 'Profil mis à jour.' ] );
+    }
+
+    // -------------------------------------------------------------------------
+    // Reusable Header & Footer
+    // -------------------------------------------------------------------------
+
+    public static function render_header(): string {
+        $home_url    = esc_url( home_url( '/' ) );
+        $is_logged   = is_user_logged_in();
+        $user        = $is_logged ? wp_get_current_user() : null;
+        $roles       = $user ? (array) $user->roles : [];
+        $is_admin    = in_array( 'administrator', $roles, true );
+        $is_teacher  = in_array( 'pedagolens_teacher', $roles, true );
+        $is_student  = in_array( 'pedagolens_student', $roles, true );
+
+        $login_page  = get_page_by_path( 'connexion' );
+        $login_url   = $login_page ? get_permalink( $login_page ) : wp_login_url();
+
+        $dash_teacher = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
+        $dash_student = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+        $twin_url     = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+        $account_url  = esc_url( self::page_url( 'compte', '' ) );
+        $logout_url   = esc_url( wp_logout_url( $home_url ) );
+
+        ob_start();
+        ?>
+        <nav class="pl-landing-nav" role="navigation" aria-label="Navigation principale">
+            <div class="pl-landing-nav-inner">
+                <a href="<?php echo $home_url; ?>" class="pl-nav-logo">P&eacute;dagoLens</a>
+                <ul class="pl-nav-links">
+                    <li><a href="<?php echo $home_url; ?>">Accueil</a></li>
+                    <?php if ( $is_logged && ( $is_admin || $is_teacher ) ) : ?>
+                        <li><a href="<?php echo $dash_teacher; ?>">Dashboard</a></li>
+                    <?php endif; ?>
+                    <?php if ( $is_logged && $is_student ) : ?>
+                        <li><a href="<?php echo $twin_url; ?>">Jumeau</a></li>
+                    <?php endif; ?>
+                    <?php if ( $is_logged ) : ?>
+                        <li><a href="<?php echo $account_url; ?>">Compte</a></li>
+                        <li><a href="<?php echo $logout_url; ?>"><?php echo esc_html( $user->display_name ); ?> &middot; D&eacute;connexion</a></li>
+                    <?php else : ?>
+                        <li><a href="<?php echo esc_url( $login_url ); ?>">Se connecter</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </nav>
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function render_footer(): string {
+        $home_url   = esc_url( home_url( '/' ) );
+        $login_page = get_page_by_path( 'connexion' );
+        $login_url  = $login_page ? get_permalink( $login_page ) : wp_login_url();
+
+        ob_start();
+        ?>
+        <footer class="pl-landing-footer">
+            <div class="pl-footer-inner">
+                <span class="pl-footer-logo">P&eacute;dagoLens</span>
+                <ul class="pl-footer-nav">
+                    <li><a href="<?php echo $home_url; ?>">Accueil</a></li>
+                    <?php if ( is_user_logged_in() ) : ?>
+                        <li><a href="<?php echo esc_url( self::page_url( 'compte', '' ) ); ?>">Compte</a></li>
+                    <?php else : ?>
+                        <li><a href="<?php echo esc_url( $login_url ); ?>">Se connecter</a></li>
+                    <?php endif; ?>
+                </ul>
+                <p class="pl-footer-copy">&copy; 2026 P&eacute;dagoLens &mdash; Propuls&eacute; par AWS Bedrock</p>
+            </div>
+        </footer>
+        <?php
+        return ob_get_clean();
+    }
+
+    // -------------------------------------------------------------------------
+    // [pedagolens_login] — Page de connexion / inscription
+    // -------------------------------------------------------------------------
+
+    public static function shortcode_login( array $atts ): string {
+        // Si déjà connecté, rediriger vers le dashboard approprié
+        if ( is_user_logged_in() ) {
+            $user  = wp_get_current_user();
+            $roles = (array) $user->roles;
+            if ( in_array( 'pedagolens_teacher', $roles, true ) || in_array( 'administrator', $roles, true ) ) {
+                $url = self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' );
+            } else {
+                $url = self::page_url( 'dashboard-etudiant', '' );
+            }
+            return '<script>window.location.href=' . wp_json_encode( $url ) . ';</script>'
+                 . '<div class="pl-notice pl-notice-info"><p>Vous &ecirc;tes d&eacute;j&agrave; connect&eacute;. Redirection&hellip;</p></div>';
+        }
+
+        $login_nonce    = wp_create_nonce( 'pl_login_nonce' );
+        $register_nonce = wp_create_nonce( 'pl_register_nonce' );
+
+        ob_start();
+        ?>
+<div class="pl-login-page">
+
+    <?php echo self::render_header(); ?>
+
+    <div class="pl-login-wrapper">
+        <div class="pl-login-orb pl-login-orb--cyan"></div>
+        <div class="pl-login-orb pl-login-orb--accent"></div>
+
+        <div class="pl-login-card">
+            <!-- Onglets -->
+            <div class="pl-login-tabs">
+                <button class="pl-login-tab pl-login-tab--active" data-tab="login">Se connecter</button>
+                <button class="pl-login-tab" data-tab="register">Cr&eacute;er un compte</button>
+            </div>
+
+            <!-- ============ ONGLET CONNEXION ============ -->
+            <div class="pl-login-panel pl-login-panel--active" id="pl-panel-login">
+                <div id="pl-login-msg" class="pl-login-msg" style="display:none;"></div>
+                <form id="pl-login-form" autocomplete="on" novalidate>
+                    <input type="hidden" name="_wpnonce" value="<?php echo $login_nonce; ?>" />
+                    <div class="pl-login-field">
+                        <label for="pl-login-email">Courriel</label>
+                        <input type="email" id="pl-login-email" name="email" placeholder="votre@courriel.ca" required />
+                    </div>
+                    <div class="pl-login-field">
+                        <label for="pl-login-password">Mot de passe</label>
+                        <input type="password" id="pl-login-password" name="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required />
+                    </div>
+                    <button type="submit" class="pl-login-submit">Se connecter</button>
+                </form>
+            </div>
+
+            <!-- ============ ONGLET INSCRIPTION ============ -->
+            <div class="pl-login-panel" id="pl-panel-register">
+                <div id="pl-register-msg" class="pl-login-msg" style="display:none;"></div>
+
+                <!-- Étape 1 : choix du rôle -->
+                <div id="pl-register-step-role" class="pl-register-step">
+                    <p class="pl-register-prompt">Je suis&hellip;</p>
+                    <div class="pl-role-cards">
+                        <button class="pl-role-card" data-role="teacher">
+                            <span class="pl-role-card-icon">&#128218;</span>
+                            <span class="pl-role-card-label">Enseignant</span>
+                            <span class="pl-role-card-desc">J&rsquo;enseigne au C&Eacute;GEP</span>
+                        </button>
+                        <button class="pl-role-card" data-role="student">
+                            <span class="pl-role-card-icon">&#127891;</span>
+                            <span class="pl-role-card-label">&Eacute;tudiant</span>
+                            <span class="pl-role-card-desc">Je suis inscrit &agrave; un cours</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Étape 2 : formulaire -->
+                <div id="pl-register-step-form" class="pl-register-step" style="display:none;">
+                    <button type="button" class="pl-register-back">&larr; Changer de r&ocirc;le</button>
+                    <form id="pl-register-form" autocomplete="off" novalidate>
+                        <input type="hidden" name="_wpnonce" value="<?php echo $register_nonce; ?>" />
+                        <input type="hidden" name="role" id="pl-register-role" value="" />
+
+                        <div class="pl-login-field">
+                            <label for="pl-reg-name">Nom complet</label>
+                            <input type="text" id="pl-reg-name" name="display_name" placeholder="Pr&eacute;nom Nom" required />
+                        </div>
+
+                        <!-- Champ institut (enseignant seulement) -->
+                        <div class="pl-login-field pl-field-teacher" style="display:none;">
+                            <label for="pl-reg-institute">Institut / &Eacute;tablissement</label>
+                            <input type="text" id="pl-reg-institute" name="institute" placeholder="C&Eacute;GEP de&hellip;" />
+                        </div>
+
+                        <div class="pl-login-field">
+                            <label for="pl-reg-email">Courriel</label>
+                            <input type="email" id="pl-reg-email" name="email" placeholder="votre@courriel.ca" required />
+                        </div>
+                        <div class="pl-login-field">
+                            <label for="pl-reg-password">Mot de passe</label>
+                            <input type="password" id="pl-reg-password" name="password" placeholder="Min. 6 caract&egrave;res" required />
+                        </div>
+                        <div class="pl-login-field">
+                            <label for="pl-reg-password2">Confirmer le mot de passe</label>
+                            <input type="password" id="pl-reg-password2" name="password_confirm" placeholder="Retapez le mot de passe" required />
+                        </div>
+
+                        <!-- Checkbox difficultés (étudiant seulement) -->
+                        <div class="pl-login-field pl-field-student" style="display:none;">
+                            <label class="pl-login-checkbox-row">
+                                <input type="checkbox" id="pl-reg-difficulties-check" />
+                                <span class="pl-login-cb-custom"></span>
+                                <span>J&rsquo;ai des difficult&eacute;s d&rsquo;apprentissage</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="pl-login-submit">Cr&eacute;er mon compte</button>
+                    </form>
+                </div>
+            </div>
+        </div><!-- .pl-login-card -->
+    </div><!-- .pl-login-wrapper -->
+
+    <!-- ============ MODAL DIFFICULTÉS ============ -->
+    <div id="pl-difficulties-modal" class="pl-diff-modal" style="display:none;">
+        <div class="pl-diff-modal-backdrop"></div>
+        <div class="pl-diff-modal-content">
+            <button type="button" class="pl-diff-modal-close">&times;</button>
+            <h3>&#128203; Mes difficult&eacute;s d&rsquo;apprentissage</h3>
+            <p class="pl-diff-modal-desc">Ces informations aident vos enseignants &agrave; adapter leur p&eacute;dagogie. Tout est confidentiel.</p>
+            <div class="pl-diff-options">
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="tdah" />
+                    <span class="pl-diff-cb"></span>
+                    <span>TDAH / Difficult&eacute;s de concentration</span>
+                </label>
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="surcharge" />
+                    <span class="pl-diff-cb"></span>
+                    <span>Surcharge cognitive</span>
+                </label>
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="allophone" />
+                    <span class="pl-diff-cb"></span>
+                    <span>Langue seconde / Allophone</span>
+                </label>
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="faible_autonomie" />
+                    <span class="pl-diff-cb"></span>
+                    <span>Faible autonomie</span>
+                </label>
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="anxiete" />
+                    <span class="pl-diff-cb"></span>
+                    <span>Anxi&eacute;t&eacute; face aux consignes</span>
+                </label>
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="trouble_apprentissage" />
+                    <span class="pl-diff-cb"></span>
+                    <span>Trouble d&rsquo;apprentissage</span>
+                </label>
+                <label class="pl-diff-option">
+                    <input type="checkbox" name="diff[]" value="autre" />
+                    <span class="pl-diff-cb"></span>
+                    <span>Autre</span>
+                </label>
+                <div class="pl-diff-autre-field" style="display:none;">
+                    <input type="text" id="pl-diff-autre-text" placeholder="Pr&eacute;cisez&hellip;" />
+                </div>
+            </div>
+            <div class="pl-diff-more" style="display:none;">
+                <label for="pl-diff-context">Contexte suppl&eacute;mentaire</label>
+                <textarea id="pl-diff-context" rows="3" placeholder="D&eacute;crivez votre situation plus en d&eacute;tail&hellip;"></textarea>
+            </div>
+            <button type="button" class="pl-diff-more-btn">Plus pr&eacute;cis&eacute;ment&hellip;</button>
+            <button type="button" class="pl-diff-modal-save pl-login-submit">Enregistrer</button>
+        </div>
+    </div>
+
+    <?php echo self::render_footer(); ?>
+
+</div><!-- .pl-login-page -->
+        <?php
+        return ob_get_clean();
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Login
+    // -------------------------------------------------------------------------
+
+    public static function ajax_login(): void {
+        check_ajax_referer( 'pl_login_nonce' );
+
+        $email    = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
+        $password = $_POST['password'] ?? '';
+
+        if ( ! $email || ! $password ) {
+            wp_send_json_error( [ 'message' => 'Courriel et mot de passe requis.' ] );
+        }
+
+        // Trouver le user par email
+        $user_obj = get_user_by( 'email', $email );
+        if ( ! $user_obj ) {
+            wp_send_json_error( [ 'message' => 'Identifiants invalides.' ] );
+        }
+
+        $creds = [
+            'user_login'    => $user_obj->user_login,
+            'user_password' => $password,
+            'remember'      => true,
+        ];
+
+        $signon = wp_signon( $creds, is_ssl() );
+
+        if ( is_wp_error( $signon ) ) {
+            wp_send_json_error( [ 'message' => 'Identifiants invalides.' ] );
+        }
+
+        wp_set_current_user( $signon->ID );
+
+        $roles = (array) $signon->roles;
+        if ( in_array( 'pedagolens_teacher', $roles, true ) || in_array( 'administrator', $roles, true ) ) {
+            $redirect = self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' );
+        } else {
+            $redirect = self::page_url( 'dashboard-etudiant', '' );
+        }
+
+        wp_send_json_success( [ 'redirect' => $redirect ] );
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Register
+    // -------------------------------------------------------------------------
+
+    public static function ajax_register(): void {
+        check_ajax_referer( 'pl_register_nonce' );
+
+        $display_name = sanitize_text_field( wp_unslash( $_POST['display_name'] ?? '' ) );
+        $email        = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
+        $password     = $_POST['password'] ?? '';
+        $password2    = $_POST['password_confirm'] ?? '';
+        $role         = sanitize_key( $_POST['role'] ?? '' );
+        $institute    = sanitize_text_field( wp_unslash( $_POST['institute'] ?? '' ) );
+        $raw_diff     = isset( $_POST['difficulties'] ) ? sanitize_text_field( wp_unslash( $_POST['difficulties'] ) ) : '[]';
+
+        // Validations
+        if ( ! $display_name || ! $email || ! $password ) {
+            wp_send_json_error( [ 'message' => 'Tous les champs obligatoires doivent &ecirc;tre remplis.' ] );
+        }
+        if ( ! in_array( $role, [ 'teacher', 'student' ], true ) ) {
+            wp_send_json_error( [ 'message' => 'R&ocirc;le invalide.' ] );
+        }
+        if ( strlen( $password ) < 6 ) {
+            wp_send_json_error( [ 'message' => 'Le mot de passe doit contenir au moins 6 caract&egrave;res.' ] );
+        }
+        if ( $password !== $password2 ) {
+            wp_send_json_error( [ 'message' => 'Les mots de passe ne correspondent pas.' ] );
+        }
+        if ( email_exists( $email ) ) {
+            wp_send_json_error( [ 'message' => 'Ce courriel est d&eacute;j&agrave; utilis&eacute;.' ] );
+        }
+        if ( username_exists( $email ) ) {
+            wp_send_json_error( [ 'message' => 'Ce courriel est d&eacute;j&agrave; utilis&eacute;.' ] );
+        }
+
+        // Créer le user
+        $user_id = wp_create_user( $email, $password, $email );
+        if ( is_wp_error( $user_id ) ) {
+            wp_send_json_error( [ 'message' => $user_id->get_error_message() ] );
+        }
+
+        // Mettre à jour le display_name et le rôle
+        $wp_role = $role === 'teacher' ? 'pedagolens_teacher' : 'pedagolens_student';
+        wp_update_user( [
+            'ID'           => $user_id,
+            'display_name' => $display_name,
+            'role'         => $wp_role,
+        ] );
+
+        // Sauvegarder l'institut (enseignant)
+        if ( $role === 'teacher' && $institute ) {
+            update_user_meta( $user_id, 'pl_teacher_institute', $institute );
+        }
+
+        // Sauvegarder les difficultés (étudiant)
+        if ( $role === 'student' ) {
+            $decoded = json_decode( $raw_diff, true );
+            if ( is_array( $decoded ) && ! empty( $decoded ) ) {
+                $clean = [];
+                foreach ( $decoded as $item ) {
+                    if ( is_string( $item ) ) {
+                        $clean[] = sanitize_key( $item );
+                    } elseif ( is_array( $item ) && isset( $item['key'] ) ) {
+                        $clean[] = [
+                            'key'     => sanitize_key( $item['key'] ),
+                            'text'    => sanitize_text_field( $item['text'] ?? '' ),
+                            'context' => sanitize_textarea_field( $item['context'] ?? '' ),
+                        ];
+                    }
+                }
+                update_user_meta( $user_id, 'pl_student_difficulties', $clean );
+            }
+        }
+
+        // Connecter automatiquement
+        wp_set_auth_cookie( $user_id, true );
+        wp_set_current_user( $user_id );
+
+        // Redirection
+        if ( $role === 'teacher' ) {
+            $redirect = self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' );
+        } else {
+            $redirect = self::page_url( 'dashboard-etudiant', '' );
+        }
+
+        wp_send_json_success( [ 'redirect' => $redirect ] );
     }
 
     // -------------------------------------------------------------------------
