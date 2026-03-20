@@ -3,7 +3,7 @@
  * Plugin Name: PédagoLens Teacher Dashboard
  * Plugin URI:  https://pedagolens.local
  * Description: Tableau de bord enseignant — analyse de cours, scores par profil, recommandations, gestion des projets.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      PédagoLens Team
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PL_DASHBOARD_VERSION',    '1.1.0' );
+define( 'PL_DASHBOARD_VERSION',    '1.2.0' );
 define( 'PL_DASHBOARD_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PL_DASHBOARD_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

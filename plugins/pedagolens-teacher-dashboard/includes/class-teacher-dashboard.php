@@ -287,7 +287,8 @@ class PedagoLens_Teacher_Dashboard {
                 </h2>
                 <div class="pl-header-actions">
                     <span class="pl-mode-badge pl-mode-badge--<?php echo esc_attr( $mode ); ?>">
-                        &#9679; <?php echo $mode === 'mock' ? 'Mode Mock' : 'AWS Bedrock'; ?>
+                        <span class="pl-pulse-dot"></span>
+                        <?php echo $mode === 'mock' ? 'Mode Mock' : 'AWS Bedrock'; ?>
                     </span>
                     <a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=pl_course' ) ); ?>" class="pl-btn-glow">
                         + Nouveau cours
@@ -297,22 +298,22 @@ class PedagoLens_Teacher_Dashboard {
 
             <!-- ============ Stats Overview ============ -->
             <div class="pl-stats-grid">
-                <div class="pl-stat-card pl-animate-in">
+                <div class="pl-stat-card pl-animate-in" data-accent="courses">
                     <span class="pl-stat-icon">&#128218;</span>
                     <div class="pl-stat-number" data-target="<?php echo (int) $total_courses; ?>">0</div>
                     <div class="pl-stat-label">Cours</div>
                 </div>
-                <div class="pl-stat-card pl-animate-in">
+                <div class="pl-stat-card pl-animate-in" data-accent="analyses">
                     <span class="pl-stat-icon">&#128269;</span>
                     <div class="pl-stat-number" data-target="<?php echo (int) $total_analyses; ?>">0</div>
                     <div class="pl-stat-label">Analyses</div>
                 </div>
-                <div class="pl-stat-card pl-animate-in">
+                <div class="pl-stat-card pl-animate-in" data-accent="projects">
                     <span class="pl-stat-icon">&#128196;</span>
                     <div class="pl-stat-number" data-target="<?php echo (int) $total_projects; ?>">0</div>
                     <div class="pl-stat-label">Projets</div>
                 </div>
-                <div class="pl-stat-card pl-animate-in">
+                <div class="pl-stat-card pl-animate-in" data-accent="score">
                     <span class="pl-stat-icon">&#127942;</span>
                     <div class="pl-stat-number" data-target="<?php echo (int) $avg_score; ?>">0</div>
                     <div class="pl-stat-label">Score moyen</div>
@@ -325,6 +326,11 @@ class PedagoLens_Teacher_Dashboard {
                     <p>Aucun cours trouv&eacute;. <a href="<?php echo esc_url( admin_url( 'post-new.php?post_type=pl_course' ) ); ?>">Cr&eacute;er votre premier cours</a></p>
                 </div>
             <?php else : ?>
+                <h3 class="pl-section-title">
+                    <span class="pl-section-icon">&#128218;</span>
+                    Mes cours
+                    <span class="pl-section-count"><?php echo (int) $total_courses; ?></span>
+                </h3>
                 <div class="pl-courses-grid">
                     <?php foreach ( $courses_data as $cd ) :
                         $course      = $cd['post'];
@@ -335,26 +341,28 @@ class PedagoLens_Teacher_Dashboard {
                         $workbench_page = get_page_by_path( 'workbench' );
                         ?>
                         <div class="pl-course-card pl-animate-in">
-                            <div class="pl-course-header">
-                                <h3><?php echo esc_html( $course->post_title ); ?></h3>
-                                <span class="pl-badge pl-type-<?php echo esc_attr( $course_type ); ?>">
-                                    <?php echo esc_html( $course_type ); ?>
-                                </span>
-                            </div>
-                            <div class="pl-course-meta">
-                                <span>&#128197; <?php echo esc_html( get_the_date( 'j M Y', $course ) ); ?></span>
-                                <span>&#128196; <?php echo count( $projects ); ?> projet(s)</span>
-                            </div>
-                            <div class="pl-course-actions">
-                                <button class="pl-btn-glow pl-btn-sm pl-btn-analyze-front"
-                                    data-course-id="<?php echo (int) $course->ID; ?>">
-                                    &#128269; Analyser
-                                </button>
-                                <button class="pl-btn-ghost pl-btn-sm pl-btn-create-project"
-                                    data-course-id="<?php echo (int) $course->ID; ?>"
-                                    data-course-title="<?php echo esc_attr( $course->post_title ); ?>">
-                                    + Projet
-                                </button>
+                            <div class="pl-course-card-body">
+                                <div class="pl-course-header">
+                                    <h3><?php echo esc_html( $course->post_title ); ?></h3>
+                                    <span class="pl-badge pl-type-<?php echo esc_attr( $course_type ); ?>">
+                                        <?php echo esc_html( $course_type ); ?>
+                                    </span>
+                                </div>
+                                <div class="pl-course-meta">
+                                    <span>&#128197; <?php echo esc_html( get_the_date( 'j M Y', $course ) ); ?></span>
+                                    <span>&#128196; <?php echo count( $projects ); ?> projet(s)</span>
+                                </div>
+                                <div class="pl-course-actions">
+                                    <button class="pl-btn-glow pl-btn-sm pl-btn-analyze-front"
+                                        data-course-id="<?php echo (int) $course->ID; ?>">
+                                        &#128269; Analyser
+                                    </button>
+                                    <button class="pl-btn-ghost pl-btn-sm pl-btn-create-project"
+                                        data-course-id="<?php echo (int) $course->ID; ?>"
+                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>">
+                                        + Projet
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Analysis result zone -->

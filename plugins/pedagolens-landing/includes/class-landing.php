@@ -237,6 +237,9 @@ class PedagoLens_Landing {
 
     <!-- ========== HERO ========== -->
     <section class="pl-hero" id="pl-hero">
+        <div class="pl-hero-orb pl-hero-orb--cyan"></div>
+        <div class="pl-hero-orb pl-hero-orb--accent"></div>
+        <div class="pl-hero-orb pl-hero-orb--small"></div>
         <div class="pl-hero-inner">
             <div class="pl-hero-badge">&#10024; Propuls&eacute; par AWS Bedrock</div>
             <h1 class="pl-hero-title">P&eacute;dagoLens</h1>
@@ -305,7 +308,7 @@ class PedagoLens_Landing {
                 <?php echo $steps_html; ?>
             </div>
             <div class="pl-score-bars pl-animate-in" style="margin-top:48px;">
-                <h3 style="text-align:center;color:#fff;margin-bottom:24px;">Exemple de scores par profil</h3>
+                <h3 class="pl-score-section-title">Exemple de scores par profil</h3>
                 <?php echo $scores_html; ?>
             </div>
         </div>

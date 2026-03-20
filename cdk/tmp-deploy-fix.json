@@ -4,8 +4,8 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe twin-admin ===' && php -l /opt/pedagolens/plugins/pedagolens-student-twin/admin/class-twin-admin.php 2>&1",
-      "echo '=== Syntaxe all ===' && for f in /opt/pedagolens/plugins/pedagolens-*/includes/*.php /opt/pedagolens/plugins/pedagolens-*/admin/*.php; do php -l \"$f\" 2>&1; done",
+      "echo '=== Syntaxe Landing ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
+      "echo '=== Syntaxe Plugin ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/pedagolens-landing.php 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }

@@ -198,3 +198,224 @@
                 } );
         } );
     }
+
+    /* =====================================================================
+       AJAX — Create Project (modal)
+       ===================================================================== */
+
+    function initProjectModal() {
+        // Open modal
+        document.addEventListener( 'click', function ( e ) {
+            const btn = e.target.closest( '.pl-btn-create-project' ) || e.target.closest( '.pl-btn-new-project' );
+            if ( ! btn ) return;
+
+            const courseId    = btn.dataset.courseId;
+            const courseTitle = btn.dataset.courseTitle || '';
+
+            // Remove existing modal
+            const existing = document.getElementById( 'pl-project-modal' );
+            if ( existing ) existing.remove();
+
+            const modal = document.createElement( 'div' );
+            modal.id = 'pl-project-modal';
+            modal.className = 'pl-modal-overlay';
+            modal.innerHTML = `
+                <div class="pl-modal-box">
+                    <button type="button" class="pl-modal-close" id="pl-modal-close-btn" aria-label="Fermer">&times;</button>
+                    <h2>Nouveau projet — ${ escHtml( courseTitle ) }</h2>
+                    <label for="pl-project-title">Titre du projet</label>
+                    <input type="text" id="pl-project-title" placeholder="Ex. Analyse du plan de cours" autocomplete="off">
+                    <label for="pl-project-type">Type</label>
+                    <select id="pl-project-type">
+                        <option value="magistral">Magistral (diapositives, plan de cours)</option>
+                        <option value="exercice">Exercice (consigne, TP)</option>
+                        <option value="evaluation">Évaluation (examen, dissertation)</option>
+                        <option value="travail_equipe">Travail d'équipe</option>
+                    </select>
+                    <div class="pl-modal-actions">
+                        <button type="button" class="pl-btn-ghost" id="pl-project-cancel">Annuler</button>
+                        <button type="button" class="pl-btn-glow" id="pl-project-create" data-course-id="${ courseId }">Créer le projet</button>
+                    </div>
+                    <p class="pl-modal-error" id="pl-project-error"></p>
+                </div>`;
+
+            document.body.appendChild( modal );
+
+            // Focus with slight delay for animation
+            setTimeout( () => {
+                document.getElementById( 'pl-project-title' )?.focus();
+            }, 100 );
+        } );
+
+        // Cancel / close button
+        document.addEventListener( 'click', function ( e ) {
+            if ( e.target.id === 'pl-project-cancel' || e.target.id === 'pl-modal-close-btn' ) {
+                closeModal();
+            }
+        } );
+
+        // Close on overlay click
+        document.addEventListener( 'click', function ( e ) {
+            if ( e.target.id === 'pl-project-modal' ) {
+                closeModal();
+            }
+        } );
+
+        // Create
+        document.addEventListener( 'click', function ( e ) {
+            if ( e.target.id !== 'pl-project-create' ) return;
+
+            const cfg = getAjaxConfig();
+            if ( ! cfg ) return;
+
+            const btn      = e.target;
+            const courseId  = btn.dataset.courseId;
+            const title    = document.getElementById( 'pl-project-title' ).value.trim();
+            const type     = document.getElementById( 'pl-project-type' ).value;
+            const errorEl  = document.getElementById( 'pl-project-error' );
+
+            if ( ! title ) {
+                errorEl.textContent = 'Le titre est requis.';
+                errorEl.style.display = 'block';
+                // Shake the input
+                const input = document.getElementById( 'pl-project-title' );
+                input.style.animation = 'pl-shake .4s ease';
+                setTimeout( () => { input.style.animation = ''; }, 400 );
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="pl-btn-spinner"></span> Création…';
+
+            const fd = new FormData();
+            fd.append( 'action', 'pl_create_project' );
+            fd.append( 'nonce', cfg.nonce );
+            fd.append( 'course_id', courseId );
+            fd.append( 'type', type );
+            fd.append( 'title', title );
+
+            fetch( cfg.url, { method: 'POST', body: fd, credentials: 'same-origin' } )
+                .then( r => r.json() )
+                .then( res => {
+                    if ( res.success ) {
+                        closeModal();
+                        window.location.href = res.data.workbench_url;
+                    } else {
+                        errorEl.textContent = res.data?.message || 'Erreur.';
+                        errorEl.style.display = 'block';
+                        btn.disabled = false;
+                        btn.textContent = 'Créer le projet';
+                    }
+                } )
+                .catch( () => {
+                    errorEl.textContent = 'Erreur réseau.';
+                    errorEl.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Créer le projet';
+                } );
+        } );
+
+        // Enter key to submit
+        document.addEventListener( 'keydown', function ( e ) {
+            if ( e.key === 'Enter' && e.target.id === 'pl-project-title' ) {
+                const createBtn = document.getElementById( 'pl-project-create' );
+                if ( createBtn && ! createBtn.disabled ) createBtn.click();
+            }
+        } );
+
+        // Escape key
+        document.addEventListener( 'keydown', function ( e ) {
+            if ( e.key === 'Escape' ) closeModal();
+        } );
+    }
+
+    function closeModal() {
+        const m = document.getElementById( 'pl-project-modal' );
+        if ( ! m ) return;
+        m.style.opacity = '0';
+        m.style.transition = 'opacity .2s ease';
+        setTimeout( () => m.remove(), 200 );
+    }
+
+    /* =====================================================================
+       Ripple Effect on Buttons
+       ===================================================================== */
+
+    function initRipple() {
+        document.addEventListener( 'click', function ( e ) {
+            const btn = e.target.closest( '.pl-btn-glow, .pl-btn-ghost' );
+            if ( ! btn ) return;
+
+            const ripple = document.createElement( 'span' );
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max( rect.width, rect.height );
+            ripple.style.cssText = `
+                position:absolute; border-radius:50%; pointer-events:none;
+                width:${size}px; height:${size}px;
+                left:${e.clientX - rect.left - size/2}px;
+                top:${e.clientY - rect.top - size/2}px;
+                background:rgba(255,255,255,.15);
+                transform:scale(0); opacity:1;
+                animation: pl-ripple-anim .5s ease-out forwards;
+            `;
+            btn.style.position = 'relative';
+            btn.style.overflow = 'hidden';
+            btn.appendChild( ripple );
+            setTimeout( () => ripple.remove(), 500 );
+        } );
+
+        // Inject ripple keyframes once
+        if ( ! document.getElementById( 'pl-ripple-style' ) ) {
+            const style = document.createElement( 'style' );
+            style.id = 'pl-ripple-style';
+            style.textContent = `
+                @keyframes pl-ripple-anim {
+                    to { transform: scale(2.5); opacity: 0; }
+                }
+                @keyframes pl-shake {
+                    0%, 100% { transform: translateX(0); }
+                    20% { transform: translateX(-6px); }
+                    40% { transform: translateX(6px); }
+                    60% { transform: translateX(-4px); }
+                    80% { transform: translateX(4px); }
+                }
+                .pl-btn-spinner {
+                    display: inline-block;
+                    width: 12px; height: 12px;
+                    border: 2px solid rgba(255,255,255,.3);
+                    border-top-color: #fff;
+                    border-radius: 50%;
+                    animation: pl-spin .6s linear infinite;
+                    vertical-align: middle;
+                }
+                @keyframes pl-spin {
+                    to { transform: rotate(360deg); }
+                }
+                .pl-btn-loading {
+                    pointer-events: none;
+                    opacity: .8;
+                }
+            `;
+            document.head.appendChild( style );
+        }
+    }
+
+    /* =====================================================================
+       Init
+       ===================================================================== */
+
+    function init() {
+        initObservers();
+        initTiltEffect();
+        initAnalyzeButtons();
+        initProjectModal();
+        initRipple();
+    }
+
+    if ( document.readyState === 'loading' ) {
+        document.addEventListener( 'DOMContentLoaded', init );
+    } else {
+        init();
+    }
+
+} )();
