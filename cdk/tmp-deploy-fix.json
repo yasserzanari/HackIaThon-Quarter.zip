@@ -3,9 +3,10 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && echo '=== PHP Syntax Check ===' && for f in /opt/pedagolens/plugins/pedagolens-*/includes/*.php /opt/pedagolens/plugins/pedagolens-*/admin/*.php /opt/pedagolens/plugins/pedagolens-*/*.php; do php -l \"$f\" 2>&1; done",
-      "echo '=== WP DEBUG LOG ===' && tail -80 /var/www/html/wp-content/debug.log 2>/dev/null || echo 'NO_DEBUG_LOG'",
-      "echo '=== APACHE ERROR ===' && tail -30 /var/log/apache2/error.log 2>/dev/null || echo 'NO_APACHE_LOG'"
+      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
+      "echo '=== Syntaxe twin-admin ===' && php -l /opt/pedagolens/plugins/pedagolens-student-twin/admin/class-twin-admin.php 2>&1",
+      "echo '=== Syntaxe all ===' && for f in /opt/pedagolens/plugins/pedagolens-*/includes/*.php /opt/pedagolens/plugins/pedagolens-*/admin/*.php; do php -l \"$f\" 2>&1; done",
+      "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }
 }

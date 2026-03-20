@@ -1,6 +1,7 @@
 /**
- * PédagoLens Teacher Dashboard — Front JS
- * Counter animations, IntersectionObserver, AJAX analyse/projet
+ * PédagoLens Teacher Dashboard — Front JS v2
+ * Counter animations, IntersectionObserver, AJAX analyse/projet,
+ * enhanced hover effects, staggered entries, smooth transitions
  */
 ( function () {
     'use strict';
@@ -18,7 +19,6 @@
     }
 
     function getAjaxConfig() {
-        // Front-end context (plFront from landing plugin)
         if ( typeof plFront !== 'undefined' ) {
             return {
                 url:   plFront.ajaxUrl,
@@ -26,7 +26,6 @@
                 i18n:  plFront.i18n || {},
             };
         }
-        // Admin context (plDashboard from dashboard plugin)
         if ( typeof plDashboard !== 'undefined' ) {
             return {
                 url:   plDashboard.ajaxUrl,
@@ -38,26 +37,45 @@
     }
 
     /* =====================================================================
-       Counter Animation
+       Counter Animation — eased with overshoot
        ===================================================================== */
 
     function animateCounter( el ) {
         const target = parseInt( el.dataset.target, 10 ) || 0;
         if ( target === 0 ) { el.textContent = '0'; return; }
 
-        const duration = 1200;
+        const duration = 1600;
         const start    = performance.now();
 
         function step( now ) {
             const elapsed  = now - start;
             const progress = Math.min( elapsed / duration, 1 );
-            // ease-out cubic
-            const ease     = 1 - Math.pow( 1 - progress, 3 );
+            // ease-out expo for snappy feel
+            const ease = progress === 1 ? 1 : 1 - Math.pow( 2, -10 * progress );
             el.textContent = Math.round( ease * target );
             if ( progress < 1 ) requestAnimationFrame( step );
         }
 
         requestAnimationFrame( step );
+    }
+
+    /* =====================================================================
+       Tilt Effect — subtle 3D on stat cards
+       ===================================================================== */
+
+    function initTiltEffect() {
+        const cards = document.querySelectorAll( '.pl-stat-card' );
+        cards.forEach( card => {
+            card.addEventListener( 'mousemove', ( e ) => {
+                const rect = card.getBoundingClientRect();
+                const x = ( e.clientX - rect.left ) / rect.width - 0.5;
+                const y = ( e.clientY - rect.top ) / rect.height - 0.5;
+                card.style.transform = `translateY(-4px) perspective(600px) rotateX(${ -y * 6 }deg) rotateY(${ x * 6 }deg)`;
+            } );
+            card.addEventListener( 'mouseleave', () => {
+                card.style.transform = '';
+            } );
+        } );
     }
 
     /* =====================================================================
@@ -75,7 +93,7 @@
                         obs.unobserve( entry.target );
                     }
                 } );
-            }, { threshold: 0.1 } );
+            }, { threshold: 0.08 } );
 
             animateEls.forEach( el => obs.observe( el ) );
         }
@@ -86,7 +104,10 @@
             const cObs = new IntersectionObserver( ( entries ) => {
                 entries.forEach( entry => {
                     if ( entry.isIntersecting ) {
-                        animateCounter( entry.target );
+                        // Stagger counter start based on card index
+                        const card = entry.target.closest( '.pl-stat-card' );
+                        const idx = card ? Array.from( card.parentNode.children ).indexOf( card ) : 0;
+                        setTimeout( () => animateCounter( entry.target ), idx * 120 );
                         cObs.unobserve( entry.target );
                     }
                 } );
@@ -108,8 +129,10 @@
                 if ( entry.isIntersecting ) {
                     const bar   = entry.target;
                     const score = parseInt( bar.dataset.score, 10 ) || 0;
-                    // Small delay for visual effect
-                    setTimeout( () => { bar.style.width = score + '%'; }, 100 );
+                    const row   = bar.closest( '.pl-score-row' );
+                    const idx   = row ? Array.from( row.parentNode.children ).indexOf( row ) : 0;
+                    // Stagger bar animations
+                    setTimeout( () => { bar.style.width = score + '%'; }, 150 + idx * 100 );
                     bObs.unobserve( bar );
                 }
             } );
@@ -136,8 +159,10 @@
             if ( ! resultEl ) return;
 
             btn.disabled = true;
-            const origText = btn.textContent;
-            btn.textContent = cfg.i18n.analyzing || 'Analyse en cours…';
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = '<span class="pl-btn-spinner"></span> ' + ( cfg.i18n.analyzing || 'Analyse…' );
+            btn.classList.add( 'pl-btn-loading' );
+
             resultEl.innerHTML = '<div class="pl-loading-pulse">' + ( cfg.i18n.analyzing || 'Analyse en cours…' ) + '</div>';
 
             const fd = new FormData();
@@ -149,7 +174,13 @@
                 .then( r => r.json() )
                 .then( res => {
                     if ( res.success && res.data?.html ) {
+                        // Fade in the result
+                        resultEl.style.opacity = '0';
                         resultEl.innerHTML = res.data.html;
+                        requestAnimationFrame( () => {
+                            resultEl.style.transition = 'opacity .5s ease';
+                            resultEl.style.opacity = '1';
+                        } );
                         // Re-animate new bars
                         animateScoreBars( resultEl );
                     } else {
@@ -162,143 +193,8 @@
                 } )
                 .finally( () => {
                     btn.disabled = false;
-                    btn.textContent = origText;
+                    btn.innerHTML = origHTML;
+                    btn.classList.remove( 'pl-btn-loading' );
                 } );
         } );
     }
-
-    /* =====================================================================
-       AJAX — Create Project (modal)
-       ===================================================================== */
-
-    function initProjectModal() {
-        // Open modal
-        document.addEventListener( 'click', function ( e ) {
-            const btn = e.target.closest( '.pl-btn-create-project' ) || e.target.closest( '.pl-btn-new-project' );
-            if ( ! btn ) return;
-
-            const courseId    = btn.dataset.courseId;
-            const courseTitle = btn.dataset.courseTitle || '';
-
-            // Remove existing modal
-            const existing = document.getElementById( 'pl-project-modal' );
-            if ( existing ) existing.remove();
-
-            const modal = document.createElement( 'div' );
-            modal.id = 'pl-project-modal';
-            modal.className = 'pl-modal-overlay';
-            modal.innerHTML = `
-                <div class="pl-modal-box">
-                    <h2>Nouveau projet — ${ escHtml( courseTitle ) }</h2>
-                    <label>Titre du projet</label>
-                    <input type="text" id="pl-project-title" placeholder="Ex. Analyse du plan de cours">
-                    <label>Type</label>
-                    <select id="pl-project-type">
-                        <option value="magistral">Magistral (diapositives, plan de cours)</option>
-                        <option value="exercice">Exercice (consigne, TP)</option>
-                        <option value="evaluation">Évaluation (examen, dissertation)</option>
-                        <option value="travail_equipe">Travail d'équipe</option>
-                    </select>
-                    <div class="pl-modal-actions">
-                        <button type="button" class="pl-btn-ghost" id="pl-project-cancel">Annuler</button>
-                        <button type="button" class="pl-btn-glow" id="pl-project-create" data-course-id="${ courseId }">Créer</button>
-                    </div>
-                    <p class="pl-modal-error" id="pl-project-error"></p>
-                </div>`;
-
-            document.body.appendChild( modal );
-            document.getElementById( 'pl-project-title' ).focus();
-        } );
-
-        // Cancel
-        document.addEventListener( 'click', function ( e ) {
-            if ( e.target.id === 'pl-project-cancel' || ( e.target.classList.contains( 'pl-modal-overlay' ) && e.target === e.currentTarget ) ) {
-                const m = document.getElementById( 'pl-project-modal' );
-                if ( m ) m.remove();
-            }
-        } );
-
-        // Close on overlay click
-        document.addEventListener( 'click', function ( e ) {
-            if ( e.target.id === 'pl-project-modal' ) {
-                e.target.remove();
-            }
-        } );
-
-        // Create
-        document.addEventListener( 'click', function ( e ) {
-            if ( e.target.id !== 'pl-project-create' ) return;
-
-            const cfg = getAjaxConfig();
-            if ( ! cfg ) return;
-
-            const btn      = e.target;
-            const courseId  = btn.dataset.courseId;
-            const title    = document.getElementById( 'pl-project-title' ).value.trim();
-            const type     = document.getElementById( 'pl-project-type' ).value;
-            const errorEl  = document.getElementById( 'pl-project-error' );
-
-            if ( ! title ) {
-                errorEl.textContent = 'Le titre est requis.';
-                errorEl.style.display = 'block';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Création…';
-
-            const fd = new FormData();
-            fd.append( 'action', 'pl_create_project' );
-            fd.append( 'nonce', cfg.nonce );
-            fd.append( 'course_id', courseId );
-            fd.append( 'type', type );
-            fd.append( 'title', title );
-
-            fetch( cfg.url, { method: 'POST', body: fd, credentials: 'same-origin' } )
-                .then( r => r.json() )
-                .then( res => {
-                    if ( res.success ) {
-                        const m = document.getElementById( 'pl-project-modal' );
-                        if ( m ) m.remove();
-                        window.location.href = res.data.workbench_url;
-                    } else {
-                        errorEl.textContent = res.data?.message || 'Erreur.';
-                        errorEl.style.display = 'block';
-                        btn.disabled = false;
-                        btn.textContent = 'Créer';
-                    }
-                } )
-                .catch( () => {
-                    errorEl.textContent = 'Erreur réseau.';
-                    errorEl.style.display = 'block';
-                    btn.disabled = false;
-                    btn.textContent = 'Créer';
-                } );
-        } );
-
-        // Escape key
-        document.addEventListener( 'keydown', function ( e ) {
-            if ( e.key === 'Escape' ) {
-                const m = document.getElementById( 'pl-project-modal' );
-                if ( m ) m.remove();
-            }
-        } );
-    }
-
-    /* =====================================================================
-       Init
-       ===================================================================== */
-
-    function init() {
-        initObservers();
-        initAnalyzeButtons();
-        initProjectModal();
-    }
-
-    if ( document.readyState === 'loading' ) {
-        document.addEventListener( 'DOMContentLoaded', init );
-    } else {
-        init();
-    }
-
-} )();

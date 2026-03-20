@@ -670,6 +670,13 @@ class PedagoLens_Landing {
             default     => '&#128100;',
         };
 
+        $role_class = match ( true ) {
+            $is_admin   => 'pl-role-admin',
+            $is_teacher => 'pl-role-teacher',
+            $is_student => 'pl-role-student',
+            default     => 'pl-role-default',
+        };
+
         $avatar_url = esc_url( get_avatar_url( $user->ID, [ 'size' => 120 ] ) );
         $logout_url = esc_url( wp_logout_url( home_url() ) );
         $profile_nonce = wp_create_nonce( 'pl_account_profile' );
@@ -685,7 +692,7 @@ class PedagoLens_Landing {
                     <img src="<?php echo $avatar_url; ?>" alt="Avatar" class="pl-account-avatar-img" />
                 </div>
                 <h2 class="pl-account-name"><?php echo esc_html( $user->display_name ); ?></h2>
-                <span class="pl-account-role-badge"><?php echo $role_icon . ' ' . $role_label; ?></span>
+                <span class="pl-account-role-badge <?php echo $role_class; ?>"><?php echo $role_icon . ' ' . $role_label; ?></span>
                 <p class="pl-account-email-display"><?php echo esc_html( $user->user_email ); ?></p>
                 <a href="<?php echo $logout_url; ?>" class="pl-btn pl-btn-outline pl-btn-sm">D&eacute;connexion</a>
             </div>
