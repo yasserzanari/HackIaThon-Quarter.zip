@@ -157,7 +157,7 @@ class PedagoLens_Landing {
             $quote  = esc_html( $t['quote']  ?? '' );
             $author = esc_html( $t['author'] ?? '' );
             $role   = esc_html( $t['role']   ?? '' );
-            $items .= "<blockquote class=\"pl-testimonial\"><p>"{$quote}"</p><footer><strong>{$author}</strong><span>{$role}</span></footer></blockquote>";
+            $items .= "<blockquote class=\"pl-testimonial\"><p>&ldquo;{$quote}&rdquo;</p><footer><strong>{$author}</strong><span>{$role}</span></footer></blockquote>";
         }
 
         return <<<HTML
