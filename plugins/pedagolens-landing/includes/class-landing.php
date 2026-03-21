@@ -71,6 +71,11 @@ class PedagoLens_Landing {
             add_action( 'wp_ajax_pl_save_student_difficulties', [ self::class, 'ajax_save_student_difficulties' ] );
         }
 
+        // AJAX front-end pour chat Léa (API Bridge → Bedrock ou mock)
+        if ( ! has_action( 'wp_ajax_pl_lea_chat' ) ) {
+            add_action( 'wp_ajax_pl_lea_chat', [ self::class, 'ajax_lea_chat' ] );
+        }
+
         // AJAX front-end pour teacher dashboard
         if ( ! has_action( 'wp_ajax_pl_analyze_course' ) ) {
             add_action( 'wp_ajax_pl_analyze_course',    [ 'PedagoLens_Dashboard_Admin', 'ajax_analyze' ] );
@@ -1010,11 +1015,14 @@ class PedagoLens_Landing {
 
             // ── Jumeau IA full-screen view (?view=twin) ──
             if ( isset( $_GET['view'] ) && $_GET['view'] === 'twin' ) {
-                $dash_url = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-                $avatar_url = get_avatar_url( $user->ID, [ 'size' => 40 ] );
-                $display    = esc_html( $user->display_name );
+                $dash_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+                $history_url = esc_url( self::page_url( 'historique', '' ) );
+                $account_url = esc_url( self::page_url( 'compte', '' ) );
+                $twin_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) . '?view=twin' );
+                $avatar_url  = get_avatar_url( $user->ID, [ 'size' => 40 ] );
+                $display     = esc_html( $user->display_name );
 
-                // Get courses for the dropdown
+                // Get courses for the dropdown + course panel
                 $courses = get_posts( [
                     'post_type'      => 'pl_course',
                     'posts_per_page' => -1,
@@ -1029,10 +1037,6 @@ class PedagoLens_Landing {
             <a href="<?php echo $dash_url; ?>" class="pl-twin-logo-link">
                 <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="P&eacute;dagoLens" class="pl-logo-img pl-logo-img--twin" />
             </a>
-            <a href="<?php echo $dash_url; ?>" class="pl-twin-back-btn">
-                <span class="material-symbols-outlined">arrow_back</span>
-                <span class="pl-twin-back-label">Dashboard</span>
-            </a>
             <div class="pl-twin-header-sep"></div>
             <h1 class="pl-twin-header-title">Jumeau IA &mdash; L&eacute;a</h1>
         </div>
@@ -1045,24 +1049,86 @@ class PedagoLens_Landing {
             </select>
         </div>
         <div class="pl-twin-header-right">
+            <button class="pl-twin-mobile-courses-btn" id="pl-twin-mobile-courses-btn" title="Mes cours" aria-label="Afficher les cours">
+                <span class="material-symbols-outlined">menu_book</span>
+            </button>
             <img src="<?php echo esc_url( $avatar_url ); ?>" alt="" class="pl-twin-avatar" />
             <span class="pl-twin-username"><?php echo $display; ?></span>
         </div>
     </header>
 
-    <div class="pl-twin-chat-area">
-        <div class="pl-twin-messages" id="pl-lea-messages">
-            <div class="pl-lea-msg pl-lea-msg--bot">
-                Bonjour <?php echo $first_name; ?> ! &#128075; Je suis L&eacute;a, ta tutrice IA. Je suis l&agrave; pour t'aider &agrave; comprendre tes cours &mdash; pas pour te donner les r&eacute;ponses, mais pour t'accompagner dans ta r&eacute;flexion. Choisis un cours ci-dessus ou pose-moi une question g&eacute;n&eacute;rale !
+    <div class="pl-twin-body-layout">
+        <!-- Mini sidebar (icon bar) -->
+        <nav class="pl-twin-mini-sidebar" aria-label="Navigation rapide">
+            <div class="pl-twin-mini-sidebar-top">
+                <a href="<?php echo $dash_url; ?>" class="pl-twin-mini-icon" data-tooltip="Dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                </a>
+                <a href="<?php echo $twin_url; ?>" class="pl-twin-mini-icon pl-twin-mini-icon--active" data-tooltip="Jumeau IA">
+                    <span class="material-symbols-outlined">psychology</span>
+                </a>
+                <a href="<?php echo $history_url; ?>" class="pl-twin-mini-icon" data-tooltip="Historique">
+                    <span class="material-symbols-outlined">history</span>
+                </a>
+                <a href="<?php echo $account_url; ?>" class="pl-twin-mini-icon" data-tooltip="Mon compte">
+                    <span class="material-symbols-outlined">person</span>
+                </a>
             </div>
-        </div>
+        </nav>
 
-        <div class="pl-twin-input-area">
-            <div class="pl-twin-input-wrap">
-                <textarea class="pl-twin-input" id="pl-lea-input" placeholder="Pose ta question &agrave; L&eacute;a..." rows="1"></textarea>
-                <button class="pl-twin-send-btn" id="pl-lea-send" title="Envoyer">
-                    <span class="material-symbols-outlined">send</span>
+        <!-- Course selection panel -->
+        <aside class="pl-twin-course-panel" id="pl-twin-course-panel">
+            <div class="pl-twin-course-panel-header">
+                <div class="pl-twin-course-panel-title">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    Mes cours
+                </div>
+                <button class="pl-twin-course-panel-toggle" id="pl-twin-course-panel-toggle" title="Masquer le panneau" aria-label="Masquer le panneau de cours">
+                    <span class="material-symbols-outlined">chevron_left</span>
                 </button>
+            </div>
+            <div class="pl-twin-course-list" id="pl-twin-course-list">
+                <button class="pl-twin-course-card pl-twin-course-card--active" data-course-id="0">
+                    <span class="pl-twin-course-card-icon material-symbols-outlined">public</span>
+                    <div class="pl-twin-course-card-info">
+                        <span class="pl-twin-course-card-name">G&eacute;n&eacute;ral (tous les cours)</span>
+                        <span class="pl-twin-course-card-badge">Tous</span>
+                    </div>
+                </button>
+                <?php foreach ( $courses as $c ) :
+                    $course_type = get_post_meta( $c->ID, '_pl_course_type', true ) ?: 'Cours';
+                ?>
+                <button class="pl-twin-course-card" data-course-id="<?php echo esc_attr( $c->ID ); ?>">
+                    <span class="pl-twin-course-card-icon material-symbols-outlined">school</span>
+                    <div class="pl-twin-course-card-info">
+                        <span class="pl-twin-course-card-name"><?php echo esc_html( $c->post_title ); ?></span>
+                        <span class="pl-twin-course-card-badge"><?php echo esc_html( $course_type ); ?></span>
+                    </div>
+                </button>
+                <?php endforeach; ?>
+            </div>
+        </aside>
+
+        <!-- Collapsed toggle (visible when panel is hidden) -->
+        <button class="pl-twin-course-panel-expand" id="pl-twin-course-panel-expand" title="Afficher les cours" aria-label="Afficher le panneau de cours" style="display:none;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+
+        <!-- Chat area -->
+        <div class="pl-twin-chat-area">
+            <div class="pl-twin-messages" id="pl-lea-messages">
+                <div class="pl-lea-msg pl-lea-msg--bot">
+                    Bonjour <?php echo $first_name; ?> ! &#128075; Je suis L&eacute;a, ta tutrice IA. Je suis l&agrave; pour t'aider &agrave; comprendre tes cours &mdash; pas pour te donner les r&eacute;ponses, mais pour t'accompagner dans ta r&eacute;flexion. Choisis un cours &agrave; gauche ou pose-moi une question g&eacute;n&eacute;rale !
+                </div>
+            </div>
+
+            <div class="pl-twin-input-area">
+                <div class="pl-twin-input-wrap">
+                    <textarea class="pl-twin-input" id="pl-lea-input" placeholder="Pose ta question &agrave; L&eacute;a..." rows="1"></textarea>
+                    <button class="pl-twin-send-btn" id="pl-lea-send" title="Envoyer">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3280,6 +3346,72 @@ class PedagoLens_Landing {
             'message'    => 'Séance créée avec succès !',
             'project_id' => $post_id,
         ] );
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Chat Léa (API Bridge → Bedrock ou mock)
+    // -------------------------------------------------------------------------
+
+    public static function ajax_lea_chat(): void {
+        check_ajax_referer( 'pl_nonce', '_wpnonce' );
+
+        if ( ! is_user_logged_in() ) {
+            wp_send_json_error( [ 'message' => 'Vous devez être connecté.' ] );
+        }
+
+        $message   = sanitize_text_field( wp_unslash( $_POST['message'] ?? '' ) );
+        $course_id = (int) ( $_POST['course_id'] ?? 0 );
+
+        if ( empty( $message ) ) {
+            wp_send_json_error( [ 'message' => 'Message vide.' ] );
+        }
+
+        $user       = wp_get_current_user();
+        $first_name = $user->first_name ?: $user->display_name;
+
+        // Build course context for the prompt
+        $course_context = 'Général';
+        if ( $course_id > 0 ) {
+            $course_post = get_post( $course_id );
+            if ( $course_post && $course_post->post_type === 'pl_course' ) {
+                $course_context = $course_post->post_title;
+            }
+        }
+
+        $params = [
+            'message'        => $message,
+            'course_context' => $course_context,
+            'student_name'   => $first_name,
+            'course_id'      => $course_id,
+        ];
+
+        // Check if API Bridge is available
+        if ( ! class_exists( 'PedagoLens_API_Bridge' ) ) {
+            wp_send_json_error( [ 'message' => 'Le module API Bridge n\'est pas activé.' ] );
+        }
+
+        try {
+            $result = PedagoLens_API_Bridge::invoke( 'student_twin_response', $params );
+
+            if ( ! empty( $result['success'] ) ) {
+                // The mock/bedrock returns 'reply' field
+                $response_text = $result['reply'] ?? $result['response'] ?? '';
+
+                if ( empty( $response_text ) ) {
+                    $response_text = 'Je suis là pour t\'aider ! Peux-tu reformuler ta question ?';
+                }
+
+                wp_send_json_success( [ 'response' => $response_text ] );
+            } else {
+                // API Bridge returned an error — fallback with generic response
+                $fallback = 'Désolée, je rencontre un petit souci technique. Réessaie dans un instant ! 😊';
+                wp_send_json_success( [ 'response' => $fallback ] );
+            }
+        } catch ( \Throwable $e ) {
+            wp_send_json_success( [
+                'response' => 'Oups, une erreur est survenue. Réessaie dans quelques secondes !',
+            ] );
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -88,20 +88,51 @@ class PedagoLens_Profile_Manager {
 
         $now = gmdate( 'c' );
 
+        // Map system_prompt_template → system_prompt si system_prompt est vide/absent
+        $system_prompt = $profile_data['system_prompt'] ?? '';
+        if ( empty( $system_prompt ) && ! empty( $profile_data['system_prompt_template'] ) ) {
+            $system_prompt = $profile_data['system_prompt_template'];
+        }
+
+        // Build references text from array if present and resources is empty
+        $resources = $profile_data['resources'] ?? '';
+        if ( empty( $resources ) && ! empty( $profile_data['references'] ) && is_array( $profile_data['references'] ) ) {
+            $resources = implode( "\n", $profile_data['references'] );
+        }
+
         $profile = [
             'slug'             => $slug,
             'name'             => sanitize_text_field( $profile_data['name'] ?? $slug ),
-            'description'      => sanitize_text_field( $profile_data['description'] ?? '' ),
+            'description'      => wp_kses_post( $profile_data['description'] ?? '' ),
             'is_active'        => (bool) ( $profile_data['is_active'] ?? true ),
             'sort_order'       => (int) ( $profile_data['sort_order'] ?? count( $index ) + 1 ),
-            'system_prompt'    => sanitize_textarea_field( $profile_data['system_prompt'] ?? '' ),
-            'resources'        => sanitize_textarea_field( $profile_data['resources'] ?? '' ),
+            'system_prompt'    => sanitize_textarea_field( $system_prompt ),
+            'resources'        => sanitize_textarea_field( $resources ),
             'scoring_grid'     => self::sanitize_scoring_grid( $profile_data['scoring_grid'] ?? self::default_scoring_grid() ),
             'inject_resources' => (bool) ( $profile_data['inject_resources'] ?? true ),
             'inject_scoring'   => (bool) ( $profile_data['inject_scoring'] ?? true ),
             'created_at'       => $existing['created_at'] ?? $now,
             'updated_at'       => $now,
         ];
+
+        // Store rich/extended fields as-is (read-only scientific data)
+        $extended_keys = [
+            'scientific_basis',
+            'cognitive_characteristics',
+            'learning_challenges',
+            'pedagogical_recommendations',
+            'risk_indicators',
+            'ai_analysis_criteria',
+            'scoring_weights',
+            'references',
+            'system_prompt_template',
+        ];
+
+        foreach ( $extended_keys as $key ) {
+            if ( isset( $profile_data[ $key ] ) ) {
+                $profile[ $key ] = $profile_data[ $key ];
+            }
+        }
 
         update_option( self::OPTION_PREFIX . $slug, $profile );
 
@@ -181,6 +212,14 @@ class PedagoLens_Profile_Manager {
             return; // Déjà seedé
         }
 
+        // Try to import from rich JSON files first
+        $imported = self::import_from_json_files();
+        if ( $imported > 0 ) {
+            PedagoLens_Core::log( 'info', "Profile_Manager::seed_defaults — {$imported} profils importés depuis JSON." );
+            return;
+        }
+
+        // Fallback to minimal hardcoded defaults
         $defaults = [
             [ 'slug' => 'concentration_tdah',  'name' => 'TDAH / Concentration',       'description' => 'Étudiant avec TDAH ou difficultés de concentration',                    'sort_order' => 1 ],
             [ 'slug' => 'surcharge_cognitive',  'name' => 'Surcharge cognitive',         'description' => 'Étudiant en surcharge cognitive',                                       'sort_order' => 2 ],
@@ -199,12 +238,76 @@ class PedagoLens_Profile_Manager {
         }
     }
 
+    /**
+     * Import profiles from JSON files in the profiles/ directory.
+     * Returns the number of profiles successfully imported.
+     */
+    public static function import_from_json_files(): int {
+        $profiles_dir = PEDAGOLENS_PLUGIN_DIR . 'profiles/';
+        $index_file   = $profiles_dir . 'index.json';
+
+        if ( ! file_exists( $index_file ) ) {
+            return 0;
+        }
+
+        $index_json = file_get_contents( $index_file );
+        $index_data = json_decode( $index_json, true );
+
+        if ( ! is_array( $index_data ) || empty( $index_data['profiles'] ) ) {
+            return 0;
+        }
+
+        $imported = 0;
+        $order    = 1;
+
+        foreach ( $index_data['profiles'] as $slug ) {
+            $file = $profiles_dir . $slug . '.json';
+            if ( ! file_exists( $file ) ) {
+                PedagoLens_Core::log( 'warning', "Profile_Manager::import_from_json_files — fichier manquant : {$file}" );
+                continue;
+            }
+
+            $json = file_get_contents( $file );
+            $data = json_decode( $json, true );
+
+            if ( ! is_array( $data ) || empty( $data['slug'] ) ) {
+                PedagoLens_Core::log( 'warning', "Profile_Manager::import_from_json_files — JSON invalide : {$file}" );
+                continue;
+            }
+
+            // Set sort_order from index position if not present
+            if ( ! isset( $data['sort_order'] ) ) {
+                $data['sort_order'] = $order;
+            }
+
+            // Ensure is_active defaults to true
+            if ( ! isset( $data['is_active'] ) ) {
+                $data['is_active'] = true;
+            }
+
+            // Skip if already exists (don't overwrite user edits)
+            $existing = self::get( $data['slug'] );
+            if ( $existing !== null ) {
+                $order++;
+                continue;
+            }
+
+            if ( self::save( $data ) ) {
+                $imported++;
+            }
+
+            $order++;
+        }
+
+        return $imported;
+    }
+
     // -------------------------------------------------------------------------
     // Helpers privés
     // -------------------------------------------------------------------------
 
     private static function is_valid_slug( string $slug ): bool {
-        return (bool) preg_match( '/^[a-z][a-z0-9\-]*$/', $slug );
+        return (bool) preg_match( '/^[a-z][a-z0-9_\-]*$/', $slug );
     }
 
     private static function is_slug_used_in_analyses( string $slug ): bool {

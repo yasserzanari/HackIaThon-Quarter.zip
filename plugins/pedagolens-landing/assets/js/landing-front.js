@@ -2126,16 +2126,50 @@
             messagesEl.appendChild(typingEl);
             messagesEl.scrollTop = messagesEl.scrollHeight;
 
-            // Simulate AI response (mock mode)
-            var delay = 1000 + Math.random() * 2000;
-            setTimeout(function() {
-                messagesEl.removeChild(typingEl);
-                isTyping = false;
-                sendBtn.disabled = false;
+            // Course select: twin view or dashboard
+            var courseSelect = document.getElementById('pl-twin-course-select');
+            var courseId = courseSelect ? courseSelect.value : 0;
 
-                var response = generateResponse(text, currentSlug);
-                addMessage('bot', response);
-            }, delay);
+            // Call backend API Bridge (Bedrock or mock PHP)
+            if (window.plFront && plFront.ajaxUrl) {
+                jQuery.ajax({
+                    url: plFront.ajaxUrl,
+                    method: 'POST',
+                    data: {
+                        action: 'pl_lea_chat',
+                        _wpnonce: plFront.nonce,
+                        message: text,
+                        course_id: courseId
+                    },
+                    success: function(res) {
+                        if (typingEl.parentNode) messagesEl.removeChild(typingEl);
+                        isTyping = false;
+                        sendBtn.disabled = false;
+                        if (res.success && res.data && res.data.response) {
+                            addMessage('bot', res.data.response);
+                        } else {
+                            // Fallback to JS mock if backend fails
+                            addMessage('bot', generateResponse(text, currentSlug));
+                        }
+                    },
+                    error: function() {
+                        if (typingEl.parentNode) messagesEl.removeChild(typingEl);
+                        isTyping = false;
+                        sendBtn.disabled = false;
+                        // Fallback to JS mock on network error
+                        addMessage('bot', generateResponse(text, currentSlug));
+                    }
+                });
+            } else {
+                // No plFront available — pure JS fallback
+                var delay = 1000 + Math.random() * 2000;
+                setTimeout(function() {
+                    if (typingEl.parentNode) messagesEl.removeChild(typingEl);
+                    isTyping = false;
+                    sendBtn.disabled = false;
+                    addMessage('bot', generateResponse(text, currentSlug));
+                }, delay);
+            }
         }
 
         sendBtn.addEventListener('click', sendMessage);
@@ -2190,5 +2224,120 @@
         document.addEventListener('DOMContentLoaded', initLeaChat);
     } else {
         initLeaChat();
+    }
+})();
+
+/* ============================================================
+   Twin View — Course Panel Toggle & Sync
+   ============================================================ */
+(function() {
+    'use strict';
+
+    function initTwinCoursePanel() {
+        var panel       = document.getElementById('pl-twin-course-panel');
+        var toggleBtn   = document.getElementById('pl-twin-course-panel-toggle');
+        var expandBtn   = document.getElementById('pl-twin-course-panel-expand');
+        var courseList   = document.getElementById('pl-twin-course-list');
+        var courseSelect = document.getElementById('pl-twin-course-select');
+        var mobileBtn   = document.getElementById('pl-twin-mobile-courses-btn');
+
+        if (!panel || !courseList) return;
+
+        var isMobile = window.innerWidth <= 768;
+
+        // --- Desktop: toggle panel visibility ---
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                panel.classList.add('pl-twin-course-panel--hidden');
+                if (expandBtn) expandBtn.style.display = 'flex';
+            });
+        }
+
+        if (expandBtn) {
+            expandBtn.addEventListener('click', function() {
+                panel.classList.remove('pl-twin-course-panel--hidden');
+                expandBtn.style.display = 'none';
+            });
+        }
+
+        // --- Mobile: overlay panel ---
+        var overlay = document.createElement('div');
+        overlay.className = 'pl-twin-course-overlay';
+        overlay.id = 'pl-twin-course-overlay';
+        document.body.appendChild(overlay);
+
+        function openMobilePanel() {
+            panel.classList.add('pl-twin-course-panel--mobile-open');
+            overlay.classList.add('pl-twin-course-overlay--visible');
+        }
+        function closeMobilePanel() {
+            panel.classList.remove('pl-twin-course-panel--mobile-open');
+            overlay.classList.remove('pl-twin-course-overlay--visible');
+        }
+
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', openMobilePanel);
+        }
+        overlay.addEventListener('click', closeMobilePanel);
+
+        // Close mobile panel on toggle btn too
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    closeMobilePanel();
+                }
+            });
+        }
+
+        // --- Course card click → sync dropdown + highlight ---
+        courseList.addEventListener('click', function(e) {
+            var card = e.target.closest('.pl-twin-course-card');
+            if (!card) return;
+
+            var courseId = card.getAttribute('data-course-id');
+
+            // Update active state on cards
+            courseList.querySelectorAll('.pl-twin-course-card').forEach(function(c) {
+                c.classList.remove('pl-twin-course-card--active');
+            });
+            card.classList.add('pl-twin-course-card--active');
+
+            // Sync the header dropdown
+            if (courseSelect) {
+                courseSelect.value = courseId;
+                // Trigger change event for any listeners
+                var evt = new Event('change', { bubbles: true });
+                courseSelect.dispatchEvent(evt);
+            }
+
+            // Close mobile panel after selection
+            if (window.innerWidth <= 768) {
+                closeMobilePanel();
+            }
+        });
+
+        // --- Dropdown change → sync course cards ---
+        if (courseSelect) {
+            courseSelect.addEventListener('change', function() {
+                var val = this.value;
+                courseList.querySelectorAll('.pl-twin-course-card').forEach(function(c) {
+                    c.classList.toggle('pl-twin-course-card--active', c.getAttribute('data-course-id') === val);
+                });
+            });
+        }
+
+        // --- Handle resize ---
+        window.addEventListener('resize', function() {
+            var nowMobile = window.innerWidth <= 768;
+            if (!nowMobile) {
+                closeMobilePanel();
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTwinCoursePanel);
+    } else {
+        initTwinCoursePanel();
     }
 })();
