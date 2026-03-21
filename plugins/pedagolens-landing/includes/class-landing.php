@@ -898,19 +898,24 @@ class PedagoLens_Landing {
             <div class="pl-courses-page-header pl-animate-in">
                 <div>
                     <span class="pl-section-tag">📚 Mes cours</span>
-                    <h1 class="pl-courses-main-title">Cours &amp; Projets</h1>
-                    <p class="pl-courses-subtitle">Gérez vos cours, créez des projets et analysez-les avec l'IA.</p>
+                    <h1 class="pl-courses-main-title">Cours &amp; S&eacute;ances</h1>
+                    <p class="pl-courses-subtitle">G&eacute;rez vos cours, cr&eacute;ez des s&eacute;ances et analysez-les avec l'IA.</p>
                 </div>
-                <button data-pl-modal-open="create-course" class="pl-btn pl-btn--primary pl-btn--icon">
+                <button data-pl-modal-open="create-course" class="pl-btn pl-btn--primary pl-btn--icon" style="display:none;">
                     <span class="material-symbols-outlined">add</span>
-                    Créer un cours
+                    Cr&eacute;er un cours
                 </button>
             </div>
 
             <?php if ( empty( $courses ) ) : ?>
-                <div class="pl-wb-empty pl-animate-in">
-                    <div class="pl-wb-empty-icon">📚</div>
-                    <p>Aucun cours disponible. Créez-en un depuis le tableau de bord enseignant.</p>
+                <div class="pl-empty-cta pl-animate-in">
+                    <div class="pl-empty-cta-icon"><span class="material-symbols-outlined">add</span></div>
+                    <h3>Cr&eacute;ez votre premier cours</h3>
+                    <p>Ajoutez un cours pour commencer &agrave; organiser vos s&eacute;ances et lancer des analyses IA.</p>
+                    <button data-pl-modal-open="create-course" class="pl-btn pl-btn--primary pl-btn--icon">
+                        <span class="material-symbols-outlined">add</span>
+                        Cr&eacute;er un cours
+                    </button>
                 </div>
             <?php else : ?>
                 <div class="pl-courses-grid">
@@ -947,7 +952,7 @@ class PedagoLens_Landing {
                                     </div>
                                 </div>
                                 <div class="pl-course-card-meta">
-                                    <span>📁 <?php echo $nb_projects; ?> projet(s)</span>
+                                    <span>📁 <?php echo $nb_projects; ?> s&eacute;ance(s)</span>
                                     <?php if ( $last_analysis ) : ?>
                                         <span>🔍 Dernière analyse : <?php echo esc_html( $last_analysis ); ?></span>
                                     <?php else : ?>
@@ -956,13 +961,13 @@ class PedagoLens_Landing {
                                 </div>
                                 <div class="pl-course-card-actions">
                                     <a href="?course_id=<?php echo (int) $course->ID; ?>" class="pl-wb-btn pl-wb-btn-sm <?php echo $is_open ? 'pl-wb-btn-outline' : 'pl-wb-btn-accent'; ?>">
-                                        <?php echo $is_open ? '✕ Fermer' : '📂 Voir les projets'; ?>
+                                        <?php echo $is_open ? '✕ Fermer' : '📂 Voir les s&eacute;ances'; ?>
                                     </a>
                                     <?php if ( $is_open ) : ?>
                                         <button class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-glow pl-btn-create-project"
                                             data-course-id="<?php echo (int) $course->ID; ?>"
                                             data-course-title="<?php echo esc_attr( $course->post_title ); ?>">
-                                            + Créer un projet
+                                            + Cr&eacute;er une s&eacute;ance
                                         </button>
                                     <?php endif; ?>
                                     <?php if ( ! empty( $analysis_posts ) ) : ?>
@@ -992,7 +997,7 @@ class PedagoLens_Landing {
                             <?php if ( $is_open ) : ?>
                                 <div class="pl-projects-panel-front">
                                     <?php if ( empty( $projects ) ) : ?>
-                                        <p class="pl-wb-sidebar-empty">Aucun projet pour ce cours. Créez-en un !</p>
+                                        <p class="pl-wb-sidebar-empty">Aucune s&eacute;ance pour ce cours. Cr&eacute;ez-en une !</p>
                                     <?php else : ?>
                                         <div class="pl-projects-grid-front">
                                             <?php foreach ( $projects as $project ) :
@@ -1016,6 +1021,12 @@ class PedagoLens_Landing {
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
+                    <!-- Create course card at end of grid -->
+                    <button class="pl-create-course-card pl-animate-in" data-pl-modal-open="create-course">
+                        <div class="pl-create-course-card-icon"><span class="material-symbols-outlined">add</span></div>
+                        <span class="pl-create-course-card-label">Cr&eacute;er un cours</span>
+                        <span class="pl-create-course-card-sub">Ajouter un nouveau cours</span>
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -1128,7 +1139,7 @@ class PedagoLens_Landing {
           <div class="pl-modal-backdrop"></div>
           <div class="pl-modal-content">
             <div class="pl-modal-header">
-              <h2>Créer un nouveau projet</h2>
+              <h2>Cr&eacute;er une nouvelle s&eacute;ance</h2>
               <button data-pl-modal-close class="pl-modal-close-btn"><span class="material-symbols-outlined">close</span></button>
             </div>
             <form id="pl-create-project-form" class="pl-modal-form" enctype="multipart/form-data">
@@ -1137,11 +1148,11 @@ class PedagoLens_Landing {
                 📚 Cours : <span id="pl-project-course-label"></span>
               </div>
               <div class="pl-form-group">
-                <label for="pl-project-title">Titre du projet *</label>
-                <input type="text" id="pl-project-title" name="title" required placeholder="Ex: Chapitre 3 — Les fonctions" class="pl-form-input" />
+                <label for="pl-project-title">Titre de la s&eacute;ance *</label>
+                <input type="text" id="pl-project-title" name="title" required placeholder="Ex: Semaine 3 — Les fonctions" class="pl-form-input" />
               </div>
               <div class="pl-form-group">
-                <label for="pl-project-type">Type de projet</label>
+                <label for="pl-project-type">Type de s&eacute;ance</label>
                 <select id="pl-project-type" name="project_type" class="pl-form-input">
                   <?php foreach ( $project_type_options as $val => $lbl ) : ?>
                     <option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( $lbl ); ?></option>
@@ -1150,7 +1161,7 @@ class PedagoLens_Landing {
               </div>
               <div class="pl-form-group">
                 <label for="pl-project-desc">Description</label>
-                <textarea id="pl-project-desc" name="description" rows="3" placeholder="Description du projet..." class="pl-form-input"></textarea>
+                <textarea id="pl-project-desc" name="description" rows="3" placeholder="Description de la s&eacute;ance..." class="pl-form-input"></textarea>
               </div>
               <div class="pl-form-group">
                 <label>Fichier(s)</label>
@@ -1167,7 +1178,7 @@ class PedagoLens_Landing {
               <div class="pl-modal-footer">
                 <button type="button" data-pl-modal-close class="pl-btn pl-btn--ghost">Annuler</button>
                 <button type="submit" class="pl-btn pl-btn--primary pl-btn-submit">
-                  <span class="pl-btn-text">Créer le projet</span>
+                  <span class="pl-btn-text">Cr&eacute;er la s&eacute;ance</span>
                   <span class="pl-btn-loader" style="display:none;"><span class="material-symbols-outlined pl-spin">progress_activity</span></span>
                 </button>
               </div>
@@ -1827,9 +1838,11 @@ class PedagoLens_Landing {
                 [ 'slug' => 'dashboard',     'icon' => 'dashboard',        'label' => 'Dashboard',              'url' => $url_dash_teacher ],
                 [ 'slug' => 'courses',        'icon' => 'school',           'label' => 'Analyses IA',            'url' => $url_courses ],
                 [ 'slug' => 'workbench',      'icon' => 'build',            'label' => 'Atelier',                'url' => $url_workbench ],
+                [ 'slug' => 'lea',            'icon' => 'psychology',       'label' => 'Agent IA L&eacute;a',    'url' => $url_dash_student ],
                 [ 'slug' => 'history',        'icon' => 'history',          'label' => 'Historique',             'url' => $url_history ],
                 [ 'slug' => 'settings',       'icon' => 'settings',         'label' => 'Param&egrave;tres',      'url' => $url_settings ],
                 [ 'slug' => 'institutional',  'icon' => 'account_balance',  'label' => 'Lumi&egrave;re institutionnelle', 'url' => $url_institutional ],
+                [ 'slug' => 'account',        'icon' => 'person',           'label' => 'Compte',                 'url' => $url_account ],
             ];
         } else {
             $nav = [
@@ -1917,21 +1930,20 @@ class PedagoLens_Landing {
         <section class="pl-st-login-branding">
             <div class="pl-st-login-branding-content">
                 <div class="pl-st-login-brand-logo">
-                    <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--login" />
-                    <span class="pl-st-login-brand-name">P&eacute;dagoLens</span>
+                    <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--login-hero" />
                 </div>
                 <h1 class="pl-st-login-brand-title">
-                    L'intelligence <span class="pl-st-login-brand-accent">&eacute;ditoriale</span> au service de l'&eacute;ducation.
+                    Votre assistant <span class="pl-st-login-brand-accent">p&eacute;dagogique</span> propuls&eacute; par l'IA.
                 </h1>
-                <p class="pl-st-login-brand-desc">Analysez les parcours p&eacute;dagogiques avec la pr&eacute;cision d'un curateur et la puissance de l'IA.</p>
+                <p class="pl-st-login-brand-desc">Optimisez vos cours, identifiez les difficult&eacute;s &eacute;tudiantes et g&eacute;n&eacute;rez des analyses personnalis&eacute;es en quelques clics.</p>
                 <div class="pl-st-login-brand-widgets">
                     <div class="pl-st-login-widget">
-                        <span class="material-symbols-outlined">psychology</span>
-                        <div><strong>Analyses IA</strong><span>Rapports pr&eacute;dictifs automatis&eacute;s.</span></div>
+                        <span class="material-symbols-outlined">auto_awesome</span>
+                        <div><strong>Analyse de contenu</strong><span>D&eacute;tection automatique des lacunes p&eacute;dagogiques.</span></div>
                     </div>
                     <div class="pl-st-login-widget">
-                        <span class="material-symbols-outlined">monitoring</span>
-                        <div><strong>Progression</strong><span>+24% d'engagement moyen.</span></div>
+                        <span class="material-symbols-outlined">psychology</span>
+                        <div><strong>Jumeau num&eacute;rique</strong><span>Un agent IA qui simule le profil de chaque &eacute;tudiant.</span></div>
                     </div>
                 </div>
             </div>

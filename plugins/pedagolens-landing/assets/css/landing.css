@@ -5590,3 +5590,103 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
     padding: 1rem;
   }
 }
+
+/* ── Login hero logo (larger, no brand name) ──────────────── */
+.pl-logo-img--login-hero {
+  height: 96px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Create course card in grid ───────────────────────────── */
+.pl-create-course-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 220px;
+  border: 2px dashed rgba(0, 35, 111, 0.2);
+  border-radius: var(--pl-radius-lg, 16px);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 2rem;
+  text-align: center;
+}
+.pl-create-course-card:hover {
+  border-color: var(--pl-secondary);
+  background: rgba(113, 42, 226, 0.04);
+  box-shadow: 0 0 24px rgba(113, 42, 226, 0.12);
+  transform: translateY(-2px);
+}
+.pl-create-course-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pl-primary), var(--pl-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 2rem;
+  transition: transform 0.3s ease;
+}
+.pl-create-course-card:hover .pl-create-course-card-icon {
+  transform: rotate(90deg) scale(1.1);
+}
+.pl-create-course-card-label {
+  font-family: var(--pl-font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--pl-primary);
+}
+.pl-create-course-card-sub {
+  font-size: 0.85rem;
+  color: var(--pl-text-muted);
+}
+
+/* ── Empty state CTA (no courses) ─────────────────────────── */
+.pl-empty-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.pl-empty-cta-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pl-primary), var(--pl-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 2.5rem;
+  animation: pl-pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pl-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(113, 42, 226, 0.3); }
+  50% { box-shadow: 0 0 0 16px rgba(113, 42, 226, 0); }
+}
+.pl-empty-cta h3 {
+  font-family: var(--pl-font-heading);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--pl-primary);
+  margin: 0;
+}
+.pl-empty-cta p {
+  color: var(--pl-text-muted);
+  max-width: 400px;
+  margin: 0;
+}
+.pl-empty-cta .pl-btn {
+  margin-top: 0.5rem;
+}
