@@ -1924,6 +1924,18 @@ class PedagoLens_Landing {
         ob_start();
         ?>
 <div class="pl-st-login-page">
+    <!-- ========== LOGIN HEADER ========== -->
+    <header class="pl-login-header">
+        <a href="<?php echo esc_url( home_url('/') ); ?>" class="pl-login-header-logo">
+            <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--login-header" />
+        </a>
+        <nav class="pl-login-header-nav">
+            <a href="<?php echo esc_url( home_url('/') ); ?>">Accueil</a>
+            <a href="<?php echo esc_url( home_url('/#plx-features') ); ?>">Fonctionnalit&eacute;s</a>
+            <a href="<?php echo esc_url( home_url('/#plx-how') ); ?>">Comment &ccedil;a marche</a>
+        </nav>
+    </header>
+
     <div class="pl-st-login-layout">
 
         <!-- ========== LEFT: BRANDING ========== -->
@@ -1953,10 +1965,6 @@ class PedagoLens_Landing {
             </div>
             <div class="pl-st-login-branding-blur pl-st-login-branding-blur--violet"></div>
             <div class="pl-st-login-branding-blur pl-st-login-branding-blur--teal"></div>
-            <footer class="pl-st-login-branding-footer">
-                <span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> P&eacute;dagoLens AI</span>
-                <div><span>Confidentialit&eacute;</span><span>Conditions</span></div>
-            </footer>
         </section>
 
         <!-- ========== RIGHT: FORM ========== -->
@@ -2120,6 +2128,16 @@ class PedagoLens_Landing {
     </div>
 
     <script>window.plRegisterRedirect = <?php echo wp_json_encode( $compte_url ); ?>;</script>
+
+    <!-- ========== LOGIN FOOTER ========== -->
+    <footer class="pl-login-footer">
+        <span>&copy; <?php echo esc_html( date( 'Y' ) ); ?> P&eacute;dagoLens AI</span>
+        <div class="pl-login-footer-links">
+            <a href="#">Confidentialit&eacute;</a>
+            <a href="#">Conditions</a>
+            <a href="#">Aide</a>
+        </div>
+    </footer>
 
 </div><!-- .pl-st-login-page -->
         <?php
