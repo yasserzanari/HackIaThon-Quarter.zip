@@ -417,7 +417,9 @@ class PedagoLens_API_Bridge {
         $service      = 'bedrock';
         $short_date   = substr( $date, 0, 8 );
         $host         = parse_url( $endpoint, PHP_URL_HOST );
-        $path         = parse_url( $endpoint, PHP_URL_PATH );
+        $raw_path     = parse_url( $endpoint, PHP_URL_PATH );
+        // SigV4: URI-encode each path segment (e.g. ':' → '%3A') to match what the HTTP client sends.
+        $path         = '/' . implode( '/', array_map( 'rawurlencode', array_filter( explode( '/', $raw_path ), 'strlen' ) ) );
         $content_type = 'application/json';
 
         $canonical_headers = "content-type:{$content_type}\nhost:{$host}\nx-amz-date:{$date}\n";

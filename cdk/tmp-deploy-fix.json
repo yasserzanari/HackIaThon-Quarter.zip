@@ -3,7 +3,7 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && cat > /tmp/pl-set-mock.php << 'EOFPHP'\n<?php\nrequire_once('/var/www/html/wp-load.php');\nupdate_option('pl_ai_mode', 'mock');\necho 'pl_ai_mode set to: ' . get_option('pl_ai_mode') . PHP_EOL;\nEOFPHP\nphp /tmp/pl-set-mock.php 2>&1"
+      "echo '=== WP DEBUG LOG ===' && tail -100 /var/www/html/wp-content/debug.log 2>/dev/null || echo 'NO_DEBUG_LOG'"
     ]
   }
 }
