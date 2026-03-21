@@ -183,14 +183,23 @@ class PedagoLens_Landing {
                 <span class="plx-logo-text">PédagoLens</span>
             </div>
             <div class="plx-nav-links">
-                <a href="#plx-features" class="plx-nav-link plx-nav-link--active">Découvrir</a>
-                <a href="#plx-how" class="plx-nav-link">Ressources</a>
-                <a href="#plx-testimonials" class="plx-nav-link">Tarification</a>
-                <a href="#plx-cta" class="plx-nav-link">Manifeste</a>
+                <a href="#plx-features" class="plx-nav-link plx-nav-link--active">Fonctionnalités</a>
+                <a href="#plx-how" class="plx-nav-link">Comment ça marche</a>
+                <a href="#plx-testimonials" class="plx-nav-link">Témoignages</a>
+                <a href="#plx-cta" class="plx-nav-link">Contact</a>
             </div>
             <div class="plx-nav-actions">
-                <a href="<?php echo esc_url( $login_url ); ?>" class="plx-btn-ghost">Connexion</a>
-                <a href="<?php echo esc_url( $cta_url ); ?>" class="plx-btn-pill"><?php echo $cta_text; ?></a>
+                <?php if ( is_user_logged_in() ) :
+                    $u_roles = (array) wp_get_current_user()->roles;
+                    $dash_link = ( in_array( 'pedagolens_teacher', $u_roles, true ) || in_array( 'administrator', $u_roles, true ) )
+                        ? self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' )
+                        : self::page_url( 'dashboard-etudiant', '' );
+                ?>
+                    <a href="<?php echo esc_url( $dash_link ); ?>" class="plx-btn-pill">Mon Dashboard</a>
+                <?php else : ?>
+                    <a href="<?php echo esc_url( $login_url ); ?>" class="plx-btn-ghost">Connexion</a>
+                    <a href="<?php echo esc_url( $cta_url ); ?>" class="plx-btn-pill"><?php echo $cta_text; ?></a>
+                <?php endif; ?>
             </div>
         </nav>
     </header>
@@ -204,26 +213,26 @@ class PedagoLens_Landing {
             <div class="plx-hero-content">
                 <div class="plx-hero-badge">
                     <span class="plx-badge-dot"></span>
-                    NOUVEAU : ANALYSE COGNITIVE 2.0
+                    Conçu pour l'enseignement supérieur québécois
                 </div>
                 <h1 class="plx-hero-title">
-                    L'IA qui révèle le <span class="plx-gradient-text">potentiel</span> de chaque élève.
+                    L'IA qui transforme chaque cours en expérience d'apprentissage <span class="plx-gradient-text">personnalisée</span>
                 </h1>
-                <p class="plx-hero-subtitle"><?php echo $hero_subtitle; ?></p>
+                <p class="plx-hero-subtitle">Aidez vos étudiants de cégep et d'université à réussir grâce à une pédagogie adaptée à chaque profil cognitif. Conçu par et pour les professeurs québécois.</p>
                 <div class="plx-hero-ctas">
                     <a href="<?php echo esc_url( $cta_url ); ?>" class="plx-btn-primary-lg">
-                        Démarrer l'analyse
+                        Démarrer gratuitement
                         <span class="material-symbols-outlined">bolt</span>
                     </a>
                     <a href="#plx-how" class="plx-btn-outline-lg">
-                        Réserver une démo
+                        Voir une démo
                         <span class="material-symbols-outlined">play_circle</span>
                     </a>
                 </div>
                 <div class="plx-hero-trust">
-                    <span>Recommandé par</span>
+                    <span>Reconnu par</span>
                     <span class="plx-trust-sep"></span>
-                    <span>UNESCO</span><span>HEDP</span><span>ERASMUS+</span>
+                    <span>MEES</span><span>Cégeps du Québec</span><span>Universités canadiennes</span>
                 </div>
             </div>
 
@@ -235,7 +244,7 @@ class PedagoLens_Landing {
                             <div class="plx-mockup-icon-wrap"><span class="material-symbols-outlined">analytics</span></div>
                             <div>
                                 <h4>Tableau de bord IA</h4>
-                                <p>Master 1 — Neurosciences</p>
+                                <p>Session A25 — Introduction à la psychologie</p>
                             </div>
                         </div>
                         <span class="plx-badge-live">SYNC LIVE</span>
@@ -277,11 +286,11 @@ class PedagoLens_Landing {
                 <div class="plx-problem-image">
                     <div class="plx-problem-img-overlay"></div>
                     <div class="plx-problem-quote">
-                        "Un cours standardisé est un cours qui échoue pour 30% de l'audience dès la première minute."
+                        "Dans un amphithéâtre de 200 étudiants, un cours magistral standardisé laisse de côté près de 40% de l'auditoire dès les premières minutes."
                     </div>
                 </div>
                 <div class="plx-problem-content">
-                    <h2 class="plx-section-title">Le mythe de l'étudiant moyen<br>est une barrière à l'excellence.</h2>
+                    <h2 class="plx-section-title">Le mythe de l'étudiant moyen<br>est une barrière à la réussite.</h2>
                     <div class="plx-problem-items">
                         <div class="plx-problem-item">
                             <div class="plx-problem-icon plx-problem-icon--red">
@@ -289,7 +298,7 @@ class PedagoLens_Landing {
                             </div>
                             <div>
                                 <h4>Le Décrochage Invisible</h4>
-                                <p>Plus de 25% des étudiants perdent le fil car le rythme ou le canal de diffusion est incompatible avec leur profil d'apprentissage dominant.</p>
+                                <p>Au cégep, 38% des étudiants ne terminent pas leur programme dans les délais prévus. Le rythme unique et le manque de rétroaction personnalisée sont en cause.</p>
                             </div>
                         </div>
                         <div class="plx-problem-item">
@@ -298,7 +307,7 @@ class PedagoLens_Landing {
                             </div>
                             <div>
                                 <h4>Les Barrières Cognitives</h4>
-                                <p>L'enseignement monolithique exclut naturellement les profils neuro-atypiques et ralentit l'assimilation globale de la classe.</p>
+                                <p>Avec des cours magistraux de 200+ étudiants et une diversité croissante de profils (allophones, TDAH, troubles d'apprentissage), l'enseignement uniforme ne suffit plus.</p>
                             </div>
                         </div>
                     </div>
@@ -406,10 +415,10 @@ class PedagoLens_Landing {
         <div class="plx-section-inner">
             <p class="plx-social-label">Ils transforment l'éducation avec PédagoLens</p>
             <div class="plx-social-logos">
-                <span>UNIVERSITÉ <strong>SORBONNE</strong></span>
-                <span>ÉCOLE <strong>POLYTECHNIQUE</strong></span>
-                <span>HEC <strong>PARIS</strong></span>
-                <span>SCIENCES <strong>PO</strong></span>
+                <span>CÉGEP DE <strong>MONTRÉAL</strong></span>
+                <span><strong>UQAM</strong></span>
+                <span>UNIVERSITÉ <strong>LAVAL</strong></span>
+                <span>POLYTECHNIQUE <strong>MONTRÉAL</strong></span>
             </div>
         </div>
     </section>
@@ -423,24 +432,24 @@ class PedagoLens_Landing {
             </div>
             <div class="plx-testimonials-grid">
                 <div class="plx-glass-card plx-testimonial-card">
-                    <p class="plx-testimonial-text">« PédagoLens a transformé ma façon de préparer mes cours. Les scores par profil m'ont ouvert les yeux sur des angles morts que je ne soupçonnais pas. »</p>
+                    <p class="plx-testimonial-text">« PédagoLens a transformé ma façon de préparer mes cours. Les scores par profil m'ont ouvert les yeux sur des angles morts que je ne soupçonnais pas. Mes étudiants en difficulté progressent enfin. »</p>
                     <div class="plx-testimonial-author">
                         <div class="plx-testimonial-avatar">ML</div>
-                        <div><strong>Marie L.</strong><span>Professeure de Neurosciences, Université Sorbonne</span></div>
+                        <div><strong>Marie L.</strong><span>Professeure de psychologie, Cégep du Vieux Montréal</span></div>
                     </div>
                 </div>
                 <div class="plx-glass-card plx-testimonial-card">
-                    <p class="plx-testimonial-text">« Le jumeau numérique est une révolution. Mes étudiants TDAH ont vu leur engagement augmenter de 35% en un semestre. »</p>
+                    <p class="plx-testimonial-text">« Le jumeau numérique est une révolution. Nos étudiants TDAH ont vu leur engagement augmenter de 35% en un semestre. L'outil s'intègre parfaitement à notre écosystème Moodle. »</p>
                     <div class="plx-testimonial-author">
                         <div class="plx-testimonial-avatar">PD</div>
-                        <div><strong>Pierre D.</strong><span>Directeur pédagogique, HEC Paris</span></div>
+                        <div><strong>Pierre D.</strong><span>Directeur pédagogique, UQAM</span></div>
                     </div>
                 </div>
                 <div class="plx-glass-card plx-testimonial-card">
-                    <p class="plx-testimonial-text">« L'intégration avec Moodle est transparente. En 3 clics, toute ma cohorte était synchronisée et les analyses prêtes. »</p>
+                    <p class="plx-testimonial-text">« L'intégration avec Moodle est transparente. En 3 clics, toute ma cohorte de 180 étudiants était synchronisée et les analyses prêtes pour la session. »</p>
                     <div class="plx-testimonial-author">
                         <div class="plx-testimonial-avatar">SC</div>
-                        <div><strong>Sophie C.</strong><span>Chargée de cours, École Polytechnique</span></div>
+                        <div><strong>Sophie C.</strong><span>Chargée de cours, Université Laval</span></div>
                     </div>
                 </div>
             </div>
@@ -503,8 +512,8 @@ class PedagoLens_Landing {
                     <h4>Entreprise</h4>
                     <ul>
                         <li><a href="#">À propos</a></li>
+                        <li><a href="#">Partenaires</a></li>
                         <li><a href="#">Éthique IA</a></li>
-                        <li><a href="#">Carrières</a></li>
                         <li><a href="#">Contact</a></li>
                     </ul>
                 </div>
@@ -513,6 +522,7 @@ class PedagoLens_Landing {
                     <ul>
                         <li><a href="#">Confidentialité</a></li>
                         <li><a href="#">Mentions légales</a></li>
+                        <li><a href="#">Loi 25 (Québec)</a></li>
                         <li><a href="#">Cookies</a></li>
                     </ul>
                 </div>
@@ -521,7 +531,7 @@ class PedagoLens_Landing {
                 <p>&copy; <?php echo $year; ?> PédagoLens AI. Tous droits réservés.</p>
                 <div class="plx-footer-lang">
                     <span class="material-symbols-outlined">language</span>
-                    <span>Français (France)</span>
+                    <span>Français (Québec)</span>
                 </div>
             </div>
         </div>
@@ -602,108 +612,75 @@ class PedagoLens_Landing {
         ] );
 
         ob_start();
+        echo self::render_header('Dashboard > Enseignant');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('dashboard');
+        echo '<main class="pl-app-main">';
         ?>
-<div class="pl-st-dashboard">
-
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="pl-st-sidebar">
-        <div class="pl-st-sidebar-logo">
-            <div class="pl-st-logo-icon">P</div>
-            <span class="pl-st-logo-text">P&eacute;dagoLens</span>
-        </div>
-        <nav class="pl-st-sidebar-nav">
-            <a href="<?php echo $dash_url; ?>" class="pl-st-sidebar-link pl-st-sidebar-link--active">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Tableau de bord</span>
-            </a>
-            <a href="<?php echo $courses_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">menu_book</span>
-                <span>Mes cours</span>
-            </a>
-            <a href="<?php echo $workbench_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">build</span>
-                <span>Atelier</span>
-            </a>
-            <a href="<?php echo $twin_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">smart_toy</span>
-                <span>Assistant</span>
-            </a>
-            <a href="<?php echo $account_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">settings</span>
-                <span>Param&egrave;tres</span>
-            </a>
-        </nav>
-        <div class="pl-st-sidebar-footer">
-            <a href="<?php echo $logout_url; ?>" class="pl-st-sidebar-link pl-st-sidebar-link--logout">
-                <span class="material-symbols-outlined">logout</span>
-                <span>D&eacute;connexion</span>
-            </a>
-        </div>
-    </aside>
+<div class="pl-dash-page">
 
     <!-- ========== MAIN CONTENT ========== -->
-    <main class="pl-st-dash-main">
-        <header class="pl-st-dash-header">
+        <div class="pl-dash-header">
             <div>
-                <h1 class="pl-st-dash-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
-                <p class="pl-st-dash-subtitle">Voici un aper&ccedil;u de votre activit&eacute; p&eacute;dagogique.</p>
+                <h1 class="pl-dash-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
+                <p class="pl-dash-subtitle">Voici un aper&ccedil;u de votre activit&eacute; p&eacute;dagogique.</p>
             </div>
-            <div class="pl-st-dash-header-actions">
-                <a href="<?php echo $courses_url; ?>" class="pl-st-btn-primary-sm">
+            <div class="pl-dash-header-actions">
+                <a href="<?php echo $courses_url; ?>" class="pl-dash-btn-primary">
                     <span class="material-symbols-outlined">add</span> Nouveau cours
                 </a>
             </div>
-        </header>
+        </div>
 
         <!-- Stats Cards -->
-        <div class="pl-st-stats-grid">
-            <div class="pl-st-glass-card pl-st-stat-card">
-                <div class="pl-st-stat-icon pl-st-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
-                <div class="pl-st-stat-info">
-                    <span class="pl-st-stat-value"><?php echo $nb_courses; ?></span>
-                    <span class="pl-st-stat-label">Cours</span>
+        <div class="pl-dash-kpi-grid">
+            <div class="pl-dash-kpi-card">
+                <div class="pl-dash-kpi-icon pl-dash-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
+                <div class="pl-dash-kpi-info">
+                    <span class="pl-dash-kpi-value"><?php echo $nb_courses; ?></span>
+                    <span class="pl-dash-kpi-label">Cours</span>
                 </div>
             </div>
-            <div class="pl-st-glass-card pl-st-stat-card">
-                <div class="pl-st-stat-icon pl-st-icon-violet"><span class="material-symbols-outlined">analytics</span></div>
-                <div class="pl-st-stat-info">
-                    <span class="pl-st-stat-value"><?php echo $nb_analyses; ?></span>
-                    <span class="pl-st-stat-label">Analyses</span>
+            <div class="pl-dash-kpi-card">
+                <div class="pl-dash-kpi-icon pl-dash-icon-violet"><span class="material-symbols-outlined">analytics</span></div>
+                <div class="pl-dash-kpi-info">
+                    <span class="pl-dash-kpi-value"><?php echo $nb_analyses; ?></span>
+                    <span class="pl-dash-kpi-label">Analyses</span>
                 </div>
             </div>
-            <div class="pl-st-glass-card pl-st-stat-card">
-                <div class="pl-st-stat-icon pl-st-icon-green"><span class="material-symbols-outlined">folder_open</span></div>
-                <div class="pl-st-stat-info">
-                    <span class="pl-st-stat-value"><?php echo $nb_projects; ?></span>
-                    <span class="pl-st-stat-label">Projets en cours</span>
+            <div class="pl-dash-kpi-card">
+                <div class="pl-dash-kpi-icon pl-dash-icon-green"><span class="material-symbols-outlined">folder_open</span></div>
+                <div class="pl-dash-kpi-info">
+                    <span class="pl-dash-kpi-value"><?php echo $nb_projects; ?></span>
+                    <span class="pl-dash-kpi-label">Projets en cours</span>
                 </div>
             </div>
         </div>
 
         <!-- Recent Activity -->
-        <section class="pl-st-glass-card pl-st-activity-section">
-            <h2 class="pl-st-card-title">
+        <section class="pl-dash-activity">
+            <h2 class="pl-dash-activity-title">
                 <span class="material-symbols-outlined">history</span>
                 Activit&eacute; r&eacute;cente
             </h2>
             <?php if ( empty( $recent_analyses ) ) : ?>
-                <div class="pl-st-empty-state">
+                <div class="pl-dash-empty-state">
                     <span class="material-symbols-outlined">inbox</span>
                     <p>Aucune activit&eacute; r&eacute;cente. Lancez votre premi&egrave;re analyse !</p>
                 </div>
             <?php else : ?>
-                <div class="pl-st-activity-list">
+                <div class="pl-dash-activity-list">
                     <?php foreach ( $recent_analyses as $analysis ) :
                         $course_id   = (int) get_post_meta( $analysis->ID, '_pl_course_id', true );
                         $course_post = $course_id ? get_post( $course_id ) : null;
                         $course_name = $course_post ? esc_html( $course_post->post_title ) : 'Cours inconnu';
                         $date_str    = esc_html( wp_date( 'j M Y &agrave; H:i', strtotime( $analysis->post_date ) ) );
                     ?>
-                        <div class="pl-st-activity-item">
-                            <div class="pl-st-activity-icon"><span class="material-symbols-outlined">search_insights</span></div>
-                            <div class="pl-st-activity-info">
+                        <div class="pl-dash-activity-item">
+                            <div class="pl-dash-activity-icon"><span class="material-symbols-outlined">search_insights</span></div>
+                            <div class="pl-dash-activity-info">
                                 <strong>Analyse : <?php echo $course_name; ?></strong>
-                                <span class="pl-st-activity-date"><?php echo $date_str; ?></span>
+                                <span class="pl-dash-activity-date"><?php echo $date_str; ?></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -711,10 +688,11 @@ class PedagoLens_Landing {
             <?php endif; ?>
         </section>
 
-    </main>
-
-</div><!-- .pl-st-dashboard -->
+</div><!-- .pl-dash-page -->
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -762,96 +740,67 @@ class PedagoLens_Landing {
         }
 
         ob_start();
+        echo self::render_header('Dashboard > Étudiant');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('dashboard');
+        echo '<main class="pl-app-main">';
         ?>
-<div class="pl-st-dashboard">
-
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="pl-st-sidebar">
-        <div class="pl-st-sidebar-logo">
-            <div class="pl-st-logo-icon">P</div>
-            <span class="pl-st-logo-text">P&eacute;dagoLens</span>
-        </div>
-        <nav class="pl-st-sidebar-nav">
-            <a href="<?php echo $dash_url; ?>" class="pl-st-sidebar-link pl-st-sidebar-link--active">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Tableau de bord</span>
-            </a>
-            <a href="<?php echo $courses_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">menu_book</span>
-                <span>Mes cours</span>
-            </a>
-            <a href="<?php echo $twin_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">smart_toy</span>
-                <span>Assistant</span>
-            </a>
-            <a href="<?php echo $account_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">settings</span>
-                <span>Param&egrave;tres</span>
-            </a>
-        </nav>
-        <div class="pl-st-sidebar-footer">
-            <a href="<?php echo $logout_url; ?>" class="pl-st-sidebar-link pl-st-sidebar-link--logout">
-                <span class="material-symbols-outlined">logout</span>
-                <span>D&eacute;connexion</span>
-            </a>
-        </div>
-    </aside>
+<div class="pl-stu-page">
 
     <!-- ========== MAIN CONTENT ========== -->
-    <main class="pl-st-dash-main">
-        <header class="pl-st-dash-header">
+        <div class="pl-stu-header">
             <div>
-                <h1 class="pl-st-dash-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
-                <p class="pl-st-dash-subtitle">Votre espace d'apprentissage personnalis&eacute;.</p>
+                <h1 class="pl-stu-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
+                <p class="pl-stu-subtitle">Votre espace d'apprentissage personnalis&eacute;.</p>
             </div>
-        </header>
+        </div>
 
         <!-- Stats Cards -->
-        <div class="pl-st-stats-grid">
-            <div class="pl-st-glass-card pl-st-stat-card">
-                <div class="pl-st-stat-icon pl-st-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
-                <div class="pl-st-stat-info">
-                    <span class="pl-st-stat-value"><?php echo $nb_courses; ?></span>
-                    <span class="pl-st-stat-label">Cours disponibles</span>
+        <div class="pl-stu-stats-grid">
+            <div class="pl-stu-stat-card">
+                <div class="pl-stu-stat-icon pl-stu-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
+                <div class="pl-stu-stat-info">
+                    <span class="pl-stu-stat-value"><?php echo $nb_courses; ?></span>
+                    <span class="pl-stu-stat-label">Cours disponibles</span>
                 </div>
             </div>
-            <div class="pl-st-glass-card pl-st-stat-card">
-                <div class="pl-st-stat-icon pl-st-icon-violet"><span class="material-symbols-outlined">chat</span></div>
-                <div class="pl-st-stat-info">
-                    <span class="pl-st-stat-value"><?php echo $nb_interactions; ?></span>
-                    <span class="pl-st-stat-label">Conversations</span>
+            <div class="pl-stu-stat-card">
+                <div class="pl-stu-stat-icon pl-stu-icon-violet"><span class="material-symbols-outlined">chat</span></div>
+                <div class="pl-stu-stat-info">
+                    <span class="pl-stu-stat-value"><?php echo $nb_interactions; ?></span>
+                    <span class="pl-stu-stat-label">Conversations</span>
                 </div>
             </div>
-            <div class="pl-st-glass-card pl-st-stat-card">
-                <div class="pl-st-stat-icon pl-st-icon-green"><span class="material-symbols-outlined">smart_toy</span></div>
-                <div class="pl-st-stat-info">
-                    <a href="<?php echo $twin_url; ?>" class="pl-st-stat-value pl-st-stat-link">Acc&eacute;der</a>
-                    <span class="pl-st-stat-label">Assistant IA</span>
+            <div class="pl-stu-stat-card">
+                <div class="pl-stu-stat-icon pl-stu-icon-green"><span class="material-symbols-outlined">smart_toy</span></div>
+                <div class="pl-stu-stat-info">
+                    <a href="<?php echo $twin_url; ?>" class="pl-stu-stat-value pl-stu-stat-link">Acc&eacute;der</a>
+                    <span class="pl-stu-stat-label">Assistant IA</span>
                 </div>
             </div>
         </div>
 
         <!-- Recent Activity -->
-        <section class="pl-st-glass-card pl-st-activity-section">
-            <h2 class="pl-st-card-title">
+        <section class="pl-stu-activity">
+            <h2 class="pl-stu-activity-title">
                 <span class="material-symbols-outlined">history</span>
                 Historique r&eacute;cent
             </h2>
             <?php if ( empty( $recent_interactions ) ) : ?>
-                <div class="pl-st-empty-state">
+                <div class="pl-stu-empty-state">
                     <span class="material-symbols-outlined">inbox</span>
                     <p>Aucune activit&eacute; r&eacute;cente. Commencez par discuter avec votre assistant !</p>
                 </div>
             <?php else : ?>
-                <div class="pl-st-activity-list">
+                <div class="pl-stu-activity-list">
                     <?php foreach ( $recent_interactions as $interaction ) :
                         $date_str = esc_html( wp_date( 'j M Y &agrave; H:i', strtotime( $interaction->post_date ) ) );
                     ?>
-                        <div class="pl-st-activity-item">
-                            <div class="pl-st-activity-icon"><span class="material-symbols-outlined">chat_bubble</span></div>
-                            <div class="pl-st-activity-info">
+                        <div class="pl-stu-activity-item">
+                            <div class="pl-stu-activity-icon"><span class="material-symbols-outlined">chat_bubble</span></div>
+                            <div class="pl-stu-activity-info">
                                 <strong><?php echo esc_html( $interaction->post_title ?: 'Conversation' ); ?></strong>
-                                <span class="pl-st-activity-date"><?php echo $date_str; ?></span>
+                                <span class="pl-stu-activity-date"><?php echo $date_str; ?></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -859,10 +808,11 @@ class PedagoLens_Landing {
             <?php endif; ?>
         </section>
 
-    </main>
-
-</div><!-- .pl-st-dashboard -->
+</div><!-- .pl-stu-page -->
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -906,21 +856,11 @@ class PedagoLens_Landing {
         ];
 
         ob_start();
+        echo self::render_header('Cours > Projets');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('courses');
+        echo '<main class="pl-app-main">';
         ?>
-<div class="pl-landing-page pl-courses-page">
-
-    <!-- NAV -->
-    <nav class="pl-landing-nav" role="navigation" aria-label="Navigation principale">
-        <div class="pl-landing-nav-inner">
-            <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="pl-nav-logo">P&eacute;dagoLens</a>
-            <ul class="pl-nav-links">
-                <?php foreach ( $nav_links as $label => $url ) : ?>
-                    <li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $label ); ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    </nav>
-
     <!-- CONTENT -->
     <div class="pl-courses-content">
         <div class="pl-section-inner">
@@ -1026,22 +966,10 @@ class PedagoLens_Landing {
 
         </div>
     </div>
-
-    <!-- FOOTER -->
-    <footer class="pl-landing-footer">
-        <div class="pl-footer-inner">
-            <span class="pl-footer-logo">P&eacute;dagoLens</span>
-            <ul class="pl-footer-nav">
-                <?php foreach ( $nav_links as $label => $url ) : ?>
-                    <li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $label ); ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-            <p class="pl-footer-copy">&copy; 2026 P&eacute;dagoLens &mdash; Propuls&eacute; par AWS Bedrock</p>
-        </div>
-    </footer>
-
-</div>
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -1060,7 +988,16 @@ class PedagoLens_Landing {
         if ( ! $project_id ) {
             $courses_page = get_page_by_path( 'cours-projets' );
             $courses_url  = $courses_page ? get_permalink( $courses_page ) : home_url( '/' );
-            return '<div class="pl-landing-page"><nav class="pl-landing-nav"><div class="pl-landing-nav-inner"><a href="' . esc_url( home_url('/') ) . '" class="pl-nav-logo">PédagoLens</a></div></nav><div class="pl-section-inner" style="padding-top:120px;text-align:center;"><div class="pl-wb-empty"><div class="pl-wb-empty-icon">📄</div><p>Aucun projet sélectionné. <a href="' . esc_url( $courses_url ) . '" style="color:var(--pl-cyan);">Retour aux cours</a></p></div></div></div>';
+            ob_start();
+            echo self::render_header('Atelier');
+            echo '<div class="pl-app-layout">';
+            echo self::render_sidebar('workbench');
+            echo '<main class="pl-app-main">';
+            echo '<div class="pl-wb-empty"><div class="pl-wb-empty-icon">📄</div><p>Aucun projet sélectionné. <a href="' . esc_url( $courses_url ) . '">Retour aux cours</a></p></div>';
+            echo '</main>';
+            echo '</div>';
+            echo self::render_footer();
+            return ob_get_clean();
         }
 
         if ( ! class_exists( 'PedagoLens_Workbench_Admin' ) ) {
@@ -1071,41 +1008,19 @@ class PedagoLens_Landing {
         $workbench_html = PedagoLens_Workbench_Admin::render_front( $project_id );
 
         ob_start();
+        echo self::render_header('Atelier');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('workbench');
+        echo '<main class="pl-app-main">';
         ?>
-<div class="pl-landing-page pl-workbench-page">
-
-    <!-- NAV -->
-    <nav class="pl-landing-nav" role="navigation" aria-label="Navigation principale">
-        <div class="pl-landing-nav-inner">
-            <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="pl-nav-logo">P&eacute;dagoLens</a>
-            <ul class="pl-nav-links">
-                <?php foreach ( $nav_links as $label => $url ) : ?>
-                    <li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $label ); ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    </nav>
-
     <!-- WORKBENCH CONTENT -->
     <div class="pl-workbench-content">
         <?php echo $workbench_html; ?>
     </div>
-
-    <!-- FOOTER -->
-    <footer class="pl-landing-footer">
-        <div class="pl-footer-inner">
-            <span class="pl-footer-logo">P&eacute;dagoLens</span>
-            <ul class="pl-footer-nav">
-                <?php foreach ( $nav_links as $label => $url ) : ?>
-                    <li><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( $label ); ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-            <p class="pl-footer-copy">&copy; 2026 P&eacute;dagoLens &mdash; Propuls&eacute; par AWS Bedrock</p>
-        </div>
-    </footer>
-
-</div>
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -1181,6 +1096,10 @@ class PedagoLens_Landing {
         $diff_nonce    = wp_create_nonce( 'pl_student_difficulties' );
 
         ob_start();
+        echo self::render_header('Mon Compte');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('account');
+        echo '<main class="pl-app-main">';
         ?>
         <div class="pl-account-page">
 
@@ -1448,6 +1367,9 @@ class PedagoLens_Landing {
         })(jQuery);
         </script>
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -1559,7 +1481,7 @@ class PedagoLens_Landing {
     // Reusable Header & Footer
     // -------------------------------------------------------------------------
 
-    public static function render_header(): string {
+    public static function render_header( string $breadcrumb = '' ): string {
         $home_url    = esc_url( home_url( '/' ) );
         $is_logged   = is_user_logged_in();
         $user        = $is_logged ? wp_get_current_user() : null;
@@ -1570,60 +1492,173 @@ class PedagoLens_Landing {
 
         $login_page  = get_page_by_path( 'connexion' );
         $login_url   = $login_page ? get_permalink( $login_page ) : wp_login_url();
-
-        $dash_teacher = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
-        $dash_student = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-        $twin_url     = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-        $account_url  = esc_url( self::page_url( 'compte', '' ) );
-        $logout_url   = esc_url( wp_logout_url( $home_url ) );
+        $logout_url  = esc_url( wp_logout_url( $home_url ) );
 
         ob_start();
+
+        // ── Variante 1 : Visiteur (non connecté) ──
+        if ( ! $is_logged ) :
+            $dash_teacher = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
         ?>
-        <nav class="pl-landing-nav" role="navigation" aria-label="Navigation principale">
-            <div class="pl-landing-nav-inner">
-                <a href="<?php echo $home_url; ?>" class="pl-nav-logo">P&eacute;dagoLens</a>
-                <ul class="pl-nav-links">
-                    <li><a href="<?php echo $home_url; ?>">Accueil</a></li>
-                    <?php if ( $is_logged && ( $is_admin || $is_teacher ) ) : ?>
-                        <li><a href="<?php echo $dash_teacher; ?>">Dashboard</a></li>
-                    <?php endif; ?>
-                    <?php if ( $is_logged && $is_student ) : ?>
-                        <li><a href="<?php echo $twin_url; ?>">Jumeau</a></li>
-                    <?php endif; ?>
-                    <?php if ( $is_logged ) : ?>
-                        <li><a href="<?php echo $account_url; ?>">Compte</a></li>
-                        <li><a href="<?php echo $logout_url; ?>"><?php echo esc_html( $user->display_name ); ?> &middot; D&eacute;connexion</a></li>
-                    <?php else : ?>
-                        <li><a href="<?php echo esc_url( $login_url ); ?>">Se connecter</a></li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </nav>
+        <header class="pl-header-visitor" role="banner">
+            <nav class="plx-nav" role="navigation" aria-label="Navigation principale">
+                <div class="plx-nav-inner">
+                    <a href="<?php echo $home_url; ?>" class="plx-nav-logo">
+                        <span class="plx-nav-logo-icon">P</span>
+                        P&eacute;dagoLens
+                    </a>
+                    <ul class="plx-nav-links">
+                        <li><a href="<?php echo $home_url; ?>#features">Fonctionnalit&eacute;s</a></li>
+                        <li><a href="<?php echo $home_url; ?>#how-it-works">Comment &ccedil;a marche</a></li>
+                        <li><a href="<?php echo $home_url; ?>#testimonials">T&eacute;moignages</a></li>
+                    </ul>
+                    <div class="plx-nav-actions">
+                        <a href="<?php echo esc_url( $login_url ); ?>" class="plx-btn plx-btn--ghost">Connexion</a>
+                        <a href="<?php echo esc_url( $login_url ); ?>" class="plx-btn plx-btn--primary">Essai gratuit</a>
+                    </div>
+                </div>
+            </nav>
+        </header>
         <?php
+        // ── Variante 2 & 3 : Utilisateur connecté (étudiant / enseignant / admin) ──
+        else :
+            $avatar_url = get_avatar_url( $user->ID, [ 'size' => 64 ] );
+            $display    = esc_html( $user->display_name );
+
+            // Build breadcrumb HTML
+            $bc_html = '';
+            if ( $breadcrumb ) {
+                $parts   = array_map( 'trim', explode( '>', $breadcrumb ) );
+                $last_i  = count( $parts ) - 1;
+                $bc_html = '<div class="pl-breadcrumb" aria-label="Fil d\'Ariane">';
+                foreach ( $parts as $i => $part ) {
+                    if ( $i > 0 ) {
+                        $bc_html .= '<span class="pl-breadcrumb-sep material-symbols-outlined">chevron_right</span>';
+                    }
+                    if ( $i === $last_i ) {
+                        $bc_html .= '<span class="pl-breadcrumb-current">' . esc_html( $part ) . '</span>';
+                    } else {
+                        $bc_html .= '<span>' . esc_html( $part ) . '</span>';
+                    }
+                }
+                $bc_html .= '</div>';
+            }
+        ?>
+        <header class="pl-header-app" role="banner">
+            <div class="pl-header-app-left">
+                <?php echo $bc_html; ?>
+            </div>
+            <div class="pl-header-app-right">
+                <div class="pl-header-user">
+                    <img src="<?php echo esc_url( $avatar_url ); ?>" alt="" class="pl-header-avatar" />
+                    <span class="pl-header-username"><?php echo $display; ?></span>
+                    <a href="<?php echo $logout_url; ?>" class="pl-header-logout">D&eacute;connexion</a>
+                </div>
+            </div>
+        </header>
+        <?php endif;
+
         return ob_get_clean();
     }
 
     public static function render_footer(): string {
-        $home_url   = esc_url( home_url( '/' ) );
-        $login_page = get_page_by_path( 'connexion' );
-        $login_url  = $login_page ? get_permalink( $login_page ) : wp_login_url();
+        ob_start();
+        ?>
+        <footer class="pl-app-footer" role="contentinfo">
+            <span class="pl-app-footer-logo">P&eacute;dagoLens AI</span>
+            <span>&copy; 2026 P&eacute;dagoLens &mdash; Propuls&eacute; par AWS Bedrock</span>
+            <nav class="pl-app-footer-links" aria-label="Liens du pied de page">
+                <a href="<?php echo esc_url( home_url( '/aide' ) ); ?>">Aide</a>
+                <a href="<?php echo esc_url( home_url( '/confidentialite' ) ); ?>">Confidentialit&eacute;</a>
+                <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>">Contact</a>
+            </nav>
+        </footer>
+        <?php
+        return ob_get_clean();
+    }
+
+    // -------------------------------------------------------------------------
+    // Reusable Sidebar — contextual navigation by role
+    // -------------------------------------------------------------------------
+
+    public static function render_sidebar( string $active = '' ): string {
+        $user       = wp_get_current_user();
+        $roles      = (array) $user->roles;
+        $is_admin   = in_array( 'administrator', $roles, true );
+        $is_teacher = in_array( 'pedagolens_teacher', $roles, true );
+        $is_student = in_array( 'pedagolens_student', $roles, true );
+        $logout_url = esc_url( wp_logout_url( home_url( '/' ) ) );
+
+        // URLs
+        $url_dash_teacher  = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
+        $url_dash_student  = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+        $url_courses       = esc_url( self::page_url( 'cours-projets', 'pl-course-workbench' ) );
+        $url_workbench     = esc_url( self::page_url( 'workbench', 'pl-course-workbench' ) );
+        $url_history       = esc_url( self::page_url( 'historique', '' ) );
+        $url_settings      = esc_url( self::page_url( 'parametres', '' ) );
+        $url_institutional = esc_url( self::page_url( 'institutionnel', '' ) );
+        $url_account       = esc_url( self::page_url( 'compte', '' ) );
+
+        // Navigation items per role
+        if ( $is_admin || $is_teacher ) {
+            $nav = [
+                [ 'slug' => 'dashboard',     'icon' => 'dashboard',        'label' => 'Dashboard',              'url' => $url_dash_teacher ],
+                [ 'slug' => 'courses',        'icon' => 'school',           'label' => 'Analyses IA',            'url' => $url_courses ],
+                [ 'slug' => 'workbench',      'icon' => 'build',            'label' => 'Atelier',                'url' => $url_workbench ],
+                [ 'slug' => 'history',        'icon' => 'history',          'label' => 'Historique',             'url' => $url_history ],
+                [ 'slug' => 'settings',       'icon' => 'settings',         'label' => 'Param&egrave;tres',      'url' => $url_settings ],
+                [ 'slug' => 'institutional',  'icon' => 'account_balance',  'label' => 'Lumi&egrave;re institutionnelle', 'url' => $url_institutional ],
+            ];
+        } else {
+            $nav = [
+                [ 'slug' => 'dashboard', 'icon' => 'dashboard',   'label' => 'Dashboard',   'url' => $url_dash_student ],
+                [ 'slug' => 'twin',      'icon' => 'psychology',  'label' => 'Jumeau IA',   'url' => $url_dash_student ],
+                [ 'slug' => 'history',   'icon' => 'history',     'label' => 'Historique',  'url' => $url_history ],
+                [ 'slug' => 'account',   'icon' => 'person',      'label' => 'Compte',      'url' => $url_account ],
+            ];
+        }
 
         ob_start();
         ?>
-        <footer class="pl-landing-footer">
-            <div class="pl-footer-inner">
-                <span class="pl-footer-logo">P&eacute;dagoLens</span>
-                <ul class="pl-footer-nav">
-                    <li><a href="<?php echo $home_url; ?>">Accueil</a></li>
-                    <?php if ( is_user_logged_in() ) : ?>
-                        <li><a href="<?php echo esc_url( self::page_url( 'compte', '' ) ); ?>">Compte</a></li>
-                    <?php else : ?>
-                        <li><a href="<?php echo esc_url( $login_url ); ?>">Se connecter</a></li>
-                    <?php endif; ?>
-                </ul>
-                <p class="pl-footer-copy">&copy; 2026 P&eacute;dagoLens &mdash; Propuls&eacute; par AWS Bedrock</p>
+        <aside class="pl-app-sidebar" role="navigation" aria-label="Menu principal">
+            <div class="pl-app-sidebar-logo">
+                <span class="pl-app-sidebar-logo-icon">P</span>
+                <span class="pl-app-sidebar-brand">P&eacute;dagoLens AI</span>
             </div>
-        </footer>
+            <div class="pl-app-sidebar-sub">Portail &Eacute;ducatif</div>
+
+            <?php if ( $is_admin || $is_teacher ) : ?>
+            <a href="<?php echo $url_courses; ?>" class="pl-app-sidebar-cta">
+                <span class="material-symbols-outlined">add_circle</span>
+                Nouvelle Analyse
+            </a>
+            <?php endif; ?>
+
+            <nav class="pl-app-sidebar-nav">
+                <?php foreach ( $nav as $item ) :
+                    $cls = 'pl-app-sidebar-link';
+                    if ( $active === $item['slug'] ) {
+                        $cls .= ' pl-app-sidebar-link--active';
+                    }
+                ?>
+                <a href="<?php echo $item['url']; ?>" class="<?php echo $cls; ?>">
+                    <span class="material-symbols-outlined"><?php echo $item['icon']; ?></span>
+                    <?php echo $item['label']; ?>
+                </a>
+                <?php endforeach; ?>
+            </nav>
+
+            <div class="pl-app-sidebar-bottom">
+                <a href="<?php echo esc_url( home_url( '/aide' ) ); ?>" class="pl-app-sidebar-link">
+                    <span class="material-symbols-outlined">help</span>
+                    Aide
+                </a>
+                <a href="<?php echo $logout_url; ?>" class="pl-app-sidebar-link">
+                    <span class="material-symbols-outlined">logout</span>
+                    D&eacute;connexion
+                </a>
+            </div>
+        </aside>
         <?php
         return ob_get_clean();
     }
@@ -2039,55 +2074,15 @@ class PedagoLens_Landing {
         $settings_nonce = wp_create_nonce( 'pl_settings_nonce' );
 
         ob_start();
+        echo self::render_header('Paramètres');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('settings');
+        echo '<main class="pl-app-main">';
         ?>
-<div class="pl-st-dashboard pl-st-settings-page">
-
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="pl-st-sidebar">
-        <div class="pl-st-sidebar-logo">
-            <div class="pl-st-logo-icon">P</div>
-            <span class="pl-st-logo-text">PédagoLens AI</span>
-        </div>
-        <p class="pl-st-sidebar-subtitle">Portail Éducatif</p>
-        <nav class="pl-st-sidebar-nav">
-            <a href="<?php echo $dash_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">dashboard</span>
-                <span>Tableau de bord</span>
-            </a>
-            <a href="<?php echo $courses_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">psychology</span>
-                <span>Analyses IA</span>
-            </a>
-            <a href="<?php echo $twin_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">group</span>
-                <span>Élèves</span>
-            </a>
-            <a href="<?php echo $workbench_url; ?>" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">description</span>
-                <span>Rapports</span>
-            </a>
-            <a href="<?php echo $settings_url; ?>" class="pl-st-sidebar-link pl-st-sidebar-link--active">
-                <span class="material-symbols-outlined">settings</span>
-                <span>Paramètres</span>
-            </a>
-        </nav>
-        <div class="pl-st-sidebar-footer">
-            <button class="pl-st-sidebar-cta" onclick="window.location.href='<?php echo $courses_url; ?>'">
-                <span>Nouvelle Analyse</span>
-            </button>
-            <a href="#" class="pl-st-sidebar-link">
-                <span class="material-symbols-outlined">help</span>
-                <span>Aide</span>
-            </a>
-            <a href="<?php echo $logout_url; ?>" class="pl-st-sidebar-link pl-st-sidebar-link--logout">
-                <span class="material-symbols-outlined">logout</span>
-                <span>Déconnexion</span>
-            </a>
-        </div>
-    </aside>
+<div class="pl-st-settings-page">
 
     <!-- ========== MAIN CONTENT ========== -->
-    <main class="pl-st-dash-main pl-st-settings-main">
+    <div class="pl-st-settings-main">
 
         <!-- Header -->
         <header class="pl-st-settings-header">
@@ -2285,10 +2280,13 @@ class PedagoLens_Landing {
 
         </form>
 
-    </main>
+    </div>
 
 </div><!-- .pl-st-settings-page -->
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -2502,39 +2500,15 @@ class PedagoLens_Landing {
         $base_url = remove_query_arg( [ 'pl_page', 'pl_type', 'pl_sort' ] );
 
         ob_start();
+        echo self::render_header('Historique');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('history');
+        echo '<main class="pl-app-main">';
         ?>
 <div class="pl-hi-page">
 
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="pl-hi-sidebar">
-        <div class="pl-hi-sidebar-logo">
-            <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">visibility</span>
-            <span class="pl-hi-sidebar-brand">P&eacute;dagoLens AI</span>
-        </div>
-        <div class="pl-hi-sidebar-sub">Portail &Eacute;ducatif</div>
-        <nav class="pl-hi-sidebar-nav">
-            <a href="<?php echo $dash_url; ?>" class="pl-hi-nav-link">
-                <span class="material-symbols-outlined">dashboard</span><span>Tableau de bord</span>
-            </a>
-            <a href="<?php echo $history_url; ?>" class="pl-hi-nav-link pl-hi-nav-link--active">
-                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">psychology</span><span>Analyses IA</span>
-            </a>
-            <a href="<?php echo $courses_url; ?>" class="pl-hi-nav-link">
-                <span class="material-symbols-outlined">menu_book</span><span>Mes cours</span>
-            </a>
-            <a href="<?php echo $account_url; ?>" class="pl-hi-nav-link">
-                <span class="material-symbols-outlined">settings</span><span>Param&egrave;tres</span>
-            </a>
-        </nav>
-        <div class="pl-hi-sidebar-bottom">
-            <a href="<?php echo $logout_url; ?>" class="pl-hi-nav-link">
-                <span class="material-symbols-outlined">logout</span><span>D&eacute;connexion</span>
-            </a>
-        </div>
-    </aside>
-
     <!-- ========== MAIN ========== -->
-    <main class="pl-hi-main">
+    <div class="pl-hi-main">
 
         <!-- Header -->
         <header class="pl-hi-header">
@@ -2639,7 +2613,7 @@ class PedagoLens_Landing {
         </div>
         <?php endif; ?>
 
-    </main>
+    </div>
 </div>
 
 <script>
@@ -2655,6 +2629,9 @@ class PedagoLens_Landing {
 })();
 </script>
         <?php
+        echo '</main>';
+        echo '</div>';
+        echo self::render_footer();
         return ob_get_clean();
     }
 
@@ -2831,26 +2808,29 @@ class PedagoLens_Landing {
         $first_name = esc_html( $user->first_name ?: $user->display_name );
 
         ob_start();
-        echo self::render_header();
+        echo self::render_header('Lumière institutionnelle');
+        echo '<div class="pl-app-layout">';
+        echo self::render_sidebar('institutional');
+        echo '<main class="pl-app-main">';
         ?>
-<div class="pl-inst" style="min-height:100vh;background:var(--pl-background,#f7f9fb);padding:6rem 0 4rem;">
-<div class="pl-inst-inner" style="max-width:1200px;margin:0 auto;padding:0 1.5rem;">
+<div class="pl-inst">
+<div class="pl-inst-inner">
 
     <!-- ========== PAGE HEADER ========== -->
-    <header class="pl-inst-header" style="margin-bottom:3rem;">
-        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
-            <span class="material-symbols-outlined" style="font-size:2rem;color:var(--pl-secondary);">account_balance</span>
-            <h1 style="font-family:var(--pl-font-heading,'Manrope',sans-serif);font-size:2rem;font-weight:800;color:var(--pl-primary);letter-spacing:-.02em;margin:0;">
+    <header class="pl-inst-header">
+        <div class="pl-inst-header-title-row">
+            <span class="material-symbols-outlined pl-inst-header-icon">account_balance</span>
+            <h1 class="pl-inst-page-title">
                 Lumi&egrave;re institutionnelle
             </h1>
         </div>
-        <p style="font-family:var(--pl-font-body,'Inter',sans-serif);font-size:.9375rem;color:var(--pl-on-surface-variant,#444651);margin:0;">
+        <p class="pl-inst-page-subtitle">
             Vue d'ensemble agr&eacute;g&eacute;e des analyses p&eacute;dagogiques &mdash; <?php echo $first_name; ?>
         </p>
     </header>
 
     <!-- ========== KPI CARDS ========== -->
-    <div class="pl-inst-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-bottom:2.5rem;">
+    <div class="pl-inst-kpi-grid">
 
         <?php
         $kpis = [
@@ -2860,17 +2840,13 @@ class PedagoLens_Landing {
             [ 'icon' => 'folder_open', 'value' => $total_projects, 'label' => 'Projets actifs',         'color' => '#f59e0b' ],
         ];
         foreach ( $kpis as $kpi ) : ?>
-            <div style="background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:1.5rem;padding:1.6rem;display:flex;align-items:center;gap:1.2rem;box-shadow:0 10px 40px rgba(25,28,30,.06);">
-                <div style="width:3.2rem;height:3.2rem;border-radius:1rem;background:<?php echo $kpi['color']; ?>;display:flex;align-items:center;justify-content:center;">
-                    <span class="material-symbols-outlined" style="color:#fff;font-size:1.4rem;"><?php echo $kpi['icon']; ?></span>
+            <div class="pl-inst-kpi-card">
+                <div class="pl-inst-kpi-icon" style="background:<?php echo $kpi['color']; ?>;">
+                    <span class="material-symbols-outlined"><?php echo $kpi['icon']; ?></span>
                 </div>
-                <div>
-                    <span style="font-family:var(--pl-font-heading);font-size:2rem;font-weight:800;color:var(--pl-on-surface,#191c1e);letter-spacing:-.02em;line-height:1;">
-                        <?php echo $kpi['value']; ?>
-                    </span>
-                    <span style="display:block;font-family:var(--pl-font-body);font-size:.75rem;color:var(--pl-on-surface-variant);margin-top:.2rem;">
-                        <?php echo $kpi['label']; ?>
-                    </span>
+                <div class="pl-inst-kpi-info">
+                    <span class="pl-inst-kpi-value"><?php echo $kpi['value']; ?></span>
+                    <span class="pl-inst-kpi-label"><?php echo $kpi['label']; ?></span>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -2878,27 +2854,27 @@ class PedagoLens_Landing {
     </div>
 
     <!-- ========== TWO-COLUMN: PROFILE SCORES + TREND ========== -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2.5rem;">
+    <div class="pl-inst-two-col">
 
         <!-- Profile Averages -->
-        <div style="background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:1.5rem;padding:1.8rem;box-shadow:0 10px 40px rgba(25,28,30,.06);">
-            <h2 style="font-family:var(--pl-font-heading);font-size:1.25rem;font-weight:700;color:var(--pl-primary);margin:0 0 1.4rem;display:flex;align-items:center;gap:.5rem;">
-                <span class="material-symbols-outlined" style="font-size:1.3rem;">equalizer</span>
+        <div class="pl-inst-profiles">
+            <h2 class="pl-inst-card-title">
+                <span class="material-symbols-outlined">equalizer</span>
                 Score moyen par profil
             </h2>
-            <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="pl-inst-profiles-list">
                 <?php foreach ( $profile_keys as $pk ) :
                     $avg   = $profile_averages[ $pk ];
                     $color = $profile_colors[ $pk ] ?? 'var(--pl-primary)';
                     $label = esc_html( $profile_labels[ $pk ] );
                 ?>
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem;">
-                            <span style="font-family:var(--pl-font-body);font-size:.8125rem;color:var(--pl-on-surface-variant);"><?php echo $label; ?></span>
-                            <span style="font-family:var(--pl-font-heading);font-size:.875rem;font-weight:700;color:var(--pl-on-surface);"><?php echo $avg; ?>%</span>
+                    <div class="pl-inst-profile-row">
+                        <div class="pl-inst-profile-meta">
+                            <span class="pl-inst-profile-label"><?php echo $label; ?></span>
+                            <span class="pl-inst-profile-value"><?php echo $avg; ?>%</span>
                         </div>
-                        <div style="height:.5rem;border-radius:.25rem;background:var(--pl-surface-container-low,#f1f5f9);overflow:hidden;">
-                            <div style="height:100%;width:<?php echo $avg; ?>%;border-radius:.25rem;background:<?php echo $color; ?>;transition:width .6s ease;"></div>
+                        <div class="pl-inst-profile-bar-bg">
+                            <div class="pl-inst-profile-bar-fill" style="width:<?php echo $avg; ?>%;background:<?php echo $color; ?>;"></div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -2906,22 +2882,22 @@ class PedagoLens_Landing {
         </div>
 
         <!-- Monthly Trend Chart -->
-        <div style="background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:1.5rem;padding:1.8rem;box-shadow:0 10px 40px rgba(25,28,30,.06);display:flex;flex-direction:column;">
-            <h2 style="font-family:var(--pl-font-heading);font-size:1.25rem;font-weight:700;color:var(--pl-primary);margin:0 0 1.4rem;display:flex;align-items:center;gap:.5rem;">
-                <span class="material-symbols-outlined" style="font-size:1.3rem;">trending_up</span>
+        <div class="pl-inst-trend">
+            <h2 class="pl-inst-card-title">
+                <span class="material-symbols-outlined">trending_up</span>
                 Tendance des scores (6 mois)
             </h2>
-            <div style="flex:1;display:flex;align-items:flex-end;gap:.75rem;padding-top:1rem;">
+            <div class="pl-inst-trend-chart">
                 <?php foreach ( $monthly_avgs as $mk => $mv ) :
                     $pct       = $chart_max > 0 ? round( ( $mv / $chart_max ) * 100 ) : 0;
                     $month_lbl = wp_date( 'M', strtotime( $mk . '-01' ) );
                 ?>
-                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.4rem;">
-                        <span style="font-family:var(--pl-font-heading);font-size:.75rem;font-weight:700;color:var(--pl-on-surface);"><?php echo $mv; ?></span>
-                        <div style="width:100%;border-radius:.5rem;overflow:hidden;background:var(--pl-surface-container-low,#f1f5f9);height:140px;display:flex;align-items:flex-end;">
-                            <div style="width:100%;height:<?php echo max( 4, $pct ); ?>%;background:linear-gradient(180deg,var(--pl-secondary),var(--pl-primary));border-radius:.5rem;transition:height .6s ease;"></div>
+                    <div class="pl-inst-trend-col">
+                        <span class="pl-inst-trend-value"><?php echo $mv; ?></span>
+                        <div class="pl-inst-trend-bar-bg">
+                            <div class="pl-inst-trend-bar-fill" style="height:<?php echo max( 4, $pct ); ?>%;"></div>
                         </div>
-                        <span style="font-family:var(--pl-font-body);font-size:.6875rem;color:var(--pl-on-surface-variant);text-transform:uppercase;letter-spacing:.04em;"><?php echo esc_html( $month_lbl ); ?></span>
+                        <span class="pl-inst-trend-month"><?php echo esc_html( $month_lbl ); ?></span>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -2930,30 +2906,28 @@ class PedagoLens_Landing {
     </div>
 
     <!-- ========== TWO-COLUMN: TOP RECS + IMPACTED PROFILES ========== -->
-    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:1.5rem;margin-bottom:2.5rem;">
+    <div class="pl-inst-two-col pl-inst-two-col--recs">
 
         <!-- Top Recommendations -->
-        <div style="background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:1.5rem;padding:1.8rem;box-shadow:0 10px 40px rgba(25,28,30,.06);">
-            <h2 style="font-family:var(--pl-font-heading);font-size:1.25rem;font-weight:700;color:var(--pl-primary);margin:0 0 1.4rem;display:flex;align-items:center;gap:.5rem;">
-                <span class="material-symbols-outlined" style="font-size:1.3rem;">auto_awesome</span>
+        <div class="pl-inst-recs">
+            <h2 class="pl-inst-card-title">
+                <span class="material-symbols-outlined">auto_awesome</span>
                 Recommandations r&eacute;currentes
             </h2>
             <?php if ( empty( $top_recs ) ) : ?>
-                <div style="text-align:center;padding:2rem 0;">
-                    <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--pl-outline);">inbox</span>
-                    <p style="font-family:var(--pl-font-body);font-size:.875rem;color:var(--pl-on-surface-variant);margin:.5rem 0 0;">Aucune recommandation disponible.</p>
+                <div class="pl-inst-empty">
+                    <span class="material-symbols-outlined">inbox</span>
+                    <p>Aucune recommandation disponible.</p>
                 </div>
             <?php else : ?>
-                <div style="display:flex;flex-direction:column;gap:.75rem;">
+                <div class="pl-inst-recs-list">
                     <?php $rank = 0; foreach ( $top_recs as $rec_text => $rec_count ) : $rank++; ?>
-                        <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.9rem 1rem;border-radius:1rem;background:var(--pl-surface-container-low,#f1f5f9);">
-                            <span style="font-family:var(--pl-font-heading);font-size:.8125rem;font-weight:800;color:var(--pl-secondary);min-width:1.5rem;"><?php echo $rank; ?>.</span>
-                            <div style="flex:1;">
-                                <p style="font-family:var(--pl-font-body);font-size:.8125rem;color:var(--pl-on-surface);margin:0;line-height:1.4;"><?php echo esc_html( $rec_text ); ?></p>
+                        <div class="pl-inst-rec-item">
+                            <span class="pl-inst-rec-rank"><?php echo $rank; ?>.</span>
+                            <div class="pl-inst-rec-text">
+                                <p><?php echo esc_html( $rec_text ); ?></p>
                             </div>
-                            <span style="font-family:var(--pl-font-heading);font-size:.75rem;font-weight:700;color:var(--pl-on-surface-variant);background:var(--pl-surface-container-high,#e6e8ea);padding:.15rem .6rem;border-radius:9999px;white-space:nowrap;">
-                                &times;<?php echo $rec_count; ?>
-                            </span>
+                            <span class="pl-inst-rec-count">&times;<?php echo $rec_count; ?></span>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -2961,36 +2935,36 @@ class PedagoLens_Landing {
         </div>
 
         <!-- Most Impacted Profiles -->
-        <div style="background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:1.5rem;padding:1.8rem;box-shadow:0 10px 40px rgba(25,28,30,.06);">
-            <h2 style="font-family:var(--pl-font-heading);font-size:1.25rem;font-weight:700;color:var(--pl-primary);margin:0 0 1.4rem;display:flex;align-items:center;gap:.5rem;">
-                <span class="material-symbols-outlined" style="font-size:1.3rem;">warning</span>
+        <div class="pl-inst-impacted">
+            <h2 class="pl-inst-card-title">
+                <span class="material-symbols-outlined">warning</span>
                 Profils les plus impact&eacute;s
             </h2>
-            <p style="font-family:var(--pl-font-body);font-size:.8125rem;color:var(--pl-on-surface-variant);margin:0 0 1.2rem;">
+            <p class="pl-inst-impacted-desc">
                 Profils avec les scores moyens les plus bas &mdash; priorit&eacute; d'am&eacute;lioration.
             </p>
             <?php if ( $total_analyses === 0 ) : ?>
-                <div style="text-align:center;padding:2rem 0;">
-                    <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--pl-outline);">inbox</span>
-                    <p style="font-family:var(--pl-font-body);font-size:.875rem;color:var(--pl-on-surface-variant);margin:.5rem 0 0;">Aucune donn&eacute;e disponible.</p>
+                <div class="pl-inst-empty">
+                    <span class="material-symbols-outlined">inbox</span>
+                    <p>Aucune donn&eacute;e disponible.</p>
                 </div>
             <?php else : ?>
-                <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div class="pl-inst-impacted-list">
                     <?php foreach ( $impacted as $pk => $avg ) :
                         $color = $profile_colors[ $pk ] ?? 'var(--pl-primary)';
                         $label = esc_html( $profile_labels[ $pk ] ?? $pk );
                     ?>
-                        <div style="display:flex;align-items:center;gap:1rem;padding:1rem;border-radius:1rem;background:var(--pl-surface-container-low,#f1f5f9);">
-                            <div style="width:2.8rem;height:2.8rem;border-radius:.75rem;background:<?php echo $color; ?>;display:flex;align-items:center;justify-content:center;">
-                                <span class="material-symbols-outlined" style="color:#fff;font-size:1.2rem;">person</span>
+                        <div class="pl-inst-impacted-item">
+                            <div class="pl-inst-impacted-icon" style="background:<?php echo $color; ?>;">
+                                <span class="material-symbols-outlined">person</span>
                             </div>
-                            <div style="flex:1;">
-                                <span style="font-family:var(--pl-font-body);font-size:.875rem;font-weight:600;color:var(--pl-on-surface);"><?php echo $label; ?></span>
-                                <div style="height:.4rem;border-radius:.2rem;background:var(--pl-surface-container-high,#e6e8ea);margin-top:.4rem;overflow:hidden;">
-                                    <div style="height:100%;width:<?php echo $avg; ?>%;border-radius:.2rem;background:<?php echo $color; ?>;"></div>
+                            <div class="pl-inst-impacted-info">
+                                <span class="pl-inst-impacted-label"><?php echo $label; ?></span>
+                                <div class="pl-inst-impacted-bar-bg">
+                                    <div class="pl-inst-impacted-bar-fill" style="width:<?php echo $avg; ?>%;background:<?php echo $color; ?>;"></div>
                                 </div>
                             </div>
-                            <span style="font-family:var(--pl-font-heading);font-size:1.5rem;font-weight:800;color:<?php echo $color; ?>;letter-spacing:-.02em;"><?php echo $avg; ?>%</span>
+                            <span class="pl-inst-impacted-score" style="color:<?php echo $color; ?>;"><?php echo $avg; ?>%</span>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -3002,6 +2976,8 @@ class PedagoLens_Landing {
 </div>
 </div>
         <?php
+        echo '</main>';
+        echo '</div>';
         echo self::render_footer();
         return ob_get_clean();
     }

@@ -234,4 +234,4 @@ Projet développé dans le cadre du HackIAthon par une équipe de 3 personnes, a
 
 ## Licence
 
-À définir.
+À définir.cé
