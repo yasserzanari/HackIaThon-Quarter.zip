@@ -296,4 +296,67 @@ Permettre de voir l'historique des analyses précédentes pour chaque cours et p
 
 - [x] 21.1 Bump version `PL_LANDING_VERSION` de `2.4.1` → `2.5.0` (header PHP + constante define)
 - [x] 21.2 Bump version des autres plugins modifiés si applicable (core 1.0.1 → 1.0.2)
-- [ ] 21.3 Commit + push + déploiement SSM (après confirmation utilisateur)
+- [x] 21.3 Commit + push + déploiement SSM (après confirmation utilisateur)
+
+
+---
+
+## 22. Supprimer le bouton "Vue étudiant" du header enseignant
+
+L'enseignant ne doit PAS basculer vers l'interface étudiant. Il doit accéder directement à l'agent IA (Léa) depuis son propre dashboard.
+
+- [ ] 22.1 Retirer le bloc `pl-header-switch-btn` de `render_header()` dans `class-landing.php`
+- [ ] 22.2 Ajouter un lien "Agent IA Léa" dans la sidebar enseignant (render_sidebar) — icône `psychology`, lien vers le dashboard étudiant pour accéder au jumeau numérique
+
+---
+
+## 23. Redesign du bouton "Créer un cours" — Card dans la grille
+
+Le bouton "Créer un cours" doit être plus visible. Si des cours existent déjà, afficher une card "Créer un cours" à la fin de la grille (style card avec icône +). Si aucun cours, afficher un grand CTA centré animé.
+
+- [ ] 23.1 Retirer le bouton "Créer un cours" du header de `shortcode_courses()` et le remplacer par une card dans la grille `pl-courses-grid`
+- [ ] 23.2 Ajouter les styles CSS pour `.pl-create-course-card` — card avec bordure dashed, icône + animée, hover glow effect
+- [ ] 23.3 Si aucun cours : afficher un grand CTA centré avec animation pulse au lieu du message vide actuel
+
+---
+
+## 24. Restructuration cours → séances (remplacer "projets" par "séances")
+
+La hiérarchie correcte est : Cours (session) → Séances (semaines) → Fichiers/Analyse IA. Les "projets" deviennent des "séances" avec un type (cours magistral, travail d'équipe, exercice, évaluation).
+
+- [ ] 24.1 Renommer toute la terminologie "projet" → "séance" dans `shortcode_courses()` — labels, boutons, modals, titres
+- [ ] 24.2 Mettre à jour le modal "Créer un projet" → "Créer une séance" — champs : titre de la séance, semaine (Semaine 1, 2...), type (magistral/exercice/travail d'équipe/évaluation), upload fichiers
+- [ ] 24.3 Mettre à jour les handlers AJAX `ajax_create_project_front()` pour refléter la terminologie "séance"
+- [ ] 24.4 Mettre à jour l'affichage des séances dans les cards de cours — icônes par type, badge semaine
+
+---
+
+## 25. Corrections du header — Logo cliquable + section droite propre
+
+- [ ] 25.1 Dans `render_header()` variante connectée : ajouter le logo + texte "PédagoLens AI" cliquable vers `home_url('/')` dans `pl-header-app-left`
+- [ ] 25.2 Dans `render_header()` variante connectée : remplacer le texte "Déconnexion" par un bouton "Compte" avec icône `person`, et un bouton icône `logout` séparé
+- [ ] 25.3 Ajouter les styles CSS pour le header app amélioré — logo dans le header, boutons Compte/Logout stylés
+
+---
+
+## 26. Sidebar enseignant — Ajouter lien "Compte"
+
+- [ ] 26.1 Ajouter un item "Compte" dans le tableau `$nav` des enseignants/admins dans `render_sidebar()` — icône `person`, slug `account`, url vers `/compte/`
+
+---
+
+## 27. Version bump et déploiement des corrections
+
+- [ ] 27.1 Bump `PL_LANDING_VERSION` de `2.5.0` → `2.6.0` (header PHP + constante)
+- [ ] 27.2 Commit + push + déploiement SSM (après confirmation utilisateur)
+
+
+---
+
+## 28. Debug et refonte visuelle de la page Connexion
+
+La page de connexion est visuellement moche. Utiliser Chrome MCP pour diagnostiquer et corriger le rendu.
+
+- [ ] 28.1 Inspecter la page `/connexion/` via Chrome MCP — identifier les problèmes visuels (layout, couleurs, espacement, responsive)
+- [ ] 28.2 Refaire le design de `shortcode_login()` — card centrée glass effect, gradient background, logo, champs stylés, boutons Stitch
+- [ ] 28.3 Ajouter/corriger les styles CSS pour la page connexion dans `landing.css`

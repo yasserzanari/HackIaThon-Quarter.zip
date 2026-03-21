@@ -4,6 +4,8 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
+      "echo '=== Plugin dir ===' && ls -la /var/www/html/wp-content/plugins/ | grep pedagolens 2>&1",
+      "echo '=== Symlink check ===' && ls -la /opt/pedagolens/plugins/ 2>&1",
       "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]

@@ -4901,3 +4901,686 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
     backdrop-filter: blur(12px);
     box-shadow: 0 2px 20px rgba(0,35,111,0.08);
 }
+
+/* ============================================================
+   LOGIN / REGISTER PAGE — pl-st-login-*
+   ============================================================ */
+
+/* ── Page wrapper ─────────────────────────────────────────── */
+.pl-st-login-page {
+  min-height: 100vh;
+  background: var(--pl-background);
+  font-family: var(--pl-font-body);
+  color: var(--pl-text);
+}
+
+.pl-st-login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+/* ── LEFT: Branding panel ─────────────────────────────────── */
+.pl-st-login-branding {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 4rem;
+  background: var(--pl-gradient-editorial);
+  color: #fff;
+  overflow: hidden;
+}
+
+.pl-st-login-branding-content {
+  position: relative;
+  z-index: 2;
+}
+
+.pl-st-login-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.pl-st-login-brand-logo .pl-logo-img--login {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.pl-st-login-brand-name {
+  font-family: var(--pl-font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pl-st-login-brand-title {
+  font-family: var(--pl-font-heading);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 1.25rem;
+  letter-spacing: -0.03em;
+}
+
+.pl-st-login-brand-accent {
+  background: linear-gradient(90deg, #a78bfa, #67e8f9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pl-st-login-brand-desc {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.85;
+  margin-bottom: 2.5rem;
+  max-width: 480px;
+}
+
+/* ── Branding widgets ─────────────────────────────────────── */
+.pl-st-login-brand-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pl-st-login-widget {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--pl-radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.pl-st-login-widget .material-symbols-outlined {
+  font-size: 1.75rem;
+  color: #a78bfa;
+}
+
+.pl-st-login-widget div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pl-st-login-widget strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pl-st-login-widget span:not(.material-symbols-outlined) {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+/* ── Branding blur orbs ───────────────────────────────────── */
+.pl-st-login-branding-blur {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pl-st-login-branding-blur--violet {
+  width: 400px;
+  height: 400px;
+  background: #7c3aed;
+  opacity: 0.25;
+  filter: blur(120px);
+  top: -100px;
+  right: -100px;
+}
+
+.pl-st-login-branding-blur--teal {
+  width: 350px;
+  height: 350px;
+  background: #14b8a6;
+  opacity: 0.2;
+  filter: blur(100px);
+  bottom: -80px;
+  left: -80px;
+}
+
+/* ── Branding footer ──────────────────────────────────────── */
+.pl-st-login-branding-footer {
+  position: absolute;
+  bottom: 2rem;
+  left: 4rem;
+  right: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  z-index: 2;
+}
+
+.pl-st-login-branding-footer div {
+  display: flex;
+  gap: 1.5rem;
+}
+
+
+/* ── RIGHT: Form section ──────────────────────────────────── */
+.pl-st-login-form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background: var(--pl-surface-container-low);
+}
+
+.pl-st-login-form-wrap {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* ── Mobile branding (hidden on desktop) ──────────────────── */
+.pl-st-login-mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--pl-font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--pl-primary);
+}
+
+.pl-st-login-mobile-brand .material-symbols-outlined {
+  font-size: 1.5rem;
+  color: var(--pl-secondary);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.pl-st-login-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  background: var(--pl-surface-container);
+  border-radius: var(--pl-radius-full);
+  padding: 4px;
+}
+
+.pl-st-login-tab {
+  flex: 1;
+  padding: 0.7rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-family: var(--pl-font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--pl-text-muted);
+  cursor: pointer;
+  border-radius: var(--pl-radius-full);
+  transition: all var(--pl-transition);
+}
+
+.pl-st-login-tab--active {
+  background: var(--pl-surface);
+  color: var(--pl-primary);
+  box-shadow: var(--pl-shadow-sm);
+}
+
+.pl-st-login-tab:hover:not(.pl-st-login-tab--active) {
+  color: var(--pl-text);
+}
+
+/* ── Panels ───────────────────────────────────────────────── */
+.pl-st-login-panel {
+  display: none;
+}
+
+.pl-st-login-panel--active {
+  display: block;
+  animation: pl-fade-up 0.4s ease;
+}
+
+.pl-st-login-panel-header {
+  margin-bottom: 1.75rem;
+}
+
+.pl-st-login-panel-header h2 {
+  font-family: var(--pl-font-heading);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--pl-text);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.pl-st-login-panel-header p {
+  font-size: 0.95rem;
+  color: var(--pl-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Message box ──────────────────────────────────────────── */
+.pl-st-login-msg {
+  padding: 0.75rem 1rem;
+  border-radius: var(--pl-radius-sm);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.pl-st-login-msg.pl-msg-ok {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.pl-st-login-msg.pl-msg-err {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ── Form fields ──────────────────────────────────────────── */
+.pl-st-field {
+  margin-bottom: 1.25rem;
+}
+
+.pl-st-field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pl-text);
+  margin-bottom: 0.4rem;
+}
+
+.pl-st-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.pl-st-field-header label {
+  margin-bottom: 0;
+}
+
+.pl-st-field-link {
+  font-size: 0.8rem;
+  color: var(--pl-secondary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.pl-st-field-link:hover {
+  text-decoration: underline;
+}
+
+.pl-st-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pl-st-input-wrap input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  padding-right: 2.75rem;
+  border: 1.5px solid var(--pl-outline-variant);
+  border-radius: var(--pl-radius-sm);
+  font-family: var(--pl-font-body);
+  font-size: 0.95rem;
+  color: var(--pl-text);
+  background: var(--pl-surface);
+  transition: border-color var(--pl-transition), box-shadow var(--pl-transition);
+  outline: none;
+}
+
+.pl-st-input-wrap input:focus {
+  border-color: var(--pl-primary);
+  box-shadow: 0 0 0 3px rgba(0, 35, 111, 0.1);
+}
+
+.pl-st-input-wrap input::placeholder {
+  color: var(--pl-text-light);
+}
+
+.pl-st-input-wrap .material-symbols-outlined {
+  position: absolute;
+  right: 0.85rem;
+  font-size: 1.2rem;
+  color: var(--pl-text-light);
+  pointer-events: none;
+}
+
+/* ── Checkbox row ─────────────────────────────────────────── */
+.pl-st-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--pl-text-muted);
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+}
+
+.pl-st-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--pl-primary);
+}
+
+/* ── Submit button ────────────────────────────────────────── */
+.pl-st-login-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  border: none;
+  border-radius: var(--pl-radius-sm);
+  background: var(--pl-primary);
+  color: #fff;
+  font-family: var(--pl-font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--pl-transition);
+}
+
+.pl-st-login-submit:hover {
+  background: var(--pl-primary-container);
+  box-shadow: var(--pl-shadow-primary);
+  transform: translateY(-1px);
+}
+
+.pl-st-login-submit .material-symbols-outlined {
+  font-size: 1.2rem;
+  transition: transform var(--pl-transition);
+}
+
+.pl-st-login-submit:hover .material-symbols-outlined {
+  transform: translateX(3px);
+}
+
+/* ── Switch link ──────────────────────────────────────────── */
+.pl-st-login-switch {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--pl-text-muted);
+}
+
+.pl-st-login-switch-btn {
+  background: none;
+  border: none;
+  color: var(--pl-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: var(--pl-font-body);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pl-st-login-switch-btn:hover {
+  color: var(--pl-primary);
+}
+
+
+/* ── Register: Role cards ─────────────────────────────────── */
+.pl-register-step {
+  display: none;
+}
+
+.pl-register-step--active {
+  display: block;
+  animation: pl-fade-up 0.35s ease;
+}
+
+.pl-st-register-prompt {
+  font-size: 0.95rem;
+  color: var(--pl-text-muted);
+  margin-bottom: 1rem;
+}
+
+.pl-st-role-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pl-st-role-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border: 2px solid var(--pl-outline-variant);
+  border-radius: var(--pl-radius-md);
+  background: var(--pl-surface);
+  cursor: pointer;
+  transition: all var(--pl-transition);
+  text-align: left;
+  font-family: var(--pl-font-body);
+}
+
+.pl-st-role-card:hover {
+  border-color: var(--pl-primary);
+  background: var(--pl-primary-fixed);
+  transform: translateY(-2px);
+  box-shadow: var(--pl-shadow-sm);
+}
+
+.pl-st-role-card .material-symbols-outlined {
+  font-size: 2rem;
+  color: var(--pl-primary);
+  flex-shrink: 0;
+}
+
+.pl-st-role-card strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pl-text);
+}
+
+.pl-st-role-card span:not(.material-symbols-outlined) {
+  font-size: 0.85rem;
+  color: var(--pl-text-muted);
+}
+
+/* ── Register: Back button ────────────────────────────────── */
+.pl-st-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--pl-text-muted);
+  font-size: 0.85rem;
+  font-family: var(--pl-font-body);
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  padding: 0;
+  transition: color var(--pl-transition);
+}
+
+.pl-st-back-btn:hover {
+  color: var(--pl-primary);
+}
+
+.pl-st-back-btn .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+.pl-st-register-note {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--pl-text-light);
+  margin-top: 1rem;
+}
+
+/* ── Password strength ────────────────────────────────────── */
+.pl-password-strength {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pl-password-strength-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--pl-surface-container);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pl-password-strength-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.pl-password-strength-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Difficulties modal ───────────────────────────────────── */
+.pl-diff-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pl-diff-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.pl-diff-modal-content {
+  position: relative;
+  background: var(--pl-surface);
+  border-radius: var(--pl-radius-lg);
+  padding: 2rem;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: var(--pl-shadow-lg);
+  animation: pl-scale-in 0.3s ease;
+}
+
+.pl-diff-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--pl-text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.pl-diff-modal-content h3 {
+  font-family: var(--pl-font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.pl-diff-modal-desc {
+  font-size: 0.875rem;
+  color: var(--pl-text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.pl-diff-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pl-diff-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--pl-radius-sm);
+  cursor: pointer;
+  transition: background var(--pl-transition);
+  font-size: 0.9rem;
+}
+
+.pl-diff-option:hover {
+  background: var(--pl-surface-container-low);
+}
+
+.pl-diff-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--pl-primary);
+}
+
+.pl-diff-autre-field {
+  padding-left: 2rem;
+}
+
+.pl-diff-autre-field input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid var(--pl-outline-variant);
+  border-radius: var(--pl-radius-sm);
+  font-family: var(--pl-font-body);
+  font-size: 0.9rem;
+}
+
+.pl-diff-modal-save {
+  margin-top: 0;
+}
+
+/* ── Responsive: Login page ───────────────────────────────── */
+@media (max-width: 1024px) {
+  .pl-st-login-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pl-st-login-branding {
+    display: none;
+  }
+
+  .pl-st-login-mobile-brand {
+    display: flex;
+  }
+
+  .pl-st-login-form-section {
+    min-height: 100vh;
+    padding: 2rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pl-st-login-form-wrap {
+    max-width: 100%;
+  }
+
+  .pl-st-login-panel-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .pl-st-role-card {
+    padding: 1rem;
+  }
+}

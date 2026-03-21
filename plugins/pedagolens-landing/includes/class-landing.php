@@ -1755,21 +1755,26 @@ class PedagoLens_Landing {
         ?>
         <header class="pl-header-app" role="banner">
             <div class="pl-header-app-left">
-                <?php echo $bc_html; ?>
-            </div>
-            <?php if ( $is_admin || $is_teacher ) : 
-                $student_dash_url = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-            ?>
-                <a href="<?php echo $student_dash_url; ?>" class="pl-header-switch-btn" title="Tester l'interface étudiant">
-                    <span class="material-symbols-outlined">swap_horiz</span>
-                    <span class="pl-header-switch-label">Vue étudiant</span>
+                <a href="<?php echo $home_url; ?>" class="pl-header-app-logo-link">
+                    <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--header-app" />
+                    <span class="pl-header-app-brand">P&eacute;dagoLens AI</span>
                 </a>
-            <?php endif; ?>
+                <?php if ( $bc_html ) : ?>
+                    <span class="pl-header-app-sep material-symbols-outlined">chevron_right</span>
+                    <?php echo $bc_html; ?>
+                <?php endif; ?>
+            </div>
+            
             <div class="pl-header-app-right">
                 <div class="pl-header-user">
                     <img src="<?php echo esc_url( $avatar_url ); ?>" alt="" class="pl-header-avatar" />
                     <span class="pl-header-username"><?php echo $display; ?></span>
-                    <a href="<?php echo $logout_url; ?>" class="pl-header-logout">D&eacute;connexion</a>
+                    <a href="<?php echo esc_url( self::page_url( 'compte', '' ) ); ?>" class="pl-header-account-btn" title="Mon compte">
+                        <span class="material-symbols-outlined">person</span>
+                    </a>
+                    <a href="<?php echo $logout_url; ?>" class="pl-header-logout-btn" title="Déconnexion">
+                        <span class="material-symbols-outlined">logout</span>
+                    </a>
                 </div>
             </div>
         </header>
