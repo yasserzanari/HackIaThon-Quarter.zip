@@ -400,3 +400,340 @@
     } );
 
 } )( jQuery );
+
+
+// =============================================================================
+// SLIDE VIEWER (Tâche 38.4)
+// =============================================================================
+var slideViewerImages = [];
+var slideViewerCurrent = 0;
+
+function openSlideViewer( images, startIndex ) {
+    slideViewerImages = images;
+    slideViewerCurrent = startIndex || 0;
+    var modal = document.getElementById('pl-slide-viewer');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    updateSlideViewer();
+    document.addEventListener('keydown', slideViewerKeyHandler);
+}
+
+function closeSlideViewer() {
+    var modal = document.getElementById('pl-slide-viewer');
+    if (modal) modal.style.display = 'none';
+    document.removeEventListener('keydown', slideViewerKeyHandler);
+}
+
+function updateSlideViewer() {
+    var img = document.getElementById('pl-slide-viewer-img');
+    var counter = document.getElementById('pl-slide-viewer-counter');
+    if (!img || !slideViewerImages.length) return;
+    img.src = slideViewerImages[slideViewerCurrent].url;
+    if (counter) counter.textContent = 'Diapositive ' + (slideViewerCurrent + 1) + ' / ' + slideViewerImages.length;
+}
+
+function slideViewerKeyHandler(e) {
+    if (e.key === 'ArrowRight') { slideViewerNext(); }
+    else if (e.key === 'ArrowLeft') { slideViewerPrev(); }
+    else if (e.key === 'Escape') { closeSlideViewer(); }
+}
+
+function slideViewerNext() {
+    if (slideViewerCurrent < slideViewerImages.length - 1) {
+        slideViewerCurrent++;
+        updateSlideViewer();
+    }
+}
+
+function slideViewerPrev() {
+    if (slideViewerCurrent > 0) {
+        slideViewerCurrent--;
+        updateSlideViewer();
+    }
+}
+
+// Click on slide thumbnails to open viewer
+( function( $ ) {
+    'use strict';
+
+    var ajaxUrl   = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.ajaxUrl : '';
+    var nonce     = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.nonce   : '';
+    var projectId = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.projectId : 0;
+    var slideImages = ( typeof plWorkbench !== 'undefined' && plWorkbench.slideImages ) ? plWorkbench.slideImages : [];
+
+    var ajax = function( action, data ) {
+        return $.post( ajaxUrl, { action: action, nonce: nonce, project_id: projectId, ...data } );
+    };
+
+    // Show download button if PPTX slides exist
+    if ( slideImages.length > 0 ) {
+        $( '#pl-download-pptx' ).show();
+    }
+
+    // =========================================================================
+    // Slide thumbnail click → open viewer
+    // =========================================================================
+    $( document ).on( 'click', '.pl-stitch-wb-slide-thumb', function() {
+        var idx = parseInt( $( this ).data('slide-index'), 10 ) || 0;
+        if ( slideImages.length ) {
+            openSlideViewer( slideImages, idx );
+        }
+    } );
+
+    // Update slideImages when upload returns new ones
+    $( document ).on( 'pl:slideImagesUpdated', function( e, images ) {
+        slideImages = images;
+        if ( images.length > 0 ) {
+            $( '#pl-download-pptx' ).show();
+        }
+    } );
+
+    // =========================================================================
+    // ENRICHED SUGGESTIONS — staggered animation + section highlight (Tâche 39.4)
+    // =========================================================================
+    $( document ).on( 'mouseenter', '.pl-suggestion-card[data-section-id]', function() {
+        var sectionId = $( this ).data('section-id');
+        $( '#pl-section-' + sectionId ).addClass('pl-section-highlighted');
+    } );
+
+    $( document ).on( 'mouseleave', '.pl-suggestion-card[data-section-id]', function() {
+        var sectionId = $( this ).data('section-id');
+        $( '#pl-section-' + sectionId ).removeClass('pl-section-highlighted');
+    } );
+
+    // =========================================================================
+    // PREVIEW MODAL (Tâche 40.4)
+    // =========================================================================
+    $( document ).on( 'click', '.pl-btn-preview', function() {
+        var sectionId    = $( this ).data('section-id');
+        var suggestionId = $( this ).data('suggestion-id');
+        openPreviewModal( suggestionId, sectionId );
+    } );
+
+    function openPreviewModal( suggestionId, sectionId ) {
+        var $modal = $( '#pl-preview-modal' );
+        $modal.fadeIn( 200 );
+
+        // Reset
+        $( '#pl-preview-original' ).text( 'Chargement…' );
+        $( '#pl-preview-proposed' ).text( '' );
+        $( '#pl-preview-rationale' ).hide();
+        $( '#pl-preview-slide-img' ).hide();
+        $( '#pl-preview-apply' ).data( 'section-id', sectionId ).data( 'suggestion-id', suggestionId );
+
+        ajax( 'pl_preview_suggestion', {
+            section_id: sectionId,
+            suggestion_id: suggestionId
+        } ).done( function( res ) {
+            if ( res.success ) {
+                $( '#pl-preview-original' ).text( res.data.original );
+                $( '#pl-preview-proposed' ).text( res.data.proposed );
+                if ( res.data.rationale ) {
+                    $( '#pl-preview-rationale' ).text( res.data.rationale ).show();
+                }
+                if ( res.data.slide_image_url ) {
+                    $( '#pl-preview-slide-img img' ).attr( 'src', res.data.slide_image_url );
+                    $( '#pl-preview-slide-img' ).show();
+                }
+            } else {
+                $( '#pl-preview-original' ).text( res.data?.message || 'Erreur.' );
+            }
+        } );
+    }
+
+    // Apply from preview modal
+    $( '#pl-preview-apply' ).on( 'click', function() {
+        var $btn         = $( this );
+        var sectionId    = $btn.data('section-id');
+        var suggestionId = $btn.data('suggestion-id');
+
+        $btn.prop( 'disabled', true ).text( 'Application…' );
+
+        ajax( 'pl_apply_suggestion', {
+            section_id: sectionId,
+            suggestion_id: suggestionId
+        } ).done( function( res ) {
+            if ( res.success ) {
+                $( '.pl-section-content[data-section-id="' + sectionId + '"]' ).val( res.data.new_content );
+                flashSection( sectionId );
+                $( '#pl-sug-' + suggestionId ).fadeOut( 300 );
+                showUndoButton( sectionId );
+                $( '#pl-preview-modal' ).fadeOut( 200 );
+            }
+        } ).always( function() {
+            $btn.prop( 'disabled', false ).html(
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Appliquer cette suggestion'
+            );
+        } );
+    } );
+
+    // =========================================================================
+    // APPLY SUGGESTION — enhanced with flash + undo (Tâche 41)
+    // =========================================================================
+    // Override the existing apply handler with enhanced version
+    $( document ).off( 'click', '.pl-btn-apply' ).on( 'click', '.pl-btn-apply', function() {
+        var $btn         = $( this );
+        var sectionId    = $btn.data('section-id');
+        var suggestionId = $btn.data('suggestion-id');
+
+        // Store previous content for undo
+        var $textarea    = $( '.pl-section-content[data-section-id="' + sectionId + '"]' );
+        var prevContent  = $textarea.val();
+        $textarea.data( 'prev-content', prevContent );
+
+        $btn.prop( 'disabled', true ).text( 'Application…' );
+
+        ajax( 'pl_apply_suggestion', {
+            section_id: sectionId,
+            suggestion_id: suggestionId
+        } ).done( function( res ) {
+            if ( res.success ) {
+                $textarea.val( res.data.new_content );
+                flashSection( sectionId );
+                $btn.closest( '.pl-suggestion-card' ).fadeOut( 300 );
+                showUndoButton( sectionId );
+            } else {
+                alert( res.data?.message || 'Erreur.' );
+                $btn.prop( 'disabled', false ).text( '✓ Appliquer' );
+            }
+        } ).fail( function() {
+            alert( 'Erreur réseau.' );
+            $btn.prop( 'disabled', false ).text( '✓ Appliquer' );
+        } );
+    } );
+
+    function flashSection( sectionId ) {
+        var $section = $( '#pl-section-' + sectionId );
+        $section.addClass( 'pl-section-flash-green' );
+        setTimeout( function() {
+            $section.removeClass( 'pl-section-flash-green' );
+        }, 1200 );
+    }
+
+    function showUndoButton( sectionId ) {
+        $( '#pl-section-' + sectionId + ' .pl-btn-undo' ).show();
+    }
+
+    // Undo button
+    $( document ).on( 'click', '.pl-btn-undo', function() {
+        var sectionId   = $( this ).data('section-id');
+        var $textarea   = $( '.pl-section-content[data-section-id="' + sectionId + '"]' );
+        var prevContent = $textarea.data('prev-content');
+
+        if ( typeof prevContent !== 'undefined' ) {
+            $textarea.val( prevContent );
+            // Save the reverted content
+            ajax( 'pl_save_section', { section_id: sectionId, content: prevContent } );
+            $( this ).hide();
+            flashSection( sectionId );
+        }
+    } );
+
+    // =========================================================================
+    // DOWNLOAD MODIFIED PPTX (Tâche 42)
+    // =========================================================================
+    $( '#pl-download-pptx' ).on( 'click', function() {
+        var $btn = $( this );
+        $btn.prop( 'disabled', true ).text( '⏳ Génération…' );
+
+        ajax( 'pl_download_modified', {} )
+            .done( function( res ) {
+                if ( res.success && res.data.url ) {
+                    // Trigger download
+                    var a = document.createElement('a');
+                    a.href = res.data.url;
+                    a.download = res.data.filename || 'modified.pptx';
+                    document.body.appendChild( a );
+                    a.click();
+                    document.body.removeChild( a );
+                } else {
+                    alert( res.data?.message || 'Erreur lors de la génération.' );
+                }
+            } )
+            .fail( function() {
+                alert( 'Erreur réseau.' );
+            } )
+            .always( function() {
+                $btn.prop( 'disabled', false ).html(
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger le PPTX modifié'
+                );
+            } );
+    } );
+
+    // =========================================================================
+    // ANALYZE ALL SECTIONS — enhanced with skeleton loader (Tâche 43)
+    // =========================================================================
+    $( document ).off( 'click', '#pl-analyze-all' ).on( 'click', '#pl-analyze-all', function() {
+        var $btn = $( this );
+        var $sections = $( '.pl-stitch-wb-section' );
+
+        if ( ! $sections.length ) {
+            alert( 'Aucune section à analyser.' );
+            return;
+        }
+
+        $btn.prop( 'disabled', true ).html(
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pl-spin"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Analyse globale en cours…'
+        );
+
+        // Show skeleton loaders in each suggestion zone
+        $sections.each( function() {
+            var sid = $( this ).data('section-id');
+            var $zone = $( '#pl-suggestions-' + sid );
+            $zone.html(
+                '<div class="pl-skeleton-loader">' +
+                '<div class="pl-skeleton-line pl-skeleton-line-lg"></div>' +
+                '<div class="pl-skeleton-line pl-skeleton-line-md"></div>' +
+                '<div class="pl-skeleton-line pl-skeleton-line-sm"></div>' +
+                '</div>'
+            ).slideDown( 200 );
+        } );
+
+        ajax( 'pl_analyze_all_sections', {} )
+            .done( function( res ) {
+                if ( res.success ) {
+                    // Inject suggestions per section
+                    var sections = res.data.sections || {};
+                    for ( var sid in sections ) {
+                        if ( sections.hasOwnProperty( sid ) ) {
+                            $( '#pl-suggestions-' + sid ).html( sections[ sid ].html ).slideDown( 200 );
+                        }
+                    }
+                    // Update scores
+                    if ( res.data.scores_html ) {
+                        $( '#pl-sidebar-scores' ).html( res.data.scores_html );
+                    }
+                } else {
+                    alert( res.data?.message || 'Erreur lors de l\'analyse.' );
+                }
+            } )
+            .fail( function() {
+                alert( 'Erreur réseau.' );
+            } )
+            .always( function() {
+                $btn.prop( 'disabled', false ).html(
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Demander de nouvelles suggestions'
+                );
+                // Remove any remaining skeletons
+                $( '.pl-skeleton-loader' ).remove();
+            } );
+    } );
+
+    // =========================================================================
+    // Update slideImages on upload success
+    // =========================================================================
+    var origUploadSuccess = null;
+    $( document ).ajaxComplete( function( event, xhr, settings ) {
+        if ( settings.data && typeof settings.data === 'object' ) return;
+        if ( typeof settings.data === 'string' && settings.data.indexOf('pl_upload_file') !== -1 ) {
+            try {
+                var res = xhr.responseJSON;
+                if ( res && res.success && res.data && res.data.slide_images && res.data.slide_images.length ) {
+                    slideImages = res.data.slide_images;
+                    $( '#pl-download-pptx' ).show();
+                }
+            } catch(e) {}
+        }
+    } );
+
+} )( jQuery );

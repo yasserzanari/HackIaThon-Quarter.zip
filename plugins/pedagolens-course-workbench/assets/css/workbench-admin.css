@@ -1882,3 +1882,109 @@
         justify-content: center;
     }
 }
+
+
+/* ============================================================
+   SLIDE VIEWER MODAL (Tâche 38.7)
+   ============================================================ */
+.pl-slide-viewer-modal { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; }
+.pl-slide-viewer-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.92); }
+.pl-slide-viewer-image { position:relative; z-index:1; max-width:90vw; max-height:85vh; object-fit:contain; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+.pl-slide-viewer-close { position:absolute; top:20px; right:20px; z-index:2; background:rgba(255,255,255,0.15); border:none; color:#fff; width:44px; height:44px; border-radius:50%; font-size:24px; cursor:pointer; backdrop-filter:blur(8px); transition:background 0.2s; display:flex; align-items:center; justify-content:center; }
+.pl-slide-viewer-close:hover { background:rgba(255,255,255,0.3); }
+.pl-slide-viewer-prev,
+.pl-slide-viewer-next { position:absolute; top:50%; transform:translateY(-50%); z-index:2; background:rgba(255,255,255,0.12); border:none; color:#fff; width:48px; height:48px; border-radius:50%; cursor:pointer; backdrop-filter:blur(8px); transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+.pl-slide-viewer-prev { left:20px; }
+.pl-slide-viewer-next { right:20px; }
+.pl-slide-viewer-prev:hover,
+.pl-slide-viewer-next:hover { background:rgba(255,255,255,0.25); transform:translateY(-50%) scale(1.1); }
+.pl-slide-viewer-counter { position:absolute; bottom:24px; left:50%; transform:translateX(-50%); z-index:2; background:rgba(0,0,0,0.6); color:#fff; padding:8px 20px; border-radius:20px; font-size:0.9rem; font-family:'Inter',sans-serif; backdrop-filter:blur(8px); }
+
+/* Slide thumbnails in sections */
+.pl-stitch-wb-slide-thumb { position:relative; margin:0 24px 0; border-radius:12px; overflow:hidden; cursor:pointer; border:2px solid rgba(139,92,246,0.1); transition:all 0.3s ease; }
+.pl-stitch-wb-slide-thumb:hover { border-color:rgba(139,92,246,0.4); box-shadow:0 4px 20px rgba(139,92,246,0.15); transform:translateY(-2px); }
+.pl-stitch-wb-slide-thumb img { width:100%; max-height:200px; object-fit:contain; background:rgba(0,0,0,0.2); display:block; }
+.pl-stitch-wb-slide-thumb-overlay { position:absolute; inset:0; background:rgba(15,23,42,0.7); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; font-family:'Inter',sans-serif; opacity:0; transition:opacity 0.3s; }
+.pl-stitch-wb-slide-thumb:hover .pl-stitch-wb-slide-thumb-overlay { opacity:1; }
+
+/* ============================================================
+   ENRICHED SUGGESTION CARDS (Tâche 39.5)
+   ============================================================ */
+.pl-suggestion-card { background:rgba(255,255,255,0.04); border-radius:12px; padding:16px; margin-bottom:12px; border-left:4px solid; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:all 0.3s; animation:pl-slide-in 0.4s ease-out both; }
+.pl-suggestion-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.15); transform:translateY(-1px); }
+.pl-suggestion-card[data-type="reformulation"] { border-left-color:#3b82f6; }
+.pl-suggestion-card[data-type="ajout"] { border-left-color:#10b981; }
+.pl-suggestion-card[data-type="suppression"] { border-left-color:#ef4444; }
+.pl-suggestion-card[data-type="restructuration"] { border-left-color:#f59e0b; }
+
+.pl-suggestion-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
+.pl-suggestion-badge--reformulation { background:rgba(59,130,246,0.15); color:#93c5fd; }
+.pl-suggestion-badge--ajout { background:rgba(16,185,129,0.15); color:#6ee7b7; }
+.pl-suggestion-badge--suppression { background:rgba(239,68,68,0.15); color:#fca5a5; }
+.pl-suggestion-badge--restructuration { background:rgba(245,158,11,0.15); color:#fcd34d; }
+
+.pl-suggestion-impact { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.pl-suggestion-impact-bar { flex:1; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+.pl-suggestion-impact-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#8b5cf6,#3b82f6); transition:width 0.6s ease; }
+
+.pl-suggestion-diff { margin:10px 0; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; font-size:0.85rem; line-height:1.6; }
+.pl-suggestion-diff-remove { text-decoration:line-through; color:#fca5a5; background:rgba(239,68,68,0.1); padding:1px 4px; border-radius:3px; }
+.pl-suggestion-diff-add { color:#6ee7b7; background:rgba(16,185,129,0.1); padding:1px 4px; border-radius:3px; }
+
+.pl-suggestion-profile { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; background:rgba(139,92,246,0.15); color:#c4b5fd; border-radius:12px; font-size:0.75rem; }
+
+@keyframes pl-slide-in { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+/* Section highlight on suggestion hover */
+.pl-section-highlighted { border-color:rgba(139,92,246,0.5) !important; box-shadow:0 0 24px rgba(139,92,246,0.15) !important; }
+
+/* Flash green on apply */
+.pl-section-flash-green { animation:pl-flash-green 1.2s ease; }
+@keyframes pl-flash-green {
+    0% { box-shadow:0 0 0 0 rgba(16,185,129,0.4); }
+    30% { box-shadow:0 0 30px 4px rgba(16,185,129,0.3); border-color:rgba(16,185,129,0.5); }
+    100% { box-shadow:none; }
+}
+
+/* ============================================================
+   PREVIEW MODAL — avant/après (Tâche 40.5)
+   ============================================================ */
+.pl-preview-modal-content { max-width:800px; }
+.pl-preview-slide-img { margin-bottom:16px; border-radius:12px; overflow:hidden; }
+.pl-preview-slide-img img { width:100%; max-height:200px; object-fit:contain; background:rgba(0,0,0,0.3); display:block; }
+.pl-preview-split { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.pl-preview-before,
+.pl-preview-after { padding:16px; border-radius:12px; font-size:0.88rem; line-height:1.6; }
+.pl-preview-before { background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.15); }
+.pl-preview-after { background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.15); }
+.pl-preview-before h4,
+.pl-preview-after h4 { margin:0 0 10px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:700; }
+.pl-preview-before h4 { color:#fca5a5; }
+.pl-preview-after h4 { color:#6ee7b7; }
+.pl-preview-text { white-space:pre-wrap; color:var(--stitch-text-muted, #94a3b8); }
+.pl-preview-rationale { padding:12px 16px; background:rgba(139,92,246,0.06); border:1px solid rgba(139,92,246,0.15); border-radius:10px; font-size:0.85rem; color:var(--stitch-text-muted, #94a3b8); font-style:italic; }
+
+@media (max-width:768px) {
+    .pl-preview-split { grid-template-columns:1fr; }
+}
+
+/* ============================================================
+   SKELETON LOADER (Tâche 43)
+   ============================================================ */
+.pl-skeleton-loader { padding:16px; }
+.pl-skeleton-line { height:14px; border-radius:7px; background:linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size:200% 100%; animation:pl-skeleton-shimmer 1.5s ease-in-out infinite; margin-bottom:12px; }
+.pl-skeleton-line-lg { width:90%; }
+.pl-skeleton-line-md { width:70%; }
+.pl-skeleton-line-sm { width:50%; }
+@keyframes pl-skeleton-shimmer {
+    0% { background-position:200% 0; }
+    100% { background-position:-200% 0; }
+}
+
+/* Spin animation for loading button */
+@keyframes pl-spin-anim { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.pl-spin { animation:pl-spin-anim 1s linear infinite; }
+
+/* Undo button styling */
+.pl-btn-undo { opacity:0.8; }
+.pl-btn-undo:hover { opacity:1; }

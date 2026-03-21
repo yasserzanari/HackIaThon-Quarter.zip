@@ -394,9 +394,23 @@ class PedagoLens_API_Bridge {
                 "Contenu : {content}\nProfils : {profiles}",
 
             'workbench_suggestions' =>
-                "Propose des suggestions d'amélioration pour cette section de cours.\n" .
-                "Retourne un JSON avec : suggestions (array de {id, section, original, proposed, rationale, profile_target}).\n\n" .
-                "Section : {section}\nContenu : {content}\nType de cours : {course_type}",
+                "Propose des suggestions d'amélioration pédagogique pour cette section de cours.\n\n" .
+                "Contexte :\n" .
+                "- Numéro de slide : {slide_num}\n" .
+                "- Type de cours : {course_type} (magistral ou exercice)\n" .
+                "- Profils pédagogiques actifs : {active_profiles}\n\n" .
+                "Pour chaque suggestion, retourne un objet JSON contenant :\n" .
+                "- id (string) — identifiant unique de la suggestion\n" .
+                "- section (string) — nom de la section concernée\n" .
+                "- slide_num (int) — numéro de la diapositive concernée\n" .
+                "- modification_type (string) — \"reformulation\", \"ajout\", \"suppression\" ou \"restructuration\"\n" .
+                "- impact_score (int 0-100) — score d'impact estimé de la modification\n" .
+                "- original (string) — texte original\n" .
+                "- proposed (string) — texte proposé\n" .
+                "- rationale (string) — justification pédagogique\n" .
+                "- profile_target (string) — slug du profil pédagogique ciblé\n\n" .
+                "Retourne un JSON avec : suggestions (array des objets ci-dessus).\n\n" .
+                "Section : {section}\nContenu : {content}",
 
             'student_twin_response' =>
                 "Tu es un jumeau numérique pédagogique. Réponds à l'étudiant de façon guidée.\n" .

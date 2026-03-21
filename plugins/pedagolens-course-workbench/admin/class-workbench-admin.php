@@ -29,6 +29,9 @@ class PedagoLens_Workbench_Admin {
         add_action( 'wp_ajax_pl_get_versions',               [ self::class, 'ajax_get_versions' ] );
         add_action( 'wp_ajax_pl_add_section',                [ self::class, 'ajax_add_section' ] );
         add_action( 'wp_ajax_pl_upload_file',                [ self::class, 'ajax_upload_file' ] );
+        add_action( 'wp_ajax_pl_preview_suggestion',         [ self::class, 'ajax_preview_suggestion' ] );
+        add_action( 'wp_ajax_pl_download_modified',          [ self::class, 'ajax_download_modified' ] );
+        add_action( 'wp_ajax_pl_analyze_all_sections',       [ self::class, 'ajax_analyze_all_sections' ] );
         add_action( 'admin_enqueue_scripts',                 [ self::class, 'enqueue_assets' ] );
     }
 
@@ -352,39 +355,72 @@ class PedagoLens_Workbench_Admin {
             echo '<p>' . esc_html__( 'Aucune suggestion pour cette section.', 'pedagolens-course-workbench' ) . '</p>';
             return;
         }
+
+        $type_labels = [
+            'reformulation'   => 'Reformulation',
+            'ajout'           => 'Ajout',
+            'suppression'     => 'Suppression',
+            'restructuration' => 'Restructuration',
+        ];
+        $type_icons = [
+            'reformulation'   => '✏️',
+            'ajout'           => '➕',
+            'suppression'     => '🗑️',
+            'restructuration' => '🔄',
+        ];
         ?>
         <div class="pl-suggestions-list">
             <h4><?php esc_html_e( 'Suggestions IA', 'pedagolens-course-workbench' ); ?></h4>
-            <?php foreach ( $suggestions as $sug ) :
-                $sug_id = esc_attr( $sug['id'] ?? '' );
+            <?php foreach ( $suggestions as $idx => $sug ) :
+                $sug_id   = esc_attr( $sug['id'] ?? '' );
+                $mod_type = $sug['modification_type'] ?? 'reformulation';
+                $impact   = max( 0, min( 100, (int) ( $sug['impact_score'] ?? 50 ) ) );
+                $slide    = (int) ( $sug['slide_num'] ?? 0 );
                 ?>
-                <div class="pl-suggestion-card" id="pl-sug-<?php echo $sug_id; ?>">
+                <div class="pl-suggestion-card" id="pl-sug-<?php echo $sug_id; ?>"
+                     data-type="<?php echo esc_attr( $mod_type ); ?>"
+                     data-section-id="<?php echo esc_attr( $section_id ); ?>"
+                     style="animation-delay:<?php echo $idx * 100; ?>ms;">
 
-                    <div class="pl-sug-meta">
+                    <div class="pl-sug-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                        <span class="pl-suggestion-badge pl-suggestion-badge--<?php echo esc_attr( $mod_type ); ?>">
+                            <?php echo esc_html( ( $type_icons[ $mod_type ] ?? '📝' ) . ' ' . ( $type_labels[ $mod_type ] ?? ucfirst( $mod_type ) ) ); ?>
+                        </span>
+                        <?php if ( $slide > 0 ) : ?>
+                            <span style="font-size:0.72rem;color:var(--stitch-text-dim);">Diapo <?php echo $slide; ?></span>
+                        <?php endif; ?>
                         <?php if ( ! empty( $sug['profile_target'] ) ) : ?>
-                            <span class="pl-sug-profile"><?php echo esc_html( $sug['profile_target'] ); ?></span>
+                            <span class="pl-suggestion-profile">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <?php echo esc_html( $sug['profile_target'] ); ?>
+                            </span>
                         <?php endif; ?>
                     </div>
 
-                    <div class="pl-sug-diff">
-                        <div class="pl-sug-original">
-                            <strong><?php esc_html_e( 'Original', 'pedagolens-course-workbench' ); ?></strong>
-                            <p><?php echo esc_html( $sug['original'] ?? '' ); ?></p>
+                    <!-- Impact score bar -->
+                    <div class="pl-suggestion-impact">
+                        <span style="font-size:0.72rem;color:var(--stitch-text-dim);white-space:nowrap;">Impact</span>
+                        <div class="pl-suggestion-impact-bar">
+                            <div class="pl-suggestion-impact-fill" style="width:<?php echo $impact; ?>%;"></div>
                         </div>
-                        <div class="pl-sug-proposed">
-                            <strong><?php esc_html_e( 'Proposé', 'pedagolens-course-workbench' ); ?></strong>
-                            <p><?php echo esc_html( $sug['proposed'] ?? '' ); ?></p>
-                        </div>
+                        <span style="font-size:0.72rem;font-weight:700;color:var(--stitch-text);"><?php echo $impact; ?>%</span>
+                    </div>
+
+                    <!-- Diff visuel -->
+                    <div class="pl-suggestion-diff">
+                        <?php if ( ! empty( $sug['original'] ) ) : ?>
+                            <span class="pl-suggestion-diff-remove"><?php echo esc_html( mb_substr( $sug['original'], 0, 200 ) ); ?></span>
+                        <?php endif; ?>
+                        <?php if ( ! empty( $sug['proposed'] ) ) : ?>
+                            <span class="pl-suggestion-diff-add"><?php echo esc_html( mb_substr( $sug['proposed'], 0, 200 ) ); ?></span>
+                        <?php endif; ?>
                     </div>
 
                     <?php if ( ! empty( $sug['rationale'] ) ) : ?>
                         <p class="pl-sug-rationale"><em><?php echo esc_html( $sug['rationale'] ); ?></em></p>
                     <?php endif; ?>
 
-                    <?php
-                    // Delta d'impact par profil (si disponible)
-                    if ( ! empty( $sug['impact_delta'] ) ) :
-                        ?>
+                    <?php if ( ! empty( $sug['impact_delta'] ) ) : ?>
                         <div class="pl-sug-deltas">
                             <?php foreach ( $sug['impact_delta'] as $slug => $delta ) :
                                 $sign  = $delta >= 0 ? '+' : '';
@@ -404,6 +440,12 @@ class PedagoLens_Workbench_Admin {
                             data-section-id="<?php echo esc_attr( $section_id ); ?>"
                             data-suggestion-id="<?php echo $sug_id; ?>">
                             ✓ <?php esc_html_e( 'Appliquer', 'pedagolens-course-workbench' ); ?>
+                        </button>
+                        <button type="button"
+                            class="button pl-btn-preview"
+                            data-section-id="<?php echo esc_attr( $section_id ); ?>"
+                            data-suggestion-id="<?php echo $sug_id; ?>">
+                            👁 <?php esc_html_e( 'Prévisualiser', 'pedagolens-course-workbench' ); ?>
                         </button>
                         <button type="button"
                             class="button pl-btn-reject"
@@ -427,14 +469,13 @@ class PedagoLens_Workbench_Admin {
     public static function ajax_apply_suggestion(): void {
         self::verify_nonce();
 
-        $project_id   = (int) ( $_POST['project_id']   ?? 0 );
-        $section_id   = sanitize_text_field( $_POST['section_id']   ?? '' );
+        $project_id    = (int) ( $_POST['project_id']   ?? 0 );
+        $section_id    = sanitize_text_field( $_POST['section_id']   ?? '' );
         $suggestion_id = sanitize_text_field( $_POST['suggestion_id'] ?? '' );
 
         $ok = PedagoLens_Course_Workbench::apply_suggestion( $project_id, $section_id, $suggestion_id );
 
         if ( $ok ) {
-            // Retourner le nouveau contenu de la section
             $sections = PedagoLens_Course_Workbench::get_content_sections( $project_id );
             $content  = '';
             foreach ( $sections as $s ) {
@@ -443,7 +484,17 @@ class PedagoLens_Workbench_Admin {
                     break;
                 }
             }
-            wp_send_json_success( [ 'new_content' => $content ] );
+
+            // Return current scores if available
+            $raw_scores = get_post_meta( $project_id, '_pl_profile_scores', true );
+            $scores     = is_string( $raw_scores ) ? (array) json_decode( $raw_scores, true ) : [];
+
+            wp_send_json_success( [
+                'new_content'    => $content,
+                'scores'         => $scores,
+                'suggestion_id'  => $suggestion_id,
+                'section_id'     => $section_id,
+            ] );
         } else {
             wp_send_json_error( [ 'message' => 'Application de la suggestion échouée.' ] );
         }
@@ -610,9 +661,10 @@ class PedagoLens_Workbench_Admin {
             true
         );
         wp_localize_script( 'pl-workbench-front', 'plWorkbench', [
-            'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-            'nonce'     => wp_create_nonce( self::NONCE_AJAX ),
-            'projectId' => $project_id,
+            'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+            'nonce'       => wp_create_nonce( self::NONCE_AJAX ),
+            'projectId'   => $project_id,
+            'slideImages' => $slide_images,
         ] );
 
         $project_type = get_post_meta( $project_id, '_pl_project_type', true ) ?: 'magistral';
@@ -622,6 +674,10 @@ class PedagoLens_Workbench_Admin {
         $raw_files    = get_post_meta( $project_id, '_pl_uploaded_files', true );
         $files        = is_string( $raw_files ) ? (array) json_decode( $raw_files, true ) : [];
         $summary      = get_post_meta( $project_id, '_pl_summary', true ) ?: '';
+
+        // Slide images for viewer
+        $raw_slide_images = get_post_meta( $project_id, '_pl_slide_images', true );
+        $slide_images     = is_string( $raw_slide_images ) ? (array) json_decode( $raw_slide_images, true ) : [];
 
         $courses_page = get_page_by_path( 'cours-projets' );
         $back_url     = $courses_page ? get_permalink( $courses_page ) : home_url( '/' );
@@ -677,6 +733,10 @@ class PedagoLens_Workbench_Admin {
                     <button type="button" id="pl-wb-save-version" class="pl-stitch-btn pl-stitch-btn-primary">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                         Sauvegarder la version
+                    </button>
+                    <button type="button" id="pl-download-pptx" class="pl-stitch-btn pl-stitch-btn-outline" style="display:none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Télécharger le PPTX modifié
                     </button>
                 </div>
             </header>
@@ -851,6 +911,54 @@ class PedagoLens_Workbench_Admin {
                 </div>
             </div>
 
+            <!-- Slide Viewer Modal -->
+            <div id="pl-slide-viewer" class="pl-slide-viewer-modal" style="display:none;">
+                <div class="pl-slide-viewer-overlay" onclick="closeSlideViewer()"></div>
+                <button type="button" class="pl-slide-viewer-close" onclick="closeSlideViewer()" aria-label="Fermer">&times;</button>
+                <button type="button" class="pl-slide-viewer-prev" onclick="slideViewerPrev()" aria-label="Diapositive précédente">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <img id="pl-slide-viewer-img" class="pl-slide-viewer-image" src="" alt="Diapositive" />
+                <button type="button" class="pl-slide-viewer-next" onclick="slideViewerNext()" aria-label="Diapositive suivante">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+                <div id="pl-slide-viewer-counter" class="pl-slide-viewer-counter">Diapositive 1 / 1</div>
+            </div>
+
+            <!-- Preview Suggestion Modal (avant/après) -->
+            <div id="pl-preview-modal" class="pl-stitch-modal" style="display:none;">
+                <div class="pl-stitch-modal-overlay pl-preview-modal-overlay"></div>
+                <div class="pl-stitch-modal-content pl-stitch-modal-lg pl-preview-modal-content">
+                    <div class="pl-stitch-modal-header">
+                        <h2>Prévisualisation de la suggestion</h2>
+                        <button type="button" class="pl-stitch-modal-close">&times;</button>
+                    </div>
+                    <div class="pl-stitch-modal-body">
+                        <div class="pl-preview-slide-img" id="pl-preview-slide-img" style="display:none;">
+                            <img src="" alt="Diapositive" />
+                        </div>
+                        <div class="pl-preview-split">
+                            <div class="pl-preview-before">
+                                <h4>Avant</h4>
+                                <div id="pl-preview-original" class="pl-preview-text"></div>
+                            </div>
+                            <div class="pl-preview-after">
+                                <h4>Après</h4>
+                                <div id="pl-preview-proposed" class="pl-preview-text"></div>
+                            </div>
+                        </div>
+                        <div id="pl-preview-rationale" class="pl-preview-rationale" style="display:none;"></div>
+                    </div>
+                    <div class="pl-stitch-modal-footer">
+                        <button type="button" class="pl-stitch-btn pl-stitch-btn-outline pl-stitch-modal-cancel">Fermer</button>
+                        <button type="button" id="pl-preview-apply" class="pl-stitch-btn pl-stitch-btn-apply">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Appliquer cette suggestion
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
         <?php
         return ob_get_clean();
@@ -863,8 +971,10 @@ class PedagoLens_Workbench_Admin {
         $section_id = esc_attr( $section['id'] ?? '' );
         $title      = esc_html( $section['title'] ?? 'Section' );
         $content    = esc_textarea( $section['content'] ?? '' );
+        $slide_img  = $section['slide_image_url'] ?? '';
+        $slide_num  = (int) ( $section['slide_num'] ?? 0 );
         ?>
-        <div class="pl-section-block pl-stitch-wb-section" id="pl-section-<?php echo $section_id; ?>" data-section-id="<?php echo $section_id; ?>">
+        <div class="pl-section-block pl-stitch-wb-section" id="pl-section-<?php echo $section_id; ?>" data-section-id="<?php echo $section_id; ?>" data-slide-num="<?php echo $slide_num; ?>">
             <div class="pl-section-header pl-stitch-wb-section-header">
                 <div class="pl-stitch-wb-section-title-row">
                     <?php if ( $section_num > 0 ) : ?>
@@ -883,12 +993,25 @@ class PedagoLens_Workbench_Admin {
                     </button>
                 </div>
             </div>
+            <?php if ( $slide_img ) : ?>
+            <div class="pl-stitch-wb-slide-thumb" data-slide-index="<?php echo max( 0, $slide_num - 1 ); ?>">
+                <img src="<?php echo esc_url( $slide_img ); ?>" alt="Diapositive <?php echo $slide_num; ?>" loading="lazy" />
+                <div class="pl-stitch-wb-slide-thumb-overlay">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Voir la diapositive
+                </div>
+            </div>
+            <?php endif; ?>
             <div class="pl-section-editor pl-stitch-wb-section-editor">
                 <textarea class="pl-section-content pl-stitch-wb-textarea" data-section-id="<?php echo $section_id; ?>" rows="6"><?php echo $content; ?></textarea>
                 <div class="pl-section-save-row pl-stitch-wb-save-row">
                     <button type="button" class="pl-stitch-btn pl-stitch-btn-sm pl-stitch-btn-primary pl-btn-save-section" data-section-id="<?php echo $section_id; ?>">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                         Enregistrer
+                    </button>
+                    <button type="button" class="pl-stitch-btn pl-stitch-btn-sm pl-stitch-btn-ghost pl-btn-undo" data-section-id="<?php echo $section_id; ?>" style="display:none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                        Annuler
                     </button>
                     <span class="pl-save-status"></span>
                 </div>
@@ -919,6 +1042,232 @@ class PedagoLens_Workbench_Admin {
                 <span class="pl-stitch-score-value"><?php echo $score; ?><small>/100</small></span>
             </div>
         <?php endforeach;
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Preview suggestion (avant/après)
+    // -------------------------------------------------------------------------
+
+    public static function ajax_preview_suggestion(): void {
+        self::verify_nonce();
+
+        $project_id    = (int) ( $_POST['project_id'] ?? 0 );
+        $section_id    = sanitize_text_field( $_POST['section_id'] ?? '' );
+        $suggestion_id = sanitize_text_field( $_POST['suggestion_id'] ?? '' );
+
+        // Get cached suggestions
+        $raw   = get_post_meta( $project_id, '_pl_last_suggestions', true );
+        $cache = is_string( $raw ) ? (array) json_decode( $raw, true ) : [];
+        $suggestions = $cache[ $section_id ] ?? [];
+
+        $suggestion = null;
+        foreach ( $suggestions as $sug ) {
+            if ( ( $sug['id'] ?? '' ) === $suggestion_id ) {
+                $suggestion = $sug;
+                break;
+            }
+        }
+
+        if ( ! $suggestion ) {
+            wp_send_json_error( [ 'message' => 'Suggestion introuvable.' ] );
+        }
+
+        // Get slide image URL if available
+        $sections = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+        $slide_image_url = '';
+        foreach ( $sections as $s ) {
+            if ( ( $s['id'] ?? '' ) === $section_id ) {
+                $slide_image_url = $s['slide_image_url'] ?? '';
+                break;
+            }
+        }
+
+        wp_send_json_success( [
+            'original'        => $suggestion['original'] ?? '',
+            'proposed'        => $suggestion['proposed'] ?? '',
+            'rationale'       => $suggestion['rationale'] ?? '',
+            'slide_image_url' => $slide_image_url,
+            'section_id'      => $section_id,
+            'suggestion_id'   => $suggestion_id,
+        ] );
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Download modified PPTX
+    // -------------------------------------------------------------------------
+
+    public static function ajax_download_modified(): void {
+        self::verify_nonce();
+
+        $project_id = (int) ( $_POST['project_id'] ?? 0 );
+        if ( ! $project_id ) {
+            wp_send_json_error( [ 'message' => 'ID de projet manquant.' ] );
+        }
+
+        // Find the original PPTX attachment
+        $raw_files = get_post_meta( $project_id, '_pl_uploaded_files', true );
+        $files     = is_string( $raw_files ) ? (array) json_decode( $raw_files, true ) : [];
+
+        $pptx_attachment_id = 0;
+        foreach ( $files as $f ) {
+            if ( ( $f['ext'] ?? '' ) === 'pptx' && ! empty( $f['attachment_id'] ) ) {
+                $pptx_attachment_id = (int) $f['attachment_id'];
+                break;
+            }
+        }
+
+        if ( ! $pptx_attachment_id ) {
+            wp_send_json_error( [ 'message' => 'Aucun fichier PPTX original trouvé.' ] );
+        }
+
+        $original_path = get_attached_file( $pptx_attachment_id );
+        if ( ! $original_path || ! file_exists( $original_path ) ) {
+            wp_send_json_error( [ 'message' => 'Fichier PPTX introuvable sur le serveur.' ] );
+        }
+
+        $sections    = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+        $output_path = self::generate_modified_pptx( $original_path, $sections, $project_id );
+
+        if ( ! $output_path ) {
+            wp_send_json_error( [ 'message' => 'Erreur lors de la génération du PPTX modifié.' ] );
+        }
+
+        $upload_dir = wp_upload_dir();
+        $url        = str_replace( $upload_dir['basedir'], $upload_dir['baseurl'], $output_path );
+
+        wp_send_json_success( [
+            'url'      => $url,
+            'filename' => basename( $output_path ),
+        ] );
+    }
+
+    /**
+     * Generate a modified PPTX by injecting updated section content into slide XML.
+     */
+    private static function generate_modified_pptx( string $original_path, array $sections, int $project_id ): ?string {
+        $upload_dir = wp_upload_dir();
+        $dest_dir   = $upload_dir['basedir'] . '/pedagolens/exports/' . $project_id;
+        if ( ! is_dir( $dest_dir ) ) {
+            mkdir( $dest_dir, 0755, true );
+        }
+
+        $output_path = $dest_dir . '/modified-' . time() . '.pptx';
+        copy( $original_path, $output_path );
+
+        $zip = new \ZipArchive();
+        if ( $zip->open( $output_path ) !== true ) {
+            return null;
+        }
+
+        // Map sections by slide_num
+        $by_slide = [];
+        foreach ( $sections as $sec ) {
+            $sn = (int) ( $sec['slide_num'] ?? 0 );
+            if ( $sn > 0 ) {
+                $by_slide[ $sn ] = $sec['content'] ?? '';
+            }
+        }
+
+        // For each slide that has updated content, replace all <a:t> text
+        foreach ( $by_slide as $slide_num => $new_content ) {
+            $slide_xml = $zip->getFromName( "ppt/slides/slide{$slide_num}.xml" );
+            if ( $slide_xml === false ) {
+                continue;
+            }
+
+            // Simple approach: replace the first <a:t> block with the new content
+            // and clear subsequent ones. This preserves XML structure.
+            $lines     = explode( "\n", $new_content );
+            $line_idx  = 0;
+            $modified  = preg_replace_callback(
+                '/<a:t>([^<]*)<\/a:t>/',
+                function ( $matches ) use ( $lines, &$line_idx ) {
+                    if ( $line_idx < count( $lines ) ) {
+                        $replacement = htmlspecialchars( $lines[ $line_idx ], ENT_XML1, 'UTF-8' );
+                        $line_idx++;
+                        return '<a:t>' . $replacement . '</a:t>';
+                    }
+                    return $matches[0];
+                },
+                $slide_xml
+            );
+
+            if ( $modified ) {
+                $zip->addFromString( "ppt/slides/slide{$slide_num}.xml", $modified );
+            }
+        }
+
+        $zip->close();
+        return $output_path;
+    }
+
+    // -------------------------------------------------------------------------
+    // AJAX — Analyze all sections at once
+    // -------------------------------------------------------------------------
+
+    public static function ajax_analyze_all_sections(): void {
+        self::verify_nonce();
+
+        $project_id = (int) ( $_POST['project_id'] ?? 0 );
+        if ( ! $project_id ) {
+            wp_send_json_error( [ 'message' => 'ID de projet manquant.' ] );
+        }
+
+        $sections = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+        if ( empty( $sections ) ) {
+            wp_send_json_error( [ 'message' => 'Aucune section à analyser.' ] );
+        }
+
+        $all_suggestions = [];
+        $all_html        = '';
+        $latest_scores   = [];
+
+        foreach ( $sections as $sec ) {
+            $section_id = $sec['id'] ?? '';
+            if ( ! $section_id ) {
+                continue;
+            }
+
+            $result = PedagoLens_Course_Workbench::get_suggestions( $project_id, $section_id );
+
+            if ( ! empty( $result['success'] ) && ! empty( $result['suggestions'] ) ) {
+                // Cache suggestions
+                $raw   = get_post_meta( $project_id, '_pl_last_suggestions', true );
+                $cache = is_string( $raw ) ? (array) json_decode( $raw, true ) : [];
+                $cache[ $section_id ] = $result['suggestions'];
+                update_post_meta( $project_id, '_pl_last_suggestions', wp_json_encode( $cache ) );
+
+                ob_start();
+                self::render_suggestions_html( $result['suggestions'], $section_id );
+                $html = ob_get_clean();
+
+                $all_suggestions[ $section_id ] = [
+                    'html'  => $html,
+                    'count' => count( $result['suggestions'] ),
+                ];
+            }
+
+            if ( ! empty( $result['profile_scores'] ) ) {
+                $latest_scores = $result['profile_scores'];
+            }
+        }
+
+        // Update scores
+        $scores_html = '';
+        if ( ! empty( $latest_scores ) ) {
+            update_post_meta( $project_id, '_pl_profile_scores', wp_json_encode( $latest_scores ) );
+            ob_start();
+            self::render_front_score_bars( $latest_scores );
+            $scores_html = ob_get_clean();
+        }
+
+        $total = array_sum( array_column( $all_suggestions, 'count' ) );
+
+        wp_send_json_success( [
+            'sections'    => $all_suggestions,
+            'scores_html' => $scores_html,
+            'total'       => $total,
+        ] );
     }
 
     // -------------------------------------------------------------------------
@@ -983,6 +1332,22 @@ class PedagoLens_Workbench_Admin {
                 break;
         }
 
+        // Convert PPTX slides to images
+        $slide_images = [];
+        if ( $ext === 'pptx' ) {
+            $slide_images = self::convert_pptx_to_images( $filepath, $attachment_id );
+            update_post_meta( $project_id, '_pl_slide_images', wp_json_encode( $slide_images ) );
+
+            // Link each section to its corresponding slide image
+            foreach ( $extracted_sections as $idx => &$sec ) {
+                if ( isset( $slide_images[ $idx ] ) ) {
+                    $sec['slide_image_url'] = $slide_images[ $idx ]['url'];
+                    $sec['slide_num']       = $slide_images[ $idx ]['slide_num'];
+                }
+            }
+            unset( $sec );
+        }
+
         // Merge new sections into project
         $existing = PedagoLens_Course_Workbench::get_content_sections( $project_id );
         foreach ( $extracted_sections as $sec ) {
@@ -1022,6 +1387,7 @@ class PedagoLens_Workbench_Admin {
             'sections_html' => $sections_html,
             'file_html'     => $file_html,
             'count'         => count( $extracted_sections ),
+            'slide_images'  => $slide_images,
         ] );
     }
 
@@ -1056,6 +1422,79 @@ class PedagoLens_Workbench_Admin {
 
         $zip->close();
         return $sections;
+    }
+
+    /**
+     * Convert PPTX slides to PNG images via LibreOffice + pdftoppm.
+     *
+     * @param string $filepath      Absolute path to the .pptx file.
+     * @param int    $attachment_id  WP attachment ID (used for folder naming).
+     * @return array  Array of [ slide_num, url, width, height ] per slide.
+     */
+    private static function convert_pptx_to_images( string $filepath, int $attachment_id ): array {
+        // 1. Temporary directory for conversion
+        $tmp_dir = sys_get_temp_dir() . '/pl-slides-' . $attachment_id;
+        if ( ! is_dir( $tmp_dir ) ) {
+            mkdir( $tmp_dir, 0755, true );
+        }
+
+        // 2. PPTX → PDF via LibreOffice headless
+        $pdf_cmd = sprintf(
+            'libreoffice --headless --convert-to pdf --outdir %s %s 2>&1',
+            escapeshellarg( $tmp_dir ),
+            escapeshellarg( $filepath )
+        );
+        shell_exec( $pdf_cmd );
+
+        $pdf_name = pathinfo( basename( $filepath ), PATHINFO_FILENAME ) . '.pdf';
+        $pdf_path = $tmp_dir . '/' . $pdf_name;
+
+        if ( ! file_exists( $pdf_path ) ) {
+            return []; // Conversion failed
+        }
+
+        // 3. PDF → PNG per page via pdftoppm (poppler-utils)
+        $img_prefix = $tmp_dir . '/slide';
+        $img_cmd = sprintf(
+            'pdftoppm -png -r 150 %s %s 2>&1',
+            escapeshellarg( $pdf_path ),
+            escapeshellarg( $img_prefix )
+        );
+        shell_exec( $img_cmd );
+
+        // 4. Collect generated images and move to uploads
+        $upload_dir   = wp_upload_dir();
+        $dest_dir     = $upload_dir['basedir'] . '/pedagolens/slides/' . $attachment_id;
+        if ( ! is_dir( $dest_dir ) ) {
+            mkdir( $dest_dir, 0755, true );
+        }
+
+        $dest_url_base = $upload_dir['baseurl'] . '/pedagolens/slides/' . $attachment_id;
+
+        $images = glob( $tmp_dir . '/slide-*.png' );
+        sort( $images );
+
+        $result    = [];
+        $slide_num = 1;
+        foreach ( $images as $img ) {
+            $dest_file = $dest_dir . '/slide-' . $slide_num . '.png';
+            copy( $img, $dest_file );
+
+            $size     = @getimagesize( $dest_file );
+            $result[] = [
+                'slide_num' => $slide_num,
+                'url'       => $dest_url_base . '/slide-' . $slide_num . '.png',
+                'width'     => $size[0] ?? 960,
+                'height'    => $size[1] ?? 540,
+            ];
+            $slide_num++;
+        }
+
+        // Cleanup tmp
+        array_map( 'unlink', glob( $tmp_dir . '/*' ) );
+        @rmdir( $tmp_dir );
+
+        return $result;
     }
 
     /**

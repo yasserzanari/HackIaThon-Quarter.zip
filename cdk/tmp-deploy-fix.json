@@ -3,10 +3,10 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe Landing ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
-      "echo '=== Syntaxe Workbench ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1",
-      "systemctl restart apache2 && echo 'Apache restarted OK'"
+      "export HOME=/root && apt-get install -y poppler-utils 2>&1 | tail -5",
+      "which pdftoppm && pdftoppm -v 2>&1 || echo 'pdftoppm NOT FOUND'",
+      "which libreoffice && libreoffice --version 2>&1 || echo 'LibreOffice NOT FOUND'",
+      "ls -la /var/www/html/wp-content/uploads/pedagolens/slides/ 2>/dev/null || echo 'slides dir not found'"
     ]
   }
 }
