@@ -56,10 +56,27 @@ function showSlide( index ) {
         fitVisualSlide();
     } else {
         // TEXT MODE — rich contenteditable editor styled like a real slide
+        // Check for slide image from slideImages array or section data
+        var slideImg = ( slideImages[ index ] && slideImages[ index ].url ) ? slideImages[ index ].url : ( sec.slide_image_url || '' );
+
+        // If we have a real slide image, show it as the primary view
+        if ( slideImg ) {
+            $slide.html(
+                '<div class="pl-canvas-slide-inner pl-image-mode-slide" data-section-id="' + sec.id + '" data-slide-num="' + ( sec.slide_num || 0 ) + '">' +
+                    '<div class="pl-canvas-slide-image-primary">' +
+                        '<img src="' + slideImg + '" alt="Diapositive ' + ( sec.slide_num || index + 1 ) + '" />' +
+                    '</div>' +
+                    '<details class="pl-canvas-text-details">' +
+                        '<summary class="pl-canvas-text-toggle">📝 Modifier le texte</summary>' +
+                        '<textarea class="pl-section-content pl-canvas-textarea" data-section-id="' + sec.id + '" rows="6">' + escHtml( sec.content ) + '</textarea>' +
+                    '</details>' +
+                '</div>'
+            );
+
+            // Update counter, toolbar, filmstrip, etc. (fall through below)
+        } else {
+
         var imgHtml = '';
-        if ( sec.slide_image_url ) {
-            imgHtml = '<div class="pl-canvas-slide-image"><img src="' + sec.slide_image_url + '" alt="Diapositive ' + ( sec.slide_num || index + 1 ) + '" /></div>';
-        }
 
         // Build a mini toolbar for text formatting
         var toolbarHtml =
@@ -104,7 +121,8 @@ function showSlide( index ) {
             '<textarea class="pl-section-content pl-canvas-textarea pl-hidden-textarea" data-section-id="' + sec.id + '" rows="12" style="display:none;">' + escHtml( sec.content ) + '</textarea>' +
             '</div>'
         );
-    }
+    } // end inner else (no slide image)
+    } // end outer else (text mode)
 
     // Update counter
     $( '#pl-slide-counter' ).text( 'Diapositive ' + ( index + 1 ) + ' / ' + sections.length );
@@ -966,6 +984,8 @@ $( '#pl-analyze-all' ).on( 'click', function() {
 
                     if ( res.data.scores_html ) {
                         latestScoresHtml = res.data.scores_html;
+                        // Update scores in real-time during analysis
+                        $( '#pl-sidebar-scores' ).html( latestScoresHtml );
                     }
                 }
             } )

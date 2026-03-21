@@ -3,9 +3,9 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1 && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
-      "systemctl restart apache2 && echo 'Apache restarted OK'"
+      "export HOME=/root && which libreoffice 2>/dev/null && libreoffice --version 2>/dev/null || echo 'LIBREOFFICE_NOT_FOUND'",
+      "which convert 2>/dev/null && convert --version 2>/dev/null | head -1 || echo 'IMAGEMAGICK_NOT_FOUND'",
+      "php -m | grep -i 'gd\\|imagick\\|zip' 2>/dev/null || echo 'NO_PHP_EXTENSIONS'"
     ]
   }
 }

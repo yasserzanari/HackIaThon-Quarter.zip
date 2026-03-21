@@ -3423,6 +3423,22 @@ class PedagoLens_Landing {
                     if ( ! empty( $extracted ) ) {
                         PedagoLens_Course_Workbench::save_content_sections( $post_id, $extracted );
                         $sections_count = count( $extracted );
+
+                        // Convert PPTX to slide images via LibreOffice (if available)
+                        if ( $ext === 'pptx' ) {
+                            $slide_images = self::convert_pptx_to_images( $filepath, $post_id, count( $extracted ) );
+                            if ( ! empty( $slide_images ) ) {
+                                update_post_meta( $post_id, '_pl_slide_images', wp_json_encode( $slide_images ) );
+                                // Also update each section with its slide_image_url
+                                foreach ( $extracted as $i => &$sec ) {
+                                    if ( isset( $slide_images[ $i ] ) ) {
+                                        $sec['slide_image_url'] = $slide_images[ $i ]['url'];
+                                    }
+                                }
+                                unset( $sec );
+                                PedagoLens_Course_Workbench::save_content_sections( $post_id, $extracted );
+                            }
+                        }
                     }
 
                     // Track uploaded files
@@ -4181,6 +4197,134 @@ class PedagoLens_Landing {
         echo '</div>';
         echo self::render_footer();
         return ob_get_clean();
+    }
+
+    // -------------------------------------------------------------------------
+    // PPTX → Images via LibreOffice
+    // -------------------------------------------------------------------------
+
+    /**
+     * Convert a PPTX file to PNG slide images using LibreOffice.
+     * Returns array of [ 'url' => '...', 'path' => '...' ] per slide.
+     */
+    private static function convert_pptx_to_images( string $pptx_path, int $project_id, int $expected_slides ): array {
+        // Check LibreOffice is available
+        $lo_bin = '/usr/bin/libreoffice';
+        if ( ! file_exists( $lo_bin ) ) {
+            $lo_bin = trim( shell_exec( 'which libreoffice 2>/dev/null' ) ?: '' );
+        }
+        if ( empty( $lo_bin ) || ! is_executable( $lo_bin ) ) {
+            return [];
+        }
+
+        // Create output directory in uploads
+        $upload_dir = wp_upload_dir();
+        $out_dir    = $upload_dir['basedir'] . '/pedagolens-slides/' . $project_id;
+        if ( ! is_dir( $out_dir ) ) {
+            wp_mkdir_p( $out_dir );
+        }
+
+        // Run LibreOffice headless conversion: PPTX → PDF → PNG
+        // Step 1: PPTX → PDF
+        $pdf_cmd = sprintf(
+            'HOME=/tmp %s --headless --convert-to pdf --outdir %s %s 2>&1',
+            escapeshellarg( $lo_bin ),
+            escapeshellarg( $out_dir ),
+            escapeshellarg( $pptx_path )
+        );
+        $pdf_output = shell_exec( $pdf_cmd );
+
+        // Find the generated PDF
+        $pptx_basename = pathinfo( $pptx_path, PATHINFO_FILENAME );
+        $pdf_path      = $out_dir . '/' . $pptx_basename . '.pdf';
+
+        if ( ! file_exists( $pdf_path ) ) {
+            // Fallback: try direct PNG conversion
+            $png_cmd = sprintf(
+                'HOME=/tmp %s --headless --convert-to png --outdir %s %s 2>&1',
+                escapeshellarg( $lo_bin ),
+                escapeshellarg( $out_dir ),
+                escapeshellarg( $pptx_path )
+            );
+            shell_exec( $png_cmd );
+        }
+
+        // Step 2: If we have a PDF, use GD to split pages (or use pdftoppm if available)
+        $slide_images = [];
+        $base_url     = $upload_dir['baseurl'] . '/pedagolens-slides/' . $project_id;
+
+        if ( file_exists( $pdf_path ) ) {
+            // Try pdftoppm first (poppler-utils)
+            $pdftoppm = trim( shell_exec( 'which pdftoppm 2>/dev/null' ) ?: '' );
+            if ( ! empty( $pdftoppm ) ) {
+                $ppm_cmd = sprintf(
+                    '%s -png -r 150 %s %s/slide 2>&1',
+                    escapeshellarg( $pdftoppm ),
+                    escapeshellarg( $pdf_path ),
+                    escapeshellarg( $out_dir )
+                );
+                shell_exec( $ppm_cmd );
+
+                // Collect generated PNGs (slide-01.png, slide-02.png, etc.)
+                for ( $i = 1; $i <= $expected_slides + 5; $i++ ) {
+                    $patterns = [
+                        sprintf( '%s/slide-%02d.png', $out_dir, $i ),
+                        sprintf( '%s/slide-%d.png', $out_dir, $i ),
+                    ];
+                    foreach ( $patterns as $png_path ) {
+                        if ( file_exists( $png_path ) ) {
+                            $png_name = basename( $png_path );
+                            $slide_images[] = [
+                                'url'  => $base_url . '/' . $png_name,
+                                'path' => $png_path,
+                            ];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If pdftoppm not available, try ImageMagick convert
+            if ( empty( $slide_images ) ) {
+                $convert_bin = trim( shell_exec( 'which convert 2>/dev/null' ) ?: '' );
+                if ( ! empty( $convert_bin ) ) {
+                    $im_cmd = sprintf(
+                        '%s -density 150 %s %s/slide.png 2>&1',
+                        escapeshellarg( $convert_bin ),
+                        escapeshellarg( $pdf_path ),
+                        escapeshellarg( $out_dir )
+                    );
+                    shell_exec( $im_cmd );
+
+                    for ( $i = 0; $i < $expected_slides + 5; $i++ ) {
+                        $png_path = sprintf( '%s/slide-%d.png', $out_dir, $i );
+                        if ( file_exists( $png_path ) ) {
+                            $png_name = basename( $png_path );
+                            $slide_images[] = [
+                                'url'  => $base_url . '/' . $png_name,
+                                'path' => $png_path,
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // Cleanup PDF
+            @unlink( $pdf_path );
+        }
+
+        // Fallback: if no PDF tools, check if LibreOffice created individual PNGs directly
+        if ( empty( $slide_images ) ) {
+            $png_file = $out_dir . '/' . $pptx_basename . '.png';
+            if ( file_exists( $png_file ) ) {
+                $slide_images[] = [
+                    'url'  => $base_url . '/' . $pptx_basename . '.png',
+                    'path' => $png_file,
+                ];
+            }
+        }
+
+        return $slide_images;
     }
 
     /** Alias francophone */

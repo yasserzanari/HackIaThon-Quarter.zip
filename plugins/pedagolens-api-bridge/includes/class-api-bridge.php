@@ -28,7 +28,8 @@ class PedagoLens_API_Bridge {
             'summary'          => 'string',
         ],
         'workbench_suggestions' => [
-            'suggestions' => 'array',
+            'suggestions'    => 'array',
+            'profile_scores' => 'array?',
         ],
         'student_twin_response' => [
             'reply'               => 'string',
@@ -100,10 +101,18 @@ class PedagoLens_API_Bridge {
         }
 
         foreach ( $schema as $field => $type ) {
+            $optional = str_ends_with( $type, '?' );
+            $clean_type = rtrim( $type, '?' );
             if ( ! array_key_exists( $field, $response ) ) {
+                if ( $optional ) {
+                    continue;
+                }
                 return false;
             }
-            if ( ! self::check_type( $response[ $field ], $type ) ) {
+            if ( ! self::check_type( $response[ $field ], $clean_type ) ) {
+                if ( $optional ) {
+                    continue;
+                }
                 return false;
             }
         }
@@ -554,7 +563,8 @@ class PedagoLens_API_Bridge {
                 "- proposed (string) — texte proposé\n" .
                 "- rationale (string) — justification pédagogique\n" .
                 "- profile_target (string) — slug du profil pédagogique ciblé\n\n" .
-                "Retourne un JSON avec : suggestions (array des objets ci-dessus).\n\n" .
+                "Retourne aussi un objet profile_scores avec un score de compréhension (0-100) pour chaque profil actif.\n\n" .
+                "Retourne un JSON avec : suggestions (array des objets ci-dessus), profile_scores (objet slug→score).\n\n" .
                 "Section : {section}\nContenu : {content}",
 
             'student_twin_response' =>

@@ -101,9 +101,16 @@ class PedagoLens_API_Bridge_Mock {
         $section   = $params['section'] ?? 'Introduction';
         $slide_num = $params['slide_num'] ?? 1;
 
+        $profile_slugs = self::get_active_profile_slugs();
+        $profile_scores = [];
+        foreach ( $profile_slugs as $slug ) {
+            $profile_scores[ $slug ] = rand( 45, 92 );
+        }
+
         return [
-            'success'     => true,
-            'suggestions' => [
+            'success'        => true,
+            'profile_scores' => $profile_scores,
+            'suggestions'    => [
                 [
                     'id'                => 'sug_001',
                     'section'           => $section,
