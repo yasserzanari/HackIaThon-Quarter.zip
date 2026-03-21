@@ -3936,3 +3936,23 @@ details[open] > .pl-canvas-text-toggle::before {
     background: #f8fafc;
     border-color: #e2e8f0;
 }
+
+/* ============================================================
+   SUGGESTION CARD — Applied state animation
+   ============================================================ */
+.pl-sug-card--applied {
+    background: rgba(16, 185, 129, 0.08) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.4s ease;
+}
+.pl-sug-card--applied::before {
+    content: '✓ Appliqué';
+    display: block;
+    padding: 4px 12px;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #10b981;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}

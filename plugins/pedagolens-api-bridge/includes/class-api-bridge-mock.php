@@ -101,6 +101,9 @@ class PedagoLens_API_Bridge_Mock {
         $section   = $params['section'] ?? 'Introduction';
         $slide_num = $params['slide_num'] ?? 1;
 
+        // Generate unique IDs per section to avoid cache collisions
+        $uid = substr( md5( $section . microtime() ), 0, 8 );
+
         $profile_slugs = self::get_active_profile_slugs();
         $profile_scores = [];
         foreach ( $profile_slugs as $slug ) {
@@ -112,7 +115,7 @@ class PedagoLens_API_Bridge_Mock {
             'profile_scores' => $profile_scores,
             'suggestions'    => [
                 [
-                    'id'                => 'sug_001',
+                    'id'                => "sug_{$uid}_1",
                     'section'           => $section,
                     'slide_num'         => (int) $slide_num,
                     'modification_type' => 'reformulation',
@@ -121,31 +124,46 @@ class PedagoLens_API_Bridge_Mock {
                     'proposed'          => "Rédigez une analyse littéraire en suivant ces 3 étapes :\n1. Identifiez 2 procédés stylistiques (ex. métaphore, anaphore).\n2. Expliquez l'effet de chaque procédé sur le lecteur.\n3. Reliez votre analyse au thème principal du texte.",
                     'rationale'         => 'Le découpage en étapes numérotées réduit la charge cognitive et clarifie les attentes.',
                     'profile_target'    => 'concentration_tdah',
+                    'impact_delta'      => [
+                        'concentration_tdah'  => 12,
+                        'surcharge_cognitive' => 8,
+                        'faible_autonomie'    => 5,
+                    ],
                 ],
                 [
-                    'id'                => 'sug_002',
+                    'id'                => "sug_{$uid}_2",
                     'section'           => $section,
-                    'slide_num'         => (int) $slide_num + 1,
+                    'slide_num'         => (int) $slide_num,
                     'modification_type' => 'restructuration',
                     'impact_score'      => 74,
                     'original'          => 'Analysez l\'argumentation du texte philosophique.',
                     'proposed'          => "Analysez l'argumentation en répondant à ces questions :\n• Quelle est la thèse principale de l'auteur ?\n• Quels arguments soutiennent cette thèse ?\n• Y a-t-il des contre-arguments ? Comment sont-ils réfutés ?",
                     'rationale'         => 'Les questions guidées aident les étudiants à faible autonomie à structurer leur réflexion.',
                     'profile_target'    => 'faible_autonomie',
+                    'impact_delta'      => [
+                        'faible_autonomie'    => 15,
+                        'concentration_tdah'  => 6,
+                        'anxieux_consignes'   => 4,
+                    ],
                 ],
                 [
-                    'id'                => 'sug_003',
+                    'id'                => "sug_{$uid}_3",
                     'section'           => $section,
-                    'slide_num'         => (int) $slide_num + 2,
+                    'slide_num'         => (int) $slide_num,
                     'modification_type' => 'reformulation',
                     'impact_score'      => 91,
                     'original'          => 'Critères d\'évaluation : qualité de l\'analyse, pertinence des exemples.',
                     'proposed'          => "Critères d'évaluation (sur 20 points) :\n• Identification des procédés (6 pts) : au moins 2 procédés nommés correctement.\n• Analyse de l'effet (8 pts) : explication claire du lien procédé → effet.\n• Cohérence (6 pts) : lien avec le thème, structure du paragraphe.",
                     'rationale'         => 'Des critères explicites et chiffrés réduisent l\'anxiété face aux consignes ambiguës.',
                     'profile_target'    => 'anxieux_consignes',
+                    'impact_delta'      => [
+                        'anxieux_consignes'   => 18,
+                        'surcharge_cognitive' => 7,
+                        'langue_seconde'      => 3,
+                    ],
                 ],
                 [
-                    'id'                => 'sug_004',
+                    'id'                => "sug_{$uid}_4",
                     'section'           => $section,
                     'slide_num'         => (int) $slide_num,
                     'modification_type' => 'ajout',
@@ -154,21 +172,31 @@ class PedagoLens_API_Bridge_Mock {
                     'proposed'          => "Glossaire contextuel :\n• Procédé stylistique : technique d'écriture utilisée pour produire un effet.\n• Métaphore : comparaison implicite (sans « comme »).\n• Anaphore : répétition d'un mot en début de phrase.",
                     'rationale'         => 'L\'ajout d\'un glossaire intégré à la diapositive aide les étudiants allophones à comprendre le vocabulaire technique sans interrompre leur lecture.',
                     'profile_target'    => 'langue_seconde',
+                    'impact_delta'      => [
+                        'langue_seconde'      => 20,
+                        'surcharge_cognitive' => 5,
+                        'faible_autonomie'    => 3,
+                    ],
                 ],
                 [
-                    'id'                => 'sug_005',
+                    'id'                => "sug_{$uid}_5",
                     'section'           => $section,
-                    'slide_num'         => (int) $slide_num + 1,
+                    'slide_num'         => (int) $slide_num,
                     'modification_type' => 'suppression',
                     'impact_score'      => 53,
                     'original'          => 'Note : ce travail sera noté sévèrement. Toute erreur de méthode entraînera une pénalité importante. Assurez-vous de bien relire avant de soumettre.',
                     'proposed'          => '',
                     'rationale'         => 'Le ton menaçant de cet avertissement génère de l\'anxiété inutile sans apporter de valeur pédagogique. Le retirer et intégrer les attentes dans la grille de critères est plus efficace.',
                     'profile_target'    => 'anxieux_consignes',
+                    'impact_delta'      => [
+                        'anxieux_consignes'   => 10,
+                        'concentration_tdah'  => 3,
+                    ],
                 ],
             ],
         ];
     }
+
 
     private static function mock_student_twin_response( array $params ): array {
         $message = $params['message'] ?? '';

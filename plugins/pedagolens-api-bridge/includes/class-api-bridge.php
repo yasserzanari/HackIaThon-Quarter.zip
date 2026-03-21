@@ -487,6 +487,7 @@ class PedagoLens_API_Bridge {
             'anthropic_version' => 'bedrock-2023-05-31',
             'max_tokens'        => $config['max_tokens'],
             'temperature'       => $config['temperature'],
+            'system'            => 'Tu es un assistant pédagogique. Tu réponds TOUJOURS en JSON valide uniquement, sans markdown, sans code fence, sans texte explicatif.',
             'messages'          => [
                 [ 'role' => 'user', 'content' => $prompt ],
             ],
@@ -646,24 +647,27 @@ class PedagoLens_API_Bridge {
                 "Contenu : {content}\nProfils : {profiles}",
 
             'workbench_suggestions' =>
-                "Propose des suggestions d'amélioration pédagogique pour cette section de cours.\n\n" .
+                "Tu es un expert en pédagogie inclusive. Propose des suggestions d'amélioration pour cette section de cours.\n\n" .
                 "Contexte :\n" .
+                "- Section ID : {section}\n" .
                 "- Numéro de slide : {slide_num}\n" .
-                "- Type de cours : {course_type} (magistral ou exercice)\n" .
+                "- Type de cours : {course_type}\n" .
                 "- Profils pédagogiques actifs : {active_profiles}\n\n" .
-                "Pour chaque suggestion, retourne un objet JSON contenant :\n" .
-                "- id (string) — identifiant unique de la suggestion\n" .
-                "- section (string) — nom de la section concernée\n" .
-                "- slide_num (int) — numéro de la diapositive concernée\n" .
-                "- modification_type (string) — \"reformulation\", \"ajout\", \"suppression\" ou \"restructuration\"\n" .
-                "- impact_score (int 0-100) — score d'impact estimé de la modification\n" .
-                "- original (string) — texte original\n" .
-                "- proposed (string) — texte proposé\n" .
-                "- rationale (string) — justification pédagogique\n" .
-                "- profile_target (string) — slug du profil pédagogique ciblé\n\n" .
-                "Retourne aussi un objet profile_scores avec un score de compréhension (0-100) pour chaque profil actif.\n\n" .
-                "Retourne un JSON avec : suggestions (array des objets ci-dessus), profile_scores (objet slug→score).\n\n" .
-                "Section : {section}\nContenu : {content}",
+                "Pour chaque suggestion, fournis :\n" .
+                "- id (string unique, format: sug_SECTIONID_NNN)\n" .
+                "- section (string, le section ID)\n" .
+                "- slide_num (int)\n" .
+                "- modification_type: \"reformulation\", \"ajout\", \"suppression\" ou \"restructuration\"\n" .
+                "- impact_score (int 0-100)\n" .
+                "- original (string, texte original — vide pour ajout)\n" .
+                "- proposed (string, texte proposé — vide pour suppression)\n" .
+                "- rationale (string, justification pédagogique)\n" .
+                "- profile_target (string, slug du profil ciblé)\n" .
+                "- impact_delta (objet slug→int, delta de score estimé par profil, ex: {\"concentration_tdah\": 12, \"langue_seconde\": 5})\n\n" .
+                "Fournis aussi profile_scores: un objet slug→score(0-100) pour chaque profil actif.\n\n" .
+                "IMPORTANT: Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans code fence, sans texte avant ou après.\n" .
+                "Format: {\"suggestions\": [...], \"profile_scores\": {...}}\n\n" .
+                "Contenu de la section :\n{content}",
 
             'student_twin_response' =>
                 "Tu es Léa, une tutrice étudiante virtuelle bienveillante et pédagogue. " .

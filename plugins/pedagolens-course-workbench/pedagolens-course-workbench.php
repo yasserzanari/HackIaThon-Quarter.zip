@@ -3,7 +3,7 @@
  * Plugin Name: PédagoLens Course Workbench
  * Plugin URI:  https://pedagolens.local
  * Description: Atelier de cours — suggestions IA par section, apply/reject, versionnage, delta d'impact par profil.
- * Version:     4.3.0
+ * Version:     4.4.0
  * Author:      PédagoLens Team
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PL_WORKBENCH_VERSION',    '4.3.0' );
+define( 'PL_WORKBENCH_VERSION',    '4.4.0' );
 define( 'PL_WORKBENCH_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PL_WORKBENCH_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

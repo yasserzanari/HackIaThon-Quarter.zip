@@ -41,13 +41,34 @@ class PedagoLens_Course_Workbench {
 
         $section_content = self::get_section_content( $sections, $section );
 
+        // Get slide_num from section data
+        $slide_num = 0;
+        foreach ( $sections as $idx => $s ) {
+            if ( ( $s['id'] ?? '' ) === $section ) {
+                $slide_num = (int) ( $s['slide_num'] ?? ( $idx + 1 ) );
+                break;
+            }
+        }
+
+        // Get active profile slugs
+        $active_profiles = '';
+        if ( class_exists( 'PedagoLens_Profile_Manager' ) ) {
+            $profiles = PedagoLens_Profile_Manager::get_all( active_only: true );
+            $active_profiles = implode( ', ', array_column( $profiles, 'slug' ) );
+        }
+        if ( ! $active_profiles ) {
+            $active_profiles = 'concentration_tdah, anxieux_consignes, avance_rapide, faible_autonomie, langue_seconde, surcharge_cognitive, usage_passif_ia';
+        }
+
         $params = [
-            'project_id'   => $project_id,
-            'course_id'    => $course_id,
-            'section'      => $section,
-            'content'      => $section_content,
-            'course_type'  => $course_type,
-            'project_type' => $project_type,
+            'project_id'      => $project_id,
+            'course_id'       => $course_id,
+            'section'         => $section,
+            'content'         => $section_content,
+            'course_type'     => $course_type,
+            'project_type'    => $project_type,
+            'slide_num'       => $slide_num,
+            'active_profiles' => $active_profiles,
         ];
 
         $result = PedagoLens_API_Bridge::invoke( 'workbench_suggestions', $params );

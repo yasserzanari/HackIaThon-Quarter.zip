@@ -569,27 +569,45 @@ $( document ).on( 'click', '.pl-btn-apply', function() {
     var suggestionId = $btn.data( 'suggestion-id' );
 
     // Store previous content for undo
-    var $textarea = $( '.pl-canvas-textarea[data-section-id="' + sectionId + '"]' );
-    if ( ! $textarea.length ) $textarea = $( '.pl-section-content[data-section-id="' + sectionId + '"]' );
-    var prevContent = $textarea.val();
-    $textarea.data( 'prev-content', prevContent );
+    var prevContent = '';
+    for ( var i = 0; i < sections.length; i++ ) {
+        if ( sections[i].id === sectionId ) { prevContent = sections[i].content; break; }
+    }
 
     $btn.prop( 'disabled', true ).text( 'Application…' );
 
     ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId } )
         .done( function( res ) {
             if ( res.success ) {
-                $textarea.val( res.data.new_content );
                 // Update sections array
                 for ( var i = 0; i < sections.length; i++ ) {
                     if ( sections[i].id === sectionId ) {
+                        sections[i]._prev_content = prevContent;
                         sections[i].content = res.data.new_content;
                         break;
                     }
                 }
+                // Update the visible canvas elements
+                var $textarea = $( '.pl-canvas-textarea[data-section-id="' + sectionId + '"]' );
+                if ( $textarea.length ) $textarea.val( res.data.new_content );
+                var $richtext = $( '.pl-canvas-richtext[data-section-id="' + sectionId + '"]' );
+                if ( $richtext.length ) {
+                    var lines = ( res.data.new_content || '' ).split( /\n/ );
+                    var html = '';
+                    for ( var li = 0; li < lines.length; li++ ) {
+                        var line = lines[li].trim();
+                        if ( line ) html += '<p>' + escHtml( line ) + '</p>';
+                    }
+                    if ( ! html ) html = '<p><br></p>';
+                    $richtext.html( html );
+                }
+                // Update filmstrip preview
+                $( '.pl-filmstrip-item[data-slide-index="' + currentSlideIndex + '"] .pl-filmstrip-item-preview' )
+                    .text( ( res.data.new_content || '' ).substring( 0, 40 ) );
                 flashCanvas();
-                $btn.closest( '.pl-suggestion-card' ).fadeOut( 300 );
-                $( '#pl-canvas-undo-btn' ).show();
+                $btn.closest( '.pl-suggestion-card' ).addClass( 'pl-sug-card--applied' );
+                setTimeout( function() { $btn.closest( '.pl-suggestion-card' ).fadeOut( 300 ); }, 600 );
+                $( '#pl-canvas-undo-btn' ).show().data( 'prev-content', prevContent ).data( 'section-id', sectionId );
             } else {
                 alert( res.data?.message || 'Erreur.' );
                 $btn.prop( 'disabled', false ).text( '✓ Appliquer' );
@@ -675,16 +693,39 @@ $( document ).on( 'input', '.pl-canvas-textarea, .pl-section-content', function(
 // UNDO
 // =========================================================================
 $( document ).on( 'click', '#pl-canvas-undo-btn, .pl-btn-undo', function() {
-    var sectionId = $( this ).data( 'section-id' ) || sections[ currentSlideIndex ]?.id;
-    var $textarea = $( '.pl-canvas-textarea[data-section-id="' + sectionId + '"]' );
-    var prevContent = $textarea.data( 'prev-content' );
-    if ( typeof prevContent !== 'undefined' ) {
-        $textarea.val( prevContent );
+    var $undoBtn = $( this );
+    var sectionId = $undoBtn.data( 'section-id' ) || sections[ currentSlideIndex ]?.id;
+    var prevContent = $undoBtn.data( 'prev-content' );
+    if ( typeof prevContent === 'undefined' ) {
+        // Fallback: check sections array
+        for ( var i = 0; i < sections.length; i++ ) {
+            if ( sections[i].id === sectionId && sections[i]._prev_content ) {
+                prevContent = sections[i]._prev_content;
+                break;
+            }
+        }
+    }
+    if ( typeof prevContent !== 'undefined' && prevContent !== null ) {
+        // Update sections array
         for ( var i = 0; i < sections.length; i++ ) {
             if ( sections[i].id === sectionId ) { sections[i].content = prevContent; break; }
         }
+        // Update visible elements
+        var $textarea = $( '.pl-canvas-textarea[data-section-id="' + sectionId + '"]' );
+        if ( $textarea.length ) $textarea.val( prevContent );
+        var $richtext = $( '.pl-canvas-richtext[data-section-id="' + sectionId + '"]' );
+        if ( $richtext.length ) {
+            var lines = prevContent.split( /\n/ );
+            var html = '';
+            for ( var li = 0; li < lines.length; li++ ) {
+                var line = lines[li].trim();
+                if ( line ) html += '<p>' + escHtml( line ) + '</p>';
+            }
+            if ( ! html ) html = '<p><br></p>';
+            $richtext.html( html );
+        }
         ajax( 'pl_save_section', { section_id: sectionId, content: prevContent } );
-        $( this ).hide();
+        $undoBtn.hide();
         flashCanvas();
     }
 } );
@@ -1083,9 +1124,22 @@ $( '#pl-preview-apply' ).on( 'click', function() {
     ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId } )
         .done( function( res ) {
             if ( res.success ) {
-                $( '.pl-canvas-textarea[data-section-id="' + sectionId + '"]' ).val( res.data.new_content );
+                // Update sections array
                 for ( var i = 0; i < sections.length; i++ ) {
                     if ( sections[i].id === sectionId ) { sections[i].content = res.data.new_content; break; }
+                }
+                // Update visible canvas elements
+                $( '.pl-canvas-textarea[data-section-id="' + sectionId + '"]' ).val( res.data.new_content );
+                var $richtext = $( '.pl-canvas-richtext[data-section-id="' + sectionId + '"]' );
+                if ( $richtext.length ) {
+                    var lines = ( res.data.new_content || '' ).split( /\n/ );
+                    var html = '';
+                    for ( var li = 0; li < lines.length; li++ ) {
+                        var line = lines[li].trim();
+                        if ( line ) html += '<p>' + escHtml( line ) + '</p>';
+                    }
+                    if ( ! html ) html = '<p><br></p>';
+                    $richtext.html( html );
                 }
                 flashCanvas();
                 $( '#pl-sug-' + suggestionId ).fadeOut( 300 );
