@@ -142,7 +142,7 @@ class PedagoLens_Core {
             'map_meta_cap'    => true,
         ] );
 
-        foreach ( [ '_pl_sections', '_pl_versions', '_pl_last_workbench_at', '_pl_course_type' ] as $meta_key ) {
+        foreach ( [ '_pl_sections', '_pl_versions', '_pl_last_workbench_at', '_pl_course_type', '_pl_course_code', '_pl_session' ] as $meta_key ) {
             register_post_meta( 'pl_course', $meta_key, [ 'single' => true, 'show_in_rest' => false ] );
         }
     }
@@ -179,7 +179,7 @@ class PedagoLens_Core {
         foreach ( [
             '_pl_course_id', '_pl_project_type', '_pl_content_sections',
             '_pl_profile_scores', '_pl_recommendations', '_pl_impact_estimates',
-            '_pl_versions', '_pl_created_at', '_pl_updated_at',
+            '_pl_versions', '_pl_created_at', '_pl_updated_at', '_pl_files',
         ] as $meta_key ) {
             register_post_meta( 'pl_project', $meta_key, [ 'single' => true, 'show_in_rest' => false ] );
         }

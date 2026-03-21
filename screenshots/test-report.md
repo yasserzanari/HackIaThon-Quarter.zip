@@ -1,116 +1,56 @@
-# PédagoLens — Post-CSS-Fix Test Report
+# PédagoLens — Rapport de Test Final (Post-Fix)
 
-**Date:** Auto-generated after CSS deployment  
-**Base URL:** `http://pedagolens.34.199.149.247.nip.io`  
-**Method:** Cache-busted reload (`ignoreCache: true`) + JS `pl-*` class audit + layout check  
-
----
-
-## Overall Status: ⚠️ PARTIAL PASS (6/7 pages OK)
+**Date :** Validation post-déploiement du correctif PHP  
+**URL :** http://pedagolens.34.199.149.247.nip.io  
+**Méthode :** Chrome DevTools MCP — force reload (ignoreCache) + JS audit sur chaque page
 
 ---
 
-## Per-Page Results
+## Résumé
 
-### 1. `/dashboard-enseignant/` — ✅ PASS
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** |
-| Admin bar height | 32px |
-| Sidebar top | 32px |
-| Header top | 32px |
-| Main padding | 104px 0px 0px |
-| Main content padding | N/A (element absent) |
-| Screenshot | `screenshots/post-fix-dashboard-enseignant.png` |
+| # | Page | Statut | Erreur PHP | Classes CSS manquantes | Screenshot |
+|---|------|--------|------------|------------------------|------------|
+| 1 | `/parametres/` ⭐ | ✅ OK | Non | 0 | `final-parametres.png` |
+| 2 | `/dashboard-enseignant/` | ✅ OK | Non | 0 | `final-dashboard-enseignant.png` |
+| 3 | `/dashboard-etudiant/` | ✅ OK | Non | 0 | `final-dashboard-etudiant.png` |
+| 4 | `/compte/` | ✅ OK | Non | 0 | `final-compte.png` |
+| 5 | `/institutionnel/` | ✅ OK | Non | 0 | `final-institutionnel.png` |
+| 6 | `/cours-projets/` | ✅ OK | Non | 0 | `final-cours-projets.png` |
+| 7 | `/historique/` | ✅ OK | Non | 0 | `final-historique.png` |
 
-### 2. `/dashboard-etudiant/` — ✅ PASS
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** |
-| Admin bar height | 32px |
-| Sidebar top | 32px |
-| Header top | 32px |
-| Main padding | 104px 0px 0px |
-| Main content padding | N/A (element absent) |
-| Screenshot | `screenshots/post-fix-dashboard-etudiant.png` |
-
-### 3. `/compte/` — ✅ PASS
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** |
-| Admin bar height | 32px |
-| Sidebar top | 32px |
-| Header top | 32px |
-| Main padding | 104px 0px 0px |
-| Main content padding | N/A (element absent) |
-| Screenshot | `screenshots/post-fix-compte.png` |
-
-### 4. `/institutionnel/` — ✅ PASS
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** |
-| Admin bar height | 32px |
-| Sidebar top | 32px |
-| Header top | 32px |
-| Main padding | 104px 0px 0px |
-| Main content padding | N/A (element absent) |
-| Screenshot | `screenshots/post-fix-institutionnel.png` |
-
-### 5. `/cours-projets/` — ✅ PASS
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** |
-| Admin bar height | 32px |
-| Sidebar top | 32px |
-| Header top | 32px |
-| Main padding | 104px 0px 0px |
-| Main content padding | N/A (element absent) |
-| Screenshot | `screenshots/post-fix-cours-projets.png` |
-
-### 6. `/historique/` — ✅ PASS
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** |
-| Admin bar height | 32px |
-| Sidebar top | 32px |
-| Header top | 32px |
-| Main padding | 104px 0px 0px |
-| Main content padding | N/A (element absent) |
-| Screenshot | `screenshots/post-fix-historique.png` |
-
-### 7. `/parametres/` — ❌ FAIL (Critical WP Error)
-| Metric | Value |
-|---|---|
-| Missing `pl-*` classes | **0** (page didn't render) |
-| Admin bar height | 0 (absent) |
-| Sidebar top | N/A |
-| Header top | N/A |
-| Main padding | N/A |
-| Main content padding | N/A |
-| Screenshot | `screenshots/post-fix-parametres.png` |
-| **Error** | `"Une erreur critique est survenue sur votre site."` |
+**7/7 pages — TOUTES OK**
 
 ---
 
-## Layout Consistency (pages 1–6)
+## Détail du test prioritaire : `/parametres/`
 
-All 6 working pages share identical layout values:
-- **Admin bar:** 32px height (WP admin bar present, user logged in)
-- **Sidebar top:** 32px (correctly offset below admin bar)
-- **Header top:** 32px (correctly offset below admin bar)
-- **Main padding-top:** 104px (header 72px + admin bar 32px = 104px ✅)
-- **`.pl-app-main-content`:** Element not found on any page (may use different class or structure)
-
----
-
-## Remaining Issues
-
-1. **`/parametres/` — Critical WordPress error.** The page returns a fatal PHP error and does not render at all. This is a server-side plugin/theme issue, not CSS-related. Check `wp-content/debug.log` and Apache error logs for the root cause.
-
-2. **`.pl-app-main-content` absent on all pages.** The JS audit looked for this element but it was not found on any page. Either the class name has changed or this container is not used in the current templates. Not a blocker — just a note for future reference.
+- **Problème précédent :** PHP Fatal error empêchant le rendu de la page
+- **Résultat après fix :** Page rendue complètement avec tous les éléments :
+  - Header avec titre "Paramètres" et navigation
+  - Section profil utilisateur (avatar, email)
+  - Section Institution (université, département)
+  - Modèles de Profils Élèves (TDAH, Allophone, HPI)
+  - Préférences de l'IA (modèle, ton, niveau de détail, suggestions)
+  - Notifications (alertes, rapports, SMS)
+  - Affichage & Langue (langue, thème sombre)
+  - Boutons Annuler / Sauvegarder
+  - Footer complet
 
 ---
 
-## CSS Verdict
+## Vérifications effectuées par page
 
-**All `pl-*` CSS classes used in HTML are defined in stylesheets across all 6 rendering pages. Zero missing classes detected. The CSS deployment is clean.**
+Pour chaque page :
+1. Navigation directe vers l'URL
+2. Force reload avec `ignoreCache: true` (pas de cache)
+3. Screenshot pleine page sauvegardé
+4. Audit JavaScript :
+   - Scan de toutes les classes CSS `pl-*` utilisées dans le DOM
+   - Vérification de leur présence dans les feuilles de style chargées
+   - Détection de texte "erreur critique" ou "Fatal error" dans le body
+
+---
+
+## Conclusion
+
+✅ **Le correctif PHP est validé.** La page `/parametres/` qui crashait fonctionne désormais parfaitement. Les 7 pages testées sont toutes fonctionnelles, sans erreur PHP et sans classe CSS manquante.

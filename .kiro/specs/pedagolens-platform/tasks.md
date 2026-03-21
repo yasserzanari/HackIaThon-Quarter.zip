@@ -209,3 +209,91 @@ Problème : la landing page n'est pas assez ciblée pour le marché cégeps et u
   - Préciser quel shortcode mettre dans chaque page WordPress
   - Préciser les rôles autorisés pour chaque page
   - Ajouter une section "Configuration WordPress" (page d'accueil, permalinks, etc.)
+
+
+---
+
+## 14. Logo PédagoLens — Remplacer le "P" par le vrai logo partout
+
+Le logo est disponible à : `http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png` (1536×1024). Il doit être redimensionné (32-40px de hauteur) et utilisé partout où le "P" icône apparaît.
+
+- [x] 14.1 Remplacer le logo dans `render_sidebar()` — changer `<span class="pl-app-sidebar-logo-icon">P</span>` par une balise `<img>` avec le logo redimensionné (40px height, auto width)
+- [x] 14.2 Remplacer le logo dans `render_header()` — variante visiteur : changer `<span class="plx-nav-logo-icon">P</span>` par `<img>` logo (36px height)
+- [x] 14.3 Remplacer le logo dans `shortcode_landing()` — nav header : changer `<div class="plx-logo-icon">P</div>` par `<img>` logo (36px height)
+- [x] 14.4 Remplacer le logo dans `shortcode_landing()` — footer : changer `<div class="plx-logo-icon plx-logo-icon--white">P</div>` par `<img>` logo (32px height, filtre blanc si nécessaire)
+- [x] 14.5 Remplacer le logo dans `shortcode_login()` — changer le "P" icône par `<img>` logo (48px height, centré)
+- [x] 14.6 Ajouter les styles CSS pour `.pl-logo-img` dans `landing.css` — height contrôlée, object-fit contain, border-radius léger, transition hover
+
+---
+
+## 15. Header enseignant — Bouton switch vers interface étudiant
+
+L'enseignant doit pouvoir basculer vers l'interface étudiant pour expérimenter avec l'agent IA Léa (jumeau numérique). Ajouter un toggle/bouton dans le header des pages internes enseignant.
+
+- [x] 15.1 Ajouter un bouton "Tester l'interface étudiant" dans `render_header()` pour les enseignants/admins — icône `swap_horiz`, lien vers `/dashboard-etudiant/`, style pill accent, visible uniquement pour rôle teacher/admin
+- [x] 15.2 Ajouter les styles CSS pour `.pl-header-switch-btn` — pill button, couleur secondaire (#712ae2), hover effect, icône Material, responsive (icône seule sur mobile)
+- [x] 15.3 Ajouter un bouton "Retour interface enseignant" dans le header quand un enseignant visite le dashboard étudiant — détecter via `$_GET['mode']` ou via le rôle, afficher un bandeau info "Vous êtes en mode aperçu étudiant"
+
+---
+
+## 16. Système complet de création de cours — CRUD front-end
+
+Actuellement les cours sont créés uniquement via l'admin WP. Il faut un système complet de création/édition/suppression de cours depuis le front-end (page Cours & Projets).
+
+- [x] 16.1 Ajouter un formulaire modal de création de cours dans `shortcode_courses()` — champs : titre du cours (ex: "Français 103"), code du cours, session (A25, H26...), description, type de cours (magistral/exercice/mixte), upload du plan de cours (PDF)
+- [x] 16.2 Créer le handler AJAX `ajax_create_course_front()` dans `class-landing.php` — valider les champs, créer le CPT `pl_course`, sauvegarder les metas (`_pl_course_code`, `_pl_session`, `_pl_course_type`, `_pl_syllabus_url`), retourner JSON avec le nouveau cours
+- [x] 16.3 Ajouter un formulaire modal d'édition de cours — pré-remplir les champs, bouton "Mettre à jour", handler AJAX `ajax_update_course_front()`
+- [x] 16.4 Ajouter un bouton de suppression de cours avec confirmation — handler AJAX `ajax_delete_course_front()`, vérifier qu'il n'y a pas de projets liés avant suppression (ou proposer suppression cascade)
+- [x] 16.5 Ajouter les styles CSS pour les modals de cours — `.pl-modal`, `.pl-modal-overlay`, `.pl-modal-content`, `.pl-modal-header`, `.pl-modal-body`, `.pl-modal-footer`, animation slide-up, glass effect
+- [x] 16.6 Ajouter le JavaScript pour les modals et AJAX dans `landing-front.js` — ouvrir/fermer modal, validation côté client, appels AJAX, feedback visuel (loading spinner, toast success/error)
+
+---
+
+## 17. Système complet de création de projets dans un cours
+
+Chaque cours contient des projets de 2 types principaux : "Cours magistral" (upload PowerPoint, l'IA analyse la présentation) et "Exercice" (upload consignes/exercices, approche d'analyse différente).
+
+- [x] 17.1 Refaire le formulaire modal de création de projet dans `shortcode_courses()` — champs : titre du projet, type (Cours magistral / Exercice), description, upload de fichier(s) (PowerPoint pour magistral, Word/PDF pour exercice)
+- [x] 17.2 Créer/améliorer le handler AJAX `ajax_create_project_front()` dans `class-landing.php` — valider les champs, créer le CPT `pl_project` avec meta `_pl_course_id`, `_pl_project_type` (magistral/exercice), `_pl_files`, retourner JSON
+- [x] 17.3 Ajouter la logique d'upload de fichiers pour les projets — utiliser `wp_handle_upload()`, stocker les URLs dans `_pl_files` (JSON array), supporter .pptx, .pdf, .docx, .doc
+- [x] 17.4 Différencier l'affichage selon le type de projet dans la page Cours & Projets — icône et badge différents pour magistral vs exercice, aperçu du fichier uploadé
+- [x] 17.5 Ajouter la vue détail d'un projet (dans le workbench) — afficher les fichiers uploadés, le type d'analyse, les résultats d'analyse IA, les suggestions
+- [x] 17.6 Ajouter un bouton "Lancer l'analyse IA" dans la vue projet — appel AJAX vers `PedagoLens_API_Bridge::invoke()` avec le type approprié (magistral vs exercice), afficher un loader pendant l'analyse, puis les résultats
+
+---
+
+## 18. Historique des analyses dans un cours
+
+Permettre de voir l'historique des analyses précédentes pour chaque cours et projet.
+
+- [x] 18.1 Ajouter une section "Historique des analyses" dans la vue détail d'un cours (quand on clique "Voir les projets") — liste chronologique des analyses avec date, score, résumé
+- [x] 18.2 Ajouter un lien "Voir l'historique complet" qui redirige vers la page Historique filtrée par cours — passer `?course_id=X` dans l'URL de la page historique
+- [x] 18.3 Mettre à jour `shortcode_history()` pour supporter le filtre par cours — si `$_GET['course_id']` est présent, filtrer les analyses par meta `_pl_course_id`
+
+---
+
+## 19. Landing page — Corrections visuelles et polish
+
+- [x] 19.1 Vérifier et corriger l'affichage de la landing page sur mobile (< 768px) — hero, features, testimonials, footer doivent être responsive
+- [x] 19.2 Ajouter des animations d'entrée (fade-in, slide-up) sur les sections de la landing page via `IntersectionObserver` dans `landing-front.js`
+- [x] 19.3 Vérifier que le header sticky de la landing fonctionne correctement — glass effect au scroll, transition smooth
+- [x] 19.4 Corriger les liens du footer de la landing — s'assurer que les ancres (#plx-features, #plx-how, etc.) scrollent correctement
+
+---
+
+## 20. Optimisations et bugs divers
+
+- [x] 20.1 Vérifier que toutes les pages internes redirigent vers /connexion/ si l'utilisateur n'est pas connecté — tester chaque shortcode
+- [x] 20.2 Vérifier que le WP admin bar n'interfère pas avec le layout (sidebar + header) — offset de 32px déjà ajouté, vérifier sur toutes les pages
+- [x] 20.3 Ajouter des meta `_pl_course_code` et `_pl_session` au CPT `pl_course` dans `register_cpt_course()` de `class-core.php`
+- [x] 20.4 Ajouter la gestion des fichiers uploadés (meta `_pl_files`) au CPT `pl_project` dans `register_cpt_project()` de `class-core.php`
+- [x] 20.5 Vérifier la cohérence des nonces AJAX sur tous les handlers — `pl_nonce` doit être vérifié partout
+- [x] 20.6 Ajouter un toast/notification system global dans `landing-front.js` — pour feedback après création/édition/suppression de cours/projets
+
+---
+
+## 21. Version bump et déploiement
+
+- [x] 21.1 Bump version `PL_LANDING_VERSION` de `2.4.1` → `2.5.0` (header PHP + constante define)
+- [x] 21.2 Bump version des autres plugins modifiés si applicable (core 1.0.1 → 1.0.2)
+- [ ] 21.3 Commit + push + déploiement SSM (après confirmation utilisateur)

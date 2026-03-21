@@ -3,7 +3,7 @@
  * Plugin Name: PédagoLens Core
  * Plugin URI:  https://pedagolens.local
  * Description: Noyau partagé PédagoLens — CPT, rôles, helpers, constantes, Profile_Manager.
- * Version:     1.0.1
+ * Version:     1.0.2
  * Author:      PédagoLens Team
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PEDAGOLENS_VERSION',    '1.0.1' );
+define( 'PEDAGOLENS_VERSION',    '1.0.2' );
 define( 'PEDAGOLENS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PEDAGOLENS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

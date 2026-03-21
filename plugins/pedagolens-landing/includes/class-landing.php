@@ -95,6 +95,22 @@ class PedagoLens_Landing {
         if ( ! has_action( 'wp_ajax_pl_save_settings' ) ) {
             add_action( 'wp_ajax_pl_save_settings', [ self::class, 'ajax_save_settings' ] );
         }
+
+        // AJAX front-end pour CRUD cours (Task 16)
+        if ( ! has_action( 'wp_ajax_pl_create_course_front' ) ) {
+            add_action( 'wp_ajax_pl_create_course_front', [ self::class, 'ajax_create_course_front' ] );
+        }
+        if ( ! has_action( 'wp_ajax_pl_update_course_front' ) ) {
+            add_action( 'wp_ajax_pl_update_course_front', [ self::class, 'ajax_update_course_front' ] );
+        }
+        if ( ! has_action( 'wp_ajax_pl_delete_course_front' ) ) {
+            add_action( 'wp_ajax_pl_delete_course_front', [ self::class, 'ajax_delete_course_front' ] );
+        }
+
+        // AJAX front-end pour création projet (Task 17)
+        if ( ! has_action( 'wp_ajax_pl_create_project_front' ) ) {
+            add_action( 'wp_ajax_pl_create_project_front', [ self::class, 'ajax_create_project_front' ] );
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -179,7 +195,7 @@ class PedagoLens_Landing {
     <header class="plx-header">
         <nav class="plx-nav">
             <div class="plx-nav-logo">
-                <div class="plx-logo-icon">P</div>
+                <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--landing" />
                 <span class="plx-logo-text">PédagoLens</span>
             </div>
             <div class="plx-nav-links">
@@ -480,7 +496,7 @@ class PedagoLens_Landing {
             <div class="plx-footer-grid">
                 <div class="plx-footer-brand">
                     <div class="plx-nav-logo">
-                        <div class="plx-logo-icon plx-logo-icon--white">P</div>
+                        <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--footer" />
                         <span class="plx-logo-text-white">PédagoLens</span>
                     </div>
                     <p>L'intelligence artificielle dédiée à l'équité pédagogique. Nous aidons les éducateurs à bâtir un futur où personne n'est laissé pour compte.</p>
@@ -744,7 +760,21 @@ class PedagoLens_Landing {
         echo '<div class="pl-app-layout">';
         echo self::render_sidebar('dashboard');
         echo '<main class="pl-app-main">';
+
+        // Bandeau aperçu enseignant
+        $current_user_roles = (array) wp_get_current_user()->roles;
+        $is_teacher_preview = in_array('administrator', $current_user_roles, true) || in_array('pedagolens_teacher', $current_user_roles, true);
+        if ($is_teacher_preview) :
+            $teacher_dash_url = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
         ?>
+        <div class="pl-preview-banner">
+            <span class="material-symbols-outlined">visibility</span>
+            Vous êtes en mode aperçu étudiant
+            <a href="<?php echo $teacher_dash_url; ?>" class="pl-preview-banner-link">
+                <span class="material-symbols-outlined">arrow_back</span> Retour interface enseignant
+            </a>
+        </div>
+        <?php endif; ?>
 <div class="pl-stu-page">
 
     <!-- ========== MAIN CONTENT ========== -->
@@ -871,6 +901,10 @@ class PedagoLens_Landing {
                     <h1 class="pl-courses-main-title">Cours &amp; Projets</h1>
                     <p class="pl-courses-subtitle">Gérez vos cours, créez des projets et analysez-les avec l'IA.</p>
                 </div>
+                <button data-pl-modal-open="create-course" class="pl-btn pl-btn--primary pl-btn--icon">
+                    <span class="material-symbols-outlined">add</span>
+                    Créer un cours
+                </button>
             </div>
 
             <?php if ( empty( $courses ) ) : ?>
@@ -931,6 +965,27 @@ class PedagoLens_Landing {
                                             + Créer un projet
                                         </button>
                                     <?php endif; ?>
+                                    <?php if ( ! empty( $analysis_posts ) ) : ?>
+                                    <a href="<?php echo esc_url( self::page_url( 'historique', '' ) . '?course_id=' . $course->ID ); ?>" class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-outline" title="Historique des analyses">
+                                        <span class="material-symbols-outlined" style="font-size:1rem;">history</span> Historique
+                                    </a>
+                                    <?php endif; ?>
+                                    <button class="pl-course-card-edit-btn"
+                                        data-course-id="<?php echo (int) $course->ID; ?>"
+                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
+                                        data-course-code="<?php echo esc_attr( get_post_meta( $course->ID, '_pl_course_code', true ) ); ?>"
+                                        data-course-session="<?php echo esc_attr( get_post_meta( $course->ID, '_pl_session', true ) ); ?>"
+                                        data-course-desc="<?php echo esc_attr( $course->post_content ); ?>"
+                                        data-course-type="<?php echo esc_attr( $course_type ); ?>"
+                                        title="Modifier ce cours">
+                                        <span class="material-symbols-outlined" style="font-size:1.1rem;">edit</span>
+                                    </button>
+                                    <button class="pl-course-card-delete-btn"
+                                        data-course-id="<?php echo (int) $course->ID; ?>"
+                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
+                                        title="Supprimer ce cours">
+                                        <span class="material-symbols-outlined" style="font-size:1.1rem;">delete</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -966,6 +1021,160 @@ class PedagoLens_Landing {
 
         </div>
     </div>
+
+        <?php
+        // ── Create Course Modal ──
+        ?>
+        <div class="pl-modal" data-pl-modal="create-course">
+          <div class="pl-modal-backdrop"></div>
+          <div class="pl-modal-content">
+            <div class="pl-modal-header">
+              <h2>Créer un nouveau cours</h2>
+              <button data-pl-modal-close class="pl-modal-close-btn"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <form id="pl-create-course-form" class="pl-modal-form">
+              <div class="pl-form-group">
+                <label for="pl-course-title">Titre du cours *</label>
+                <input type="text" id="pl-course-title" name="title" required placeholder="Ex: Français 103" class="pl-form-input" />
+              </div>
+              <div class="pl-form-row">
+                <div class="pl-form-group pl-form-half">
+                  <label for="pl-course-code">Code du cours</label>
+                  <input type="text" id="pl-course-code" name="code" placeholder="Ex: FRA-103" class="pl-form-input" />
+                </div>
+                <div class="pl-form-group pl-form-half">
+                  <label for="pl-course-session">Session</label>
+                  <input type="text" id="pl-course-session" name="session" placeholder="Ex: H26" class="pl-form-input" />
+                </div>
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-course-desc">Description</label>
+                <textarea id="pl-course-desc" name="description" rows="3" placeholder="Description du cours..." class="pl-form-input"></textarea>
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-course-type">Type de cours</label>
+                <select id="pl-course-type" name="course_type" class="pl-form-input">
+                  <option value="magistral">Magistral</option>
+                  <option value="exercice">Exercice</option>
+                  <option value="travail_equipe">Travail d'équipe</option>
+                  <option value="evaluation">Évaluation</option>
+                </select>
+              </div>
+              <div class="pl-modal-footer">
+                <button type="button" data-pl-modal-close class="pl-btn pl-btn--ghost">Annuler</button>
+                <button type="submit" class="pl-btn pl-btn--primary pl-btn-submit">
+                  <span class="pl-btn-text">Créer le cours</span>
+                  <span class="pl-btn-loader" style="display:none;"><span class="material-symbols-outlined pl-spin">progress_activity</span></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <?php
+        // ── Edit Course Modal ──
+        ?>
+        <div class="pl-modal" data-pl-modal="edit-course">
+          <div class="pl-modal-backdrop"></div>
+          <div class="pl-modal-content">
+            <div class="pl-modal-header">
+              <h2>Modifier le cours</h2>
+              <button data-pl-modal-close class="pl-modal-close-btn"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <form id="pl-edit-course-form" class="pl-modal-form">
+              <input type="hidden" id="pl-edit-course-id" name="course_id" />
+              <div class="pl-form-group">
+                <label for="pl-edit-course-title">Titre du cours *</label>
+                <input type="text" id="pl-edit-course-title" name="title" required placeholder="Ex: Français 103" class="pl-form-input" />
+              </div>
+              <div class="pl-form-row">
+                <div class="pl-form-group pl-form-half">
+                  <label for="pl-edit-course-code">Code du cours</label>
+                  <input type="text" id="pl-edit-course-code" name="code" placeholder="Ex: FRA-103" class="pl-form-input" />
+                </div>
+                <div class="pl-form-group pl-form-half">
+                  <label for="pl-edit-course-session">Session</label>
+                  <input type="text" id="pl-edit-course-session" name="session" placeholder="Ex: H26" class="pl-form-input" />
+                </div>
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-edit-course-desc">Description</label>
+                <textarea id="pl-edit-course-desc" name="description" rows="3" placeholder="Description du cours..." class="pl-form-input"></textarea>
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-edit-course-type">Type de cours</label>
+                <select id="pl-edit-course-type" name="course_type" class="pl-form-input">
+                  <option value="magistral">Magistral</option>
+                  <option value="exercice">Exercice</option>
+                  <option value="travail_equipe">Travail d'équipe</option>
+                  <option value="evaluation">Évaluation</option>
+                </select>
+              </div>
+              <div class="pl-modal-footer">
+                <button type="button" data-pl-modal-close class="pl-btn pl-btn--ghost">Annuler</button>
+                <button type="submit" class="pl-btn pl-btn--primary pl-btn-submit">
+                  <span class="pl-btn-text">Enregistrer</span>
+                  <span class="pl-btn-loader" style="display:none;"><span class="material-symbols-outlined pl-spin">progress_activity</span></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <?php
+        // ── Create Project Modal (Task 17) ──
+        ?>
+        <div class="pl-modal" data-pl-modal="create-project">
+          <div class="pl-modal-backdrop"></div>
+          <div class="pl-modal-content">
+            <div class="pl-modal-header">
+              <h2>Créer un nouveau projet</h2>
+              <button data-pl-modal-close class="pl-modal-close-btn"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <form id="pl-create-project-form" class="pl-modal-form" enctype="multipart/form-data">
+              <input type="hidden" id="pl-project-course-id" name="course_id" value="" />
+              <div class="pl-project-course-info">
+                📚 Cours : <span id="pl-project-course-label"></span>
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-project-title">Titre du projet *</label>
+                <input type="text" id="pl-project-title" name="title" required placeholder="Ex: Chapitre 3 — Les fonctions" class="pl-form-input" />
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-project-type">Type de projet</label>
+                <select id="pl-project-type" name="project_type" class="pl-form-input">
+                  <?php foreach ( $project_type_options as $val => $lbl ) : ?>
+                    <option value="<?php echo esc_attr( $val ); ?>"><?php echo esc_html( $lbl ); ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="pl-form-group">
+                <label for="pl-project-desc">Description</label>
+                <textarea id="pl-project-desc" name="description" rows="3" placeholder="Description du projet..." class="pl-form-input"></textarea>
+              </div>
+              <div class="pl-form-group">
+                <label>Fichier(s)</label>
+                <div class="pl-file-upload-zone" id="pl-project-upload-zone">
+                  <label class="pl-file-upload-label" for="pl-project-files">
+                    <span class="material-symbols-outlined">upload_file</span>
+                    <p>Cliquez ou glissez vos fichiers ici</p>
+                    <p><small>.pptx, .pdf, .docx, .doc</small></p>
+                  </label>
+                  <input type="file" id="pl-project-files" name="project_files[]" multiple accept=".pptx,.pdf,.docx,.doc" />
+                </div>
+                <div id="pl-project-file-list" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
+              </div>
+              <div class="pl-modal-footer">
+                <button type="button" data-pl-modal-close class="pl-btn pl-btn--ghost">Annuler</button>
+                <button type="submit" class="pl-btn pl-btn--primary pl-btn-submit">
+                  <span class="pl-btn-text">Créer le projet</span>
+                  <span class="pl-btn-loader" style="display:none;"><span class="material-symbols-outlined pl-spin">progress_activity</span></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
         <?php
         echo '</main>';
         echo '</div>';
@@ -1504,7 +1713,7 @@ class PedagoLens_Landing {
             <nav class="plx-nav" role="navigation" aria-label="Navigation principale">
                 <div class="plx-nav-inner">
                     <a href="<?php echo $home_url; ?>" class="plx-nav-logo">
-                        <span class="plx-nav-logo-icon">P</span>
+                        <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--header" />
                         P&eacute;dagoLens
                     </a>
                     <ul class="plx-nav-links">
@@ -1548,6 +1757,14 @@ class PedagoLens_Landing {
             <div class="pl-header-app-left">
                 <?php echo $bc_html; ?>
             </div>
+            <?php if ( $is_admin || $is_teacher ) : 
+                $student_dash_url = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+            ?>
+                <a href="<?php echo $student_dash_url; ?>" class="pl-header-switch-btn" title="Tester l'interface étudiant">
+                    <span class="material-symbols-outlined">swap_horiz</span>
+                    <span class="pl-header-switch-label">Vue étudiant</span>
+                </a>
+            <?php endif; ?>
             <div class="pl-header-app-right">
                 <div class="pl-header-user">
                     <img src="<?php echo esc_url( $avatar_url ); ?>" alt="" class="pl-header-avatar" />
@@ -1622,7 +1839,7 @@ class PedagoLens_Landing {
         ?>
         <aside class="pl-app-sidebar" role="navigation" aria-label="Menu principal">
             <div class="pl-app-sidebar-logo">
-                <span class="pl-app-sidebar-logo-icon">P</span>
+                <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--sidebar" />
                 <span class="pl-app-sidebar-brand">P&eacute;dagoLens AI</span>
             </div>
             <div class="pl-app-sidebar-sub">Portail &Eacute;ducatif</div>
@@ -1695,7 +1912,7 @@ class PedagoLens_Landing {
         <section class="pl-st-login-branding">
             <div class="pl-st-login-branding-content">
                 <div class="pl-st-login-brand-logo">
-                    <span class="material-symbols-outlined">auto_awesome</span>
+                    <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--login" />
                     <span class="pl-st-login-brand-name">P&eacute;dagoLens</span>
                 </div>
                 <h1 class="pl-st-login-brand-title">
@@ -2348,6 +2565,187 @@ class PedagoLens_Landing {
     }
 
     // -------------------------------------------------------------------------
+    // Course CRUD — Front-end AJAX handlers (Task 16)
+    // -------------------------------------------------------------------------
+
+    public static function ajax_create_course_front(): void {
+        check_ajax_referer( 'pl_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'edit_posts' ) ) {
+            wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
+        }
+
+        $title   = sanitize_text_field( $_POST['title'] ?? '' );
+        $code    = sanitize_text_field( $_POST['code'] ?? '' );
+        $session = sanitize_text_field( $_POST['session'] ?? '' );
+        $desc    = sanitize_textarea_field( $_POST['description'] ?? '' );
+        $type    = sanitize_text_field( $_POST['course_type'] ?? 'magistral' );
+
+        if ( empty( $title ) ) {
+            wp_send_json_error( [ 'message' => 'Le titre du cours est requis.' ] );
+        }
+
+        $post_id = wp_insert_post( [
+            'post_type'    => 'pl_course',
+            'post_title'   => $title,
+            'post_content' => $desc,
+            'post_status'  => 'publish',
+            'post_author'  => get_current_user_id(),
+        ] );
+
+        if ( is_wp_error( $post_id ) ) {
+            wp_send_json_error( [ 'message' => 'Erreur lors de la création du cours.' ] );
+        }
+
+        update_post_meta( $post_id, '_pl_course_code', $code );
+        update_post_meta( $post_id, '_pl_session', $session );
+        update_post_meta( $post_id, '_pl_course_type', $type );
+
+        wp_send_json_success( [
+            'message'   => 'Cours créé avec succès !',
+            'course_id' => $post_id,
+            'title'     => $title,
+        ] );
+    }
+
+    public static function ajax_update_course_front(): void {
+        check_ajax_referer( 'pl_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'edit_posts' ) ) {
+            wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
+        }
+
+        $course_id = (int) ( $_POST['course_id'] ?? 0 );
+        if ( ! $course_id || get_post_type( $course_id ) !== 'pl_course' ) {
+            wp_send_json_error( [ 'message' => 'Cours introuvable.' ] );
+        }
+
+        $title   = sanitize_text_field( $_POST['title'] ?? '' );
+        $code    = sanitize_text_field( $_POST['code'] ?? '' );
+        $session = sanitize_text_field( $_POST['session'] ?? '' );
+        $desc    = sanitize_textarea_field( $_POST['description'] ?? '' );
+        $type    = sanitize_text_field( $_POST['course_type'] ?? 'magistral' );
+
+        if ( empty( $title ) ) {
+            wp_send_json_error( [ 'message' => 'Le titre est requis.' ] );
+        }
+
+        wp_update_post( [
+            'ID'           => $course_id,
+            'post_title'   => $title,
+            'post_content' => $desc,
+        ] );
+
+        update_post_meta( $course_id, '_pl_course_code', $code );
+        update_post_meta( $course_id, '_pl_session', $session );
+        update_post_meta( $course_id, '_pl_course_type', $type );
+
+        wp_send_json_success( [ 'message' => 'Cours mis à jour !', 'course_id' => $course_id ] );
+    }
+
+    public static function ajax_delete_course_front(): void {
+        check_ajax_referer( 'pl_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'delete_posts' ) ) {
+            wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
+        }
+
+        $course_id = (int) ( $_POST['course_id'] ?? 0 );
+        if ( ! $course_id || get_post_type( $course_id ) !== 'pl_course' ) {
+            wp_send_json_error( [ 'message' => 'Cours introuvable.' ] );
+        }
+
+        // Delete associated projects
+        $projects = get_posts( [
+            'post_type'      => 'pl_project',
+            'posts_per_page' => -1,
+            'meta_query'     => [ [ 'key' => '_pl_course_id', 'value' => $course_id ] ],
+        ] );
+        foreach ( $projects as $p ) {
+            wp_delete_post( $p->ID, true );
+        }
+
+        wp_delete_post( $course_id, true );
+
+        wp_send_json_success( [ 'message' => 'Cours supprimé.' ] );
+    }
+
+    // ── Task 17: Create project from front-end ──────────────────────────
+
+    public static function ajax_create_project_front(): void {
+        check_ajax_referer( 'pl_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'edit_posts' ) ) {
+            wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
+        }
+
+        $course_id = (int) ( $_POST['course_id'] ?? 0 );
+        if ( ! $course_id || get_post_type( $course_id ) !== 'pl_course' ) {
+            wp_send_json_error( [ 'message' => 'Cours introuvable.' ] );
+        }
+
+        $title = sanitize_text_field( $_POST['title'] ?? '' );
+        $type  = sanitize_text_field( $_POST['project_type'] ?? 'magistral' );
+        $desc  = sanitize_textarea_field( $_POST['description'] ?? '' );
+
+        if ( empty( $title ) ) {
+            wp_send_json_error( [ 'message' => 'Le titre du projet est requis.' ] );
+        }
+
+        $post_id = wp_insert_post( [
+            'post_type'    => 'pl_project',
+            'post_title'   => $title,
+            'post_content' => $desc,
+            'post_status'  => 'publish',
+            'post_author'  => get_current_user_id(),
+        ] );
+
+        if ( is_wp_error( $post_id ) ) {
+            wp_send_json_error( [ 'message' => 'Erreur lors de la création.' ] );
+        }
+
+        update_post_meta( $post_id, '_pl_course_id', $course_id );
+        update_post_meta( $post_id, '_pl_project_type', $type );
+        update_post_meta( $post_id, '_pl_created_at', current_time( 'mysql' ) );
+
+        // Handle file upload
+        $files_urls = [];
+        if ( ! empty( $_FILES['project_files'] ) ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+
+            $file_count = is_array( $_FILES['project_files']['name'] )
+                ? count( $_FILES['project_files']['name'] )
+                : 1;
+
+            for ( $i = 0; $i < $file_count; $i++ ) {
+                $file = [
+                    'name'     => is_array( $_FILES['project_files']['name'] ) ? $_FILES['project_files']['name'][ $i ] : $_FILES['project_files']['name'],
+                    'type'     => is_array( $_FILES['project_files']['type'] ) ? $_FILES['project_files']['type'][ $i ] : $_FILES['project_files']['type'],
+                    'tmp_name' => is_array( $_FILES['project_files']['tmp_name'] ) ? $_FILES['project_files']['tmp_name'][ $i ] : $_FILES['project_files']['tmp_name'],
+                    'error'    => is_array( $_FILES['project_files']['error'] ) ? $_FILES['project_files']['error'][ $i ] : $_FILES['project_files']['error'],
+                    'size'     => is_array( $_FILES['project_files']['size'] ) ? $_FILES['project_files']['size'][ $i ] : $_FILES['project_files']['size'],
+                ];
+                $_FILES['upload_file'] = $file;
+                $upload = wp_handle_upload( $file, [ 'test_form' => false ] );
+                if ( ! empty( $upload['url'] ) ) {
+                    $files_urls[] = $upload['url'];
+                }
+            }
+        }
+
+        if ( ! empty( $files_urls ) ) {
+            update_post_meta( $post_id, '_pl_files', wp_json_encode( $files_urls ) );
+        }
+
+        wp_send_json_success( [
+            'message'    => 'Projet créé avec succès !',
+            'project_id' => $post_id,
+        ] );
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -2385,6 +2783,10 @@ class PedagoLens_Landing {
         $filter_type  = sanitize_text_field( $_GET['pl_type'] ?? 'all' );
         $filter_sort  = sanitize_text_field( $_GET['pl_sort'] ?? 'newest' );
 
+        // Course filter (from Cours & Projets page)
+        $filter_course       = (int) ( $_GET['course_id'] ?? 0 );
+        $filter_course_title = $filter_course ? get_the_title( $filter_course ) : '';
+
         // ── Build unified timeline ──────────────────────────────
         $timeline = [];
 
@@ -2400,6 +2802,12 @@ class PedagoLens_Landing {
             // Teachers/admins see all; students see only their own
             if ( $is_student ) {
                 $analysis_args['author'] = $user->ID;
+            }
+            if ( $filter_course ) {
+                $analysis_args['meta_query'] = array_merge(
+                    $analysis_args['meta_query'] ?? [],
+                    [ [ 'key' => '_pl_course_id', 'value' => $filter_course, 'type' => 'NUMERIC' ] ]
+                );
             }
             $analyses = get_posts( $analysis_args );
             foreach ( $analyses as $a ) {
@@ -2444,6 +2852,12 @@ class PedagoLens_Landing {
                 $session_args['meta_query'] = [
                     [ 'key' => '_pl_student_id', 'value' => $user->ID ],
                 ];
+            }
+            if ( $filter_course ) {
+                $session_args['meta_query'] = array_merge(
+                    $session_args['meta_query'] ?? [],
+                    [ [ 'key' => '_pl_course_id', 'value' => $filter_course, 'type' => 'NUMERIC' ] ]
+                );
             }
             $sessions = get_posts( $session_args );
             foreach ( $sessions as $s ) {
@@ -2522,12 +2936,25 @@ class PedagoLens_Landing {
             </div>
         </header>
 
+        <?php if ( $filter_course && $filter_course_title ) : ?>
+        <div class="pl-hi-course-filter-banner">
+            <span class="material-symbols-outlined">filter_alt</span>
+            Filtré par cours : <strong><?php echo esc_html( $filter_course_title ); ?></strong>
+            <a href="<?php echo esc_url( remove_query_arg( 'course_id' ) ); ?>" class="pl-hi-clear-filter">
+                <span class="material-symbols-outlined">close</span> Voir tout
+            </a>
+        </div>
+        <?php endif; ?>
+
         <!-- Filters -->
         <section class="pl-hi-filters">
             <div class="pl-hi-filters-label">
                 <span>Filtrer par :</span>
             </div>
             <form method="get" action="" class="pl-hi-filters-form">
+                <?php if ( $filter_course ) : ?>
+                    <input type="hidden" name="course_id" value="<?php echo $filter_course; ?>" />
+                <?php endif; ?>
                 <select name="pl_type" class="pl-hi-select" onchange="this.form.submit()">
                     <option value="all" <?php selected( $filter_type, 'all' ); ?>>Tous les types</option>
                     <option value="analysis" <?php selected( $filter_type, 'analysis' ); ?>>Analyses IA</option>

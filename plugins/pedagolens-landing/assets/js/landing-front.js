@@ -1474,6 +1474,20 @@
     // INIT
     // =====================================================================
 
+    function initStitchHeaderScroll() {
+        var header = document.querySelector('.plx-header');
+        if (!header) return;
+        var onScroll = function() {
+            if (window.scrollY > 20) {
+                header.classList.add('plx-header--scrolled');
+            } else {
+                header.classList.remove('plx-header--scrolled');
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    }
+
     function initStitch() {
         initStitchScrollReveal();
         initStitchSmoothScroll();
@@ -1485,6 +1499,7 @@
         initStitchSidebarToggle();
         initStitchStagger();
         initStitchHoverLift();
+        initStitchHeaderScroll();
     }
 
     if ( document.readyState === 'loading' ) {
@@ -1782,6 +1797,13 @@
                 }, 300);
             }
         };
+
+        // PlToast compatibility shim (capital P, .success/.error/.info methods)
+        window.PlToast = {
+            success: function(msg, dur) { window.plToast(msg, 'success', dur); },
+            error:   function(msg, dur) { window.plToast(msg, 'error',   dur); },
+            info:    function(msg, dur) { window.plToast(msg, 'info',    dur); }
+        };
     }
 
     // =====================================================================
@@ -2064,3 +2086,197 @@
     }
 
 } )();
+
+/* ===== TASK 16: Course CRUD AJAX ===== */
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Helper: toggle submit button loading state
+        function setBtnLoading(btn, loading) {
+            if (!btn) return;
+            var btnText = btn.querySelector('.pl-btn-text');
+            var btnLoader = btn.querySelector('.pl-btn-loader');
+            btn.disabled = loading;
+            if (btnText) btnText.style.display = loading ? 'none' : '';
+            if (btnLoader) btnLoader.style.display = loading ? 'inline-flex' : 'none';
+        }
+
+        // Helper: AJAX post
+        function plAjaxPost(action, fd, onSuccess, onError) {
+            fd.append('action', action);
+            fd.append('nonce', (window.plFront && plFront.nonce) || '');
+            fetch((window.plFront && plFront.ajaxurl) || '/wp-admin/admin-ajax.php', {
+                method: 'POST', body: fd
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success) {
+                    if (onSuccess) onSuccess(res.data);
+                } else {
+                    if (onError) onError(res.data);
+                }
+            })
+            .catch(function() {
+                if (typeof plToast === 'function') plToast('Erreur réseau', 'error');
+            });
+        }
+
+        // ── Create course form ──
+        var createForm = document.getElementById('pl-create-course-form');
+        if (createForm) {
+            createForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var btn = createForm.querySelector('.pl-btn-submit');
+                setBtnLoading(btn, true);
+                var fd = new FormData(createForm);
+                plAjaxPost('pl_create_course_front', fd,
+                    function(data) {
+                        setBtnLoading(btn, false);
+                        if (typeof plToast === 'function') plToast(data.message, 'success');
+                        setTimeout(function() { location.reload(); }, 800);
+                    },
+                    function(data) {
+                        setBtnLoading(btn, false);
+                        if (typeof plToast === 'function') plToast(data.message || 'Erreur', 'error');
+                    }
+                );
+            });
+        }
+
+        // ── Edit course form ──
+        var editForm = document.getElementById('pl-edit-course-form');
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var btn = editForm.querySelector('.pl-btn-submit');
+                setBtnLoading(btn, true);
+                var fd = new FormData(editForm);
+                plAjaxPost('pl_update_course_front', fd,
+                    function(data) {
+                        setBtnLoading(btn, false);
+                        if (typeof plToast === 'function') plToast(data.message, 'success');
+                        setTimeout(function() { location.reload(); }, 800);
+                    },
+                    function(data) {
+                        setBtnLoading(btn, false);
+                        if (typeof plToast === 'function') plToast(data.message || 'Erreur', 'error');
+                    }
+                );
+            });
+        }
+
+        // ── Delete course buttons ──
+        document.addEventListener('click', function(e) {
+            var delBtn = e.target.closest('.pl-course-card-delete-btn');
+            if (!delBtn) return;
+            e.preventDefault();
+            var courseId = delBtn.getAttribute('data-course-id');
+            var courseTitle = delBtn.getAttribute('data-course-title') || 'ce cours';
+            if (!confirm('Supprimer "' + courseTitle + '" et tous ses projets ? Cette action est irréversible.')) return;
+
+            var fd = new FormData();
+            fd.append('course_id', courseId);
+            plAjaxPost('pl_delete_course_front', fd,
+                function(data) {
+                    if (typeof plToast === 'function') plToast(data.message, 'success');
+                    setTimeout(function() { location.reload(); }, 800);
+                },
+                function(data) {
+                    if (typeof plToast === 'function') plToast(data.message || 'Erreur', 'error');
+                }
+            );
+        });
+
+        // ── Edit button: populate edit modal ──
+        document.addEventListener('click', function(e) {
+            var editBtn = e.target.closest('.pl-course-card-edit-btn');
+            if (!editBtn) return;
+            e.preventDefault();
+            var modal = document.querySelector('[data-pl-modal="edit-course"]');
+            if (!modal) return;
+            document.getElementById('pl-edit-course-id').value = editBtn.getAttribute('data-course-id') || '';
+            document.getElementById('pl-edit-course-title').value = editBtn.getAttribute('data-course-title') || '';
+            document.getElementById('pl-edit-course-code').value = editBtn.getAttribute('data-course-code') || '';
+            document.getElementById('pl-edit-course-session').value = editBtn.getAttribute('data-course-session') || '';
+            document.getElementById('pl-edit-course-desc').value = editBtn.getAttribute('data-course-desc') || '';
+            document.getElementById('pl-edit-course-type').value = editBtn.getAttribute('data-course-type') || 'magistral';
+            modal.classList.add('pl-modal--open');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+})();
+
+/* ===== TASK 17: Project Creation AJAX ===== */
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Open project modal and set course_id
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.pl-btn-create-project');
+            if (!btn) return;
+            e.preventDefault();
+            var modal = document.querySelector('[data-pl-modal="create-project"]');
+            if (!modal) return;
+            var courseIdInput = document.getElementById('pl-project-course-id');
+            if (courseIdInput) courseIdInput.value = btn.getAttribute('data-course-id') || '';
+            var courseLabel = document.getElementById('pl-project-course-label');
+            if (courseLabel) courseLabel.textContent = btn.getAttribute('data-course-title') || '';
+            modal.classList.add('pl-modal--open');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // File input display
+        var fileInput = document.getElementById('pl-project-files');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                var list = document.getElementById('pl-project-file-list');
+                if (!list) return;
+                var names = [];
+                for (var i = 0; i < fileInput.files.length; i++) {
+                    names.push(fileInput.files[i].name);
+                }
+                list.textContent = names.length ? '📎 ' + names.join(', ') : '';
+            });
+        }
+
+        // Submit project form
+        var form = document.getElementById('pl-create-project-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var btn = form.querySelector('.pl-btn-submit');
+                var btnText = btn.querySelector('.pl-btn-text');
+                var btnLoader = btn.querySelector('.pl-btn-loader');
+                btn.disabled = true;
+                if (btnText) btnText.style.display = 'none';
+                if (btnLoader) btnLoader.style.display = 'inline-flex';
+
+                var fd = new FormData(form);
+                fd.append('action', 'pl_create_project_front');
+                fd.append('nonce', (window.plFront && plFront.nonce) || '');
+
+                fetch((window.plFront && plFront.ajaxurl) || '/wp-admin/admin-ajax.php', {
+                    method: 'POST', body: fd
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    btn.disabled = false;
+                    if (btnText) btnText.style.display = '';
+                    if (btnLoader) btnLoader.style.display = 'none';
+                    if (res.success) {
+                        if (window.PlToast) PlToast.success(res.data.message);
+                        setTimeout(function() { location.reload(); }, 800);
+                    } else {
+                        if (window.PlToast) PlToast.error(res.data.message || 'Erreur');
+                    }
+                })
+                .catch(function() {
+                    btn.disabled = false;
+                    if (btnText) btnText.style.display = '';
+                    if (btnLoader) btnLoader.style.display = 'none';
+                    if (window.PlToast) PlToast.error('Erreur réseau');
+                });
+            });
+        }
+    });
+})();

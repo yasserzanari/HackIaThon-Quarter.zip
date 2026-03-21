@@ -4734,3 +4734,170 @@ body.admin-bar .pl-app-main     { padding-top: calc(4.5rem + 32px); }
 .pl-hi-th--details {
   /* Inherits from pl-hi-th — no extra style needed */
 }
+
+
+/* ============================================================
+   LOGO IMG — Toutes variantes
+   ============================================================ */
+.pl-logo-img {
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: 6px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.pl-logo-img:hover { transform: scale(1.05); }
+.pl-logo-img--sidebar { height: 40px; width: auto; }
+.pl-logo-img--header { height: 36px; width: auto; }
+.pl-logo-img--landing { height: 36px; width: auto; }
+.pl-logo-img--footer { height: 32px; width: auto; filter: brightness(0) invert(1); }
+.pl-logo-img--login { height: 48px; width: auto; display: block; margin: 0 auto 1rem; }
+
+/* ============================================================
+   HEADER SWITCH BUTTON — Enseignant → Étudiant
+   ============================================================ */
+.pl-header-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  background: var(--pl-secondary);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--pl-font-body);
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+.pl-header-switch-btn:hover {
+  background: #5a1fbf;
+  transform: translateY(-1px);
+  color: #fff;
+  text-decoration: none;
+}
+.pl-header-switch-btn .material-symbols-outlined { font-size: 1.1rem; }
+@media (max-width: 768px) {
+  .pl-header-switch-label { display: none; }
+  .pl-header-switch-btn { padding: 0.4rem 0.6rem; }
+}
+
+/* ============================================================
+   PREVIEW BANNER — Mode aperçu étudiant
+   ============================================================ */
+.pl-preview-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, var(--pl-secondary), #5a1fbf);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--pl-font-body);
+  margin-bottom: 1.5rem;
+}
+.pl-preview-banner .material-symbols-outlined { font-size: 1.1rem; }
+.pl-preview-banner-link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.3rem 0.8rem;
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  transition: background 0.2s ease;
+}
+.pl-preview-banner-link:hover { background: rgba(255,255,255,0.35); color: #fff; }
+
+/* ===== TASK 16: Course CRUD Modals & Forms ===== */
+.pl-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.pl-modal-header h2 { font-family: 'Manrope', sans-serif; font-size: 1.35rem; font-weight: 700; color: var(--pl-primary, #00236f); }
+.pl-modal-close-btn { background: none; border: none; cursor: pointer; color: var(--pl-on-surface-variant, #666); padding: 0.25rem; border-radius: 0.5rem; transition: background 0.2s; }
+.pl-modal-close-btn:hover { background: rgba(0,0,0,0.06); }
+.pl-modal-form { display: flex; flex-direction: column; gap: 1rem; }
+.pl-form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.pl-form-group label { font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--pl-on-surface, #1a1a2e); }
+.pl-form-input { font-family: 'Inter', sans-serif; font-size: 0.95rem; padding: 0.65rem 0.85rem; border: 1.5px solid #e0e0e0; border-radius: 0.75rem; background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+.pl-form-input:focus { border-color: var(--pl-secondary, #712ae2); box-shadow: 0 0 0 3px rgba(113,42,226,0.1); background: #fff; }
+.pl-form-input::placeholder { color: #aaa; }
+textarea.pl-form-input { resize: vertical; min-height: 80px; }
+select.pl-form-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
+.pl-form-row { display: flex; gap: 1rem; }
+.pl-form-half { flex: 1; }
+.pl-modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid #f0f0f0; }
+.pl-btn { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.25rem; border-radius: 0.75rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
+.pl-btn--primary { background: var(--pl-secondary, #712ae2); color: #fff; }
+.pl-btn--primary:hover { background: #5a1fbf; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(113,42,226,0.3); }
+.pl-btn--ghost { background: transparent; color: var(--pl-on-surface-variant, #666); border: 1.5px solid #e0e0e0; }
+.pl-btn--ghost:hover { background: #f5f5f5; border-color: #ccc; }
+.pl-btn--danger { background: #ef4444; color: #fff; }
+.pl-btn--danger:hover { background: #dc2626; }
+.pl-btn--icon { gap: 0.35rem; }
+.pl-btn--icon .material-symbols-outlined { font-size: 1.1rem; }
+.pl-btn-submit { min-width: 140px; justify-content: center; }
+.pl-btn-loader { display: inline-flex; }
+.pl-spin { animation: plSpin 1s linear infinite; }
+@keyframes plSpin { to { transform: rotate(360deg); } }
+.pl-course-card-edit-btn, .pl-course-card-delete-btn { background: none; border: 1.5px solid #e0e0e0; border-radius: 0.5rem; padding: 0.3rem; cursor: pointer; color: #666; transition: all 0.2s; display: inline-flex; align-items: center; }
+.pl-course-card-edit-btn:hover { border-color: var(--pl-secondary, #712ae2); color: var(--pl-secondary, #712ae2); }
+.pl-course-card-delete-btn:hover { border-color: #ef4444; color: #ef4444; }
+@media (max-width: 640px) {
+    .pl-form-row { flex-direction: column; gap: 1rem; }
+    .pl-modal-content { padding: 1.25rem; border-radius: 1rem; }
+}
+
+/* ===== TASK 17: Project Creation Modal ===== */
+.pl-file-upload-zone { border: 2px dashed #e0e0e0; border-radius: 0.75rem; padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.pl-file-upload-zone:hover { border-color: var(--pl-secondary, #712ae2); background: rgba(113,42,226,0.03); }
+.pl-file-upload-zone .material-symbols-outlined { font-size: 2rem; color: #aaa; margin-bottom: 0.5rem; }
+.pl-file-upload-zone p { font-size: 0.85rem; color: #888; margin: 0; }
+.pl-file-upload-zone input[type="file"] { display: none; }
+.pl-file-upload-label { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; cursor: pointer; }
+.pl-project-course-info { background: rgba(113,42,226,0.06); border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.85rem; color: var(--pl-secondary, #712ae2); font-weight: 600; margin-bottom: 0.5rem; }
+
+/* ===== TASK 18: History Course Filter ===== */
+.pl-hi-course-filter-banner { display: flex; align-items: center; gap: 0.5rem; background: rgba(113,42,226,0.06); border: 1px solid rgba(113,42,226,0.15); border-radius: 0.75rem; padding: 0.65rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; color: var(--pl-secondary, #712ae2); }
+.pl-hi-course-filter-banner .material-symbols-outlined { font-size: 1.1rem; }
+.pl-hi-course-filter-banner strong { font-weight: 700; }
+.pl-hi-clear-filter { display: inline-flex; align-items: center; gap: 0.2rem; margin-left: auto; color: #666; font-size: 0.8rem; text-decoration: none; padding: 0.25rem 0.5rem; border-radius: 0.5rem; transition: background 0.2s; }
+.pl-hi-clear-filter:hover { background: rgba(0,0,0,0.06); color: #333; }
+.pl-hi-clear-filter .material-symbols-outlined { font-size: 0.9rem; }
+
+
+/* ===== TASK 19: Landing Mobile Responsive ===== */
+@media (max-width: 768px) {
+    .plx-hero-title { font-size: 2rem !important; line-height: 1.2 !important; }
+    .plx-hero-subtitle { font-size: 1rem !important; }
+    .plx-hero-actions { flex-direction: column; gap: 0.75rem; }
+    .plx-hero-actions .plx-btn { width: 100%; text-align: center; justify-content: center; }
+    .plx-features-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+    .plx-how-steps { grid-template-columns: 1fr !important; }
+    .plx-testimonials-grid { grid-template-columns: 1fr !important; }
+    .plx-stats-grid { grid-template-columns: 1fr 1fr !important; gap: 1rem !important; }
+    .plx-section { padding: 3rem 1rem !important; }
+    .plx-footer-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+    .plx-nav-links { display: none !important; }
+    .plx-nav-actions { gap: 0.5rem; }
+    .plx-nav-actions .plx-btn--ghost { display: none; }
+    .plx-hero { padding: 6rem 1rem 3rem !important; }
+    .plx-hero-visual { display: none; }
+    .plx-problem-grid { grid-template-columns: 1fr !important; }
+    .plx-cta-section { padding: 3rem 1rem !important; }
+}
+@media (max-width: 480px) {
+    .plx-hero-title { font-size: 1.6rem !important; }
+    .plx-stats-grid { grid-template-columns: 1fr !important; }
+    .plx-hero-badge { font-size: 0.75rem; }
+}
+
+/* ===== TASK 19.3: Header scrolled state ===== */
+.plx-header--scrolled {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 2px 20px rgba(0,35,111,0.08);
+}
