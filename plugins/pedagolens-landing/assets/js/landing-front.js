@@ -1870,3 +1870,168 @@
         }
     });
 })();
+
+
+/* ============================================================
+   Agent IA Léa — Chat Interface JS
+   ============================================================ */
+(function() {
+    'use strict';
+
+    function initLeaChat() {
+        var messagesEl = document.getElementById('pl-lea-messages');
+        var inputEl    = document.getElementById('pl-lea-input');
+        var sendBtn    = document.getElementById('pl-lea-send');
+        var profileCards = document.querySelectorAll('.pl-lea-profile-card');
+        var activeProfileEl = document.getElementById('pl-lea-active-profile');
+        var toggleBtn  = document.getElementById('pl-lea-toggle-panel');
+        var panel      = document.getElementById('pl-lea-profiles-panel');
+
+        if (!messagesEl || !inputEl || !sendBtn) return;
+
+        var currentProfile = profileCards.length > 0 ? profileCards[0].getAttribute('data-label') : 'Visuel-Spatial';
+        var currentSlug    = profileCards.length > 0 ? profileCards[0].getAttribute('data-profile') : 'visuel-spatial';
+        var isTyping = false;
+
+        // Profile responses based on student type
+        var profileResponses = {
+            'visuel-spatial': {
+                style: 'Je comprends mieux avec des schémas et des images.',
+                greeting: 'un étudiant visuel-spatial',
+                traits: 'J\'ai besoin de voir les concepts pour les comprendre. Les diagrammes, les cartes mentales et les couleurs m\'aident beaucoup.'
+            },
+            'auditif-verbal': {
+                style: 'J\'apprends mieux en écoutant et en discutant.',
+                greeting: 'un étudiant auditif-verbal',
+                traits: 'Les explications orales et les discussions de groupe sont mes meilleurs outils d\'apprentissage.'
+            },
+            'kinesthesique': {
+                style: 'J\'ai besoin de pratiquer pour comprendre.',
+                greeting: 'un étudiant kinesthésique',
+                traits: 'Les exercices pratiques, les manipulations et les mises en situation concrètes sont essentiels pour moi.'
+            },
+            'tdah': {
+                style: 'J\'ai du mal à rester concentré longtemps.',
+                greeting: 'un étudiant avec TDAH',
+                traits: 'J\'ai besoin de contenu court, structuré et interactif. Les longues lectures me perdent rapidement.'
+            },
+            'allophone': {
+                style: 'Le français n\'est pas ma langue maternelle.',
+                greeting: 'un étudiant allophone',
+                traits: 'J\'ai parfois du mal avec le vocabulaire technique. Des définitions simples et du contexte m\'aident beaucoup.'
+            },
+            'anxieux': {
+                style: 'Le stress d\'évaluation me bloque souvent.',
+                greeting: 'un étudiant anxieux',
+                traits: 'J\'ai besoin de renforcement positif et de consignes très claires pour me sentir en confiance.'
+            }
+        };
+
+        // Toggle panel (mobile)
+        if (toggleBtn && panel) {
+            toggleBtn.addEventListener('click', function() {
+                panel.classList.toggle('open');
+            });
+        }
+
+        // Profile selection
+        profileCards.forEach(function(card) {
+            card.addEventListener('click', function() {
+                profileCards.forEach(function(c) { c.classList.remove('active'); });
+                card.classList.add('active');
+                currentProfile = card.getAttribute('data-label');
+                currentSlug = card.getAttribute('data-profile');
+                if (activeProfileEl) {
+                    activeProfileEl.textContent = 'Profil : ' + currentProfile;
+                }
+                // Add system message about profile change
+                addMessage('bot', 'Profil changé ! Je suis maintenant ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].greeting : currentProfile) + '. ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].traits : '') + ' Posez-moi une question !');
+                // Close panel on mobile
+                if (panel) panel.classList.remove('open');
+            });
+        });
+
+        // Send message
+        function sendMessage() {
+            var text = inputEl.value.trim();
+            if (!text || isTyping) return;
+
+            addMessage('user', text);
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+
+            // Show typing indicator
+            isTyping = true;
+            sendBtn.disabled = true;
+            var typingEl = document.createElement('div');
+            typingEl.className = 'pl-lea-msg pl-lea-msg--typing';
+            typingEl.innerHTML = '<div class="pl-lea-typing-dots"><span></span><span></span><span></span></div>';
+            messagesEl.appendChild(typingEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+            // Simulate AI response (mock mode)
+            var delay = 1000 + Math.random() * 2000;
+            setTimeout(function() {
+                messagesEl.removeChild(typingEl);
+                isTyping = false;
+                sendBtn.disabled = false;
+
+                var response = generateResponse(text, currentSlug);
+                addMessage('bot', response);
+            }, delay);
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        inputEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        inputEl.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 96) + 'px';
+        });
+
+        function addMessage(type, text) {
+            var msg = document.createElement('div');
+            msg.className = 'pl-lea-msg pl-lea-msg--' + type;
+            msg.innerHTML = text;
+            messagesEl.appendChild(msg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function generateResponse(question, slug) {
+            var profile = profileResponses[slug] || profileResponses['visuel-spatial'];
+            var q = question.toLowerCase();
+
+            // Context-aware mock responses
+            if (q.indexOf('comprend') !== -1 || q.indexOf('compris') !== -1 || q.indexOf('clair') !== -1) {
+                return '<strong>Réaction (' + currentProfile + ') :</strong> ' + profile.style + ' Pour ce concept, j\'aurais besoin que vous me l\'expliquiez différemment. Peut-être avec un exemple concret ?';
+            }
+            if (q.indexOf('exercice') !== -1 || q.indexOf('pratique') !== -1 || q.indexOf('exemple') !== -1) {
+                return '<strong>Réaction (' + currentProfile + ') :</strong> Les exercices pratiques m\'aident beaucoup ! ' + profile.style + ' Est-ce que vous pourriez me donner un cas concret à résoudre étape par étape ?';
+            }
+            if (q.indexOf('examen') !== -1 || q.indexOf('évaluation') !== -1 || q.indexOf('test') !== -1 || q.indexOf('note') !== -1) {
+                return '<strong>Réaction (' + currentProfile + ') :</strong> Quand je pense à l\'évaluation... ' + profile.style + ' J\'aimerais savoir exactement ce qui sera évalué et comment me préparer efficacement.';
+            }
+            if (q.indexOf('cours') !== -1 || q.indexOf('matière') !== -1 || q.indexOf('sujet') !== -1) {
+                return '<strong>Réaction (' + currentProfile + ') :</strong> Pour bien suivre ce cours, ' + profile.style.toLowerCase() + ' Pourriez-vous me donner un aperçu de la structure du cours ?';
+            }
+            if (q.indexOf('aide') !== -1 || q.indexOf('difficulté') !== -1 || q.indexOf('problème') !== -1 || q.indexOf('bloqué') !== -1) {
+                return '<strong>Réaction (' + currentProfile + ') :</strong> Je rencontre parfois des difficultés parce que ' + profile.style.toLowerCase() + ' Quand je suis bloqué, j\'ai besoin qu\'on me guide pas à pas sans me donner directement la réponse.';
+            }
+
+            // Default response
+            return '<strong>Réaction (' + currentProfile + ') :</strong> ' + profile.style + ' Concernant votre question, je dirais que j\'ai besoin de plus de contexte pour bien comprendre. Pourriez-vous reformuler ou me donner un exemple ?';
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLeaChat);
+    } else {
+        initLeaChat();
+    }
+})();

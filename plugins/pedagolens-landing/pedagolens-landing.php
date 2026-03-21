@@ -3,7 +3,7 @@
  * Plugin Name: PédagoLens Landing
  * Plugin URI:  https://pedagolens.ca
  * Description: Landing page marketing de PédagoLens — shortcodes configurables depuis l'admin.
- * Version:     2.7.3
+ * Version:     2.8.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author:      PédagoLens
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PL_LANDING_VERSION',    '2.7.3' );
+define( 'PL_LANDING_VERSION',    '2.8.0' );
 define( 'PL_LANDING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PL_LANDING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

@@ -690,135 +690,215 @@ class PedagoLens_Landing {
     // [pedagolens_student_dashboard] — Dashboard étudiant (Stitch)
     // -------------------------------------------------------------------------
 
-    public static function shortcode_student_dashboard( array $atts ): string {
-        $atts = shortcode_atts( [ 'course_id' => 0 ], $atts );
+    
+        public static function shortcode_student_dashboard( array $atts ): string {
+            $atts = shortcode_atts( [ 'course_id' => 0 ], $atts );
 
-        if ( ! is_user_logged_in() ) {
-            return self::render_login_notice( 'Vous devez &ecirc;tre connect&eacute; pour acc&eacute;der au tableau de bord.' );
-        }
+            if ( ! is_user_logged_in() ) {
+                return self::render_login_notice( 'Vous devez &ecirc;tre connect&eacute; pour acc&eacute;der au tableau de bord.' );
+            }
 
-        $user       = wp_get_current_user();
-        $first_name = esc_html( $user->first_name ?: $user->display_name );
-        $logout_url = esc_url( wp_logout_url( home_url( '/' ) ) );
+            $user       = wp_get_current_user();
+            $first_name = esc_html( $user->first_name ?: $user->display_name );
+            $roles      = (array) $user->roles;
+            $is_teacher = in_array( 'administrator', $roles, true ) || in_array( 'pedagolens_teacher', $roles, true );
 
-        // URLs
-        $dash_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-        $courses_url = esc_url( self::page_url( 'cours-projets', 'pl-course-workbench' ) );
-        $twin_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-        $account_url = esc_url( self::page_url( 'compte', '' ) );
-
-        // Stats
-        $nb_courses      = (int) ( wp_count_posts( 'pl_course' )->publish ?? 0 );
-        $nb_interactions = (int) ( wp_count_posts( 'pl_interaction' )->publish ?? 0 );
-
-        // Recent interactions
-        $recent_interactions = get_posts( [
-            'post_type'      => 'pl_interaction',
-            'posts_per_page' => 5,
-            'orderby'        => 'date',
-            'order'          => 'DESC',
-            'post_status'    => 'publish',
-            'author'         => $user->ID,
-        ] );
-
-        // Localize twin script if available
-        if ( class_exists( 'PedagoLens_Twin_Admin' ) ) {
-            wp_localize_script( 'pl-landing-front', 'plTwin', [
+            // Localize twin script
+            wp_localize_script( 'pl-landing-front', 'plLea', [
                 'ajaxUrl' => admin_url( 'admin-ajax.php' ),
                 'nonce'   => wp_create_nonce( 'pl_twin_ajax' ),
             ] );
+
+            ob_start();
+
+            // Teacher/Admin → Agent IA Léa interface
+            if ( $is_teacher ) {
+                echo self::render_header( 'Agent IA L&eacute;a' );
+                echo '<div class="pl-app-layout">';
+                echo self::render_sidebar( 'lea' );
+                echo '<main class="pl-app-main">';
+
+                // Get active profiles from core
+                $profiles = [];
+                if ( class_exists( 'PedagoLens_Profile_Manager' ) ) {
+                    $profiles = PedagoLens_Profile_Manager::get_active_profiles();
+                }
+                if ( empty( $profiles ) ) {
+                    $profiles = [
+                        [ 'slug' => 'visuel-spatial',    'label' => 'Visuel-Spatial',    'description' => 'Apprend mieux avec des diagrammes, schémas et représentations visuelles.', 'icon' => 'visibility', 'traits' => ['Visuel', 'Spatial', 'Diagrammes'] ],
+                        [ 'slug' => 'auditif-verbal',    'label' => 'Auditif-Verbal',    'description' => 'Retient mieux par l\'écoute, les discussions et les explications orales.', 'icon' => 'hearing', 'traits' => ['Auditif', 'Verbal', 'Discussion'] ],
+                        [ 'slug' => 'kinesthesique',     'label' => 'Kinesthésique',     'description' => 'Apprend par la pratique, les exercices concrets et la manipulation.', 'icon' => 'touch_app', 'traits' => ['Pratique', 'Concret', 'Manipulation'] ],
+                        [ 'slug' => 'tdah',              'label' => 'TDAH',              'description' => 'Besoin de contenu structuré, court et interactif pour maintenir l\'attention.', 'icon' => 'psychology', 'traits' => ['Attention', 'Structure', 'Interactif'] ],
+                        [ 'slug' => 'allophone',         'label' => 'Allophone',         'description' => 'Français langue seconde — besoin de vocabulaire simplifié et de contexte culturel.', 'icon' => 'translate', 'traits' => ['Langue', 'Vocabulaire', 'Contexte'] ],
+                        [ 'slug' => 'anxieux',           'label' => 'Anxieux',           'description' => 'Sensible au stress d\'évaluation, besoin de renforcement positif et de clarté.', 'icon' => 'favorite', 'traits' => ['Stress', 'Renforcement', 'Clarté'] ],
+                    ];
+                }
+                ?>
+    <div class="pl-lea-page">
+        <!-- Profile Selector Side Panel -->
+        <div class="pl-lea-profiles-panel" id="pl-lea-profiles-panel">
+            <div class="pl-lea-profiles-header">
+                <h3><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;margin-right:0.25rem;">group</span> Profils &eacute;tudiants</h3>
+                <p>S&eacute;lectionnez un profil pour simuler les r&eacute;ponses de L&eacute;a.</p>
+            </div>
+            <div class="pl-lea-profiles-list">
+                <?php foreach ( $profiles as $i => $profile ) :
+                    $slug  = esc_attr( $profile['slug'] ?? $profile['label'] ?? 'profil-' . $i );
+                    $label = esc_html( $profile['label'] ?? $profile['slug'] ?? 'Profil' );
+                    $desc  = esc_html( $profile['description'] ?? '' );
+                    $icon  = esc_attr( $profile['icon'] ?? 'person' );
+                    $traits = $profile['traits'] ?? [];
+                    $active_cls = $i === 0 ? ' active' : '';
+                ?>
+                <div class="pl-lea-profile-card<?php echo $active_cls; ?>" data-profile="<?php echo $slug; ?>" data-label="<?php echo $label; ?>">
+                    <div class="pl-lea-profile-card-name">
+                        <span class="material-symbols-outlined"><?php echo $icon; ?></span>
+                        <?php echo $label; ?>
+                    </div>
+                    <?php if ( $desc ) : ?>
+                    <div class="pl-lea-profile-card-desc"><?php echo $desc; ?></div>
+                    <?php endif; ?>
+                    <?php if ( ! empty( $traits ) ) : ?>
+                    <div class="pl-lea-profile-card-traits">
+                        <?php foreach ( $traits as $trait ) : ?>
+                        <span class="pl-lea-profile-trait"><?php echo esc_html( $trait ); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="pl-lea-chat-area">
+            <div class="pl-lea-chat-header">
+                <div class="pl-lea-chat-header-left">
+                    <button class="pl-lea-toggle-panel" id="pl-lea-toggle-panel" title="Profils">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="pl-lea-chat-avatar">
+                        <span class="material-symbols-outlined">psychology</span>
+                    </div>
+                    <div class="pl-lea-chat-info">
+                        <h3>Agent IA L&eacute;a</h3>
+                        <p id="pl-lea-active-profile">Profil : <?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pl-lea-chat-messages" id="pl-lea-messages">
+                <div class="pl-lea-msg pl-lea-msg--bot">
+                    Bonjour <?php echo $first_name; ?> ! Je suis L&eacute;a, votre jumeau num&eacute;rique &eacute;tudiant. Je simule les r&eacute;actions d'un &eacute;tudiant au profil <strong><?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></strong>. Posez-moi une question sur votre cours ou testez une explication — je r&eacute;pondrai comme le ferait un &eacute;tudiant de ce profil.
+                </div>
+            </div>
+
+            <div class="pl-lea-chat-input-area">
+                <div class="pl-lea-chat-input-wrap">
+                    <textarea class="pl-lea-chat-input" id="pl-lea-input" placeholder="Posez une question &agrave; L&eacute;a..." rows="1"></textarea>
+                    <button class="pl-lea-chat-send" id="pl-lea-send" title="Envoyer">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+                <?php
+                echo '</main>';
+                echo '</div>';
+                echo self::render_footer();
+                return ob_get_clean();
+            }
+
+            // Student view (original)
+            $logout_url  = esc_url( wp_logout_url( home_url( '/' ) ) );
+            $dash_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+            $courses_url = esc_url( self::page_url( 'cours-projets', 'pl-course-workbench' ) );
+            $twin_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+            $account_url = esc_url( self::page_url( 'compte', '' ) );
+
+            $nb_courses      = (int) ( wp_count_posts( 'pl_course' )->publish ?? 0 );
+            $nb_interactions = (int) ( wp_count_posts( 'pl_interaction' )->publish ?? 0 );
+
+            $recent_interactions = get_posts( [
+                'post_type'      => 'pl_interaction',
+                'posts_per_page' => 5,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                'post_status'    => 'publish',
+                'author'         => $user->ID,
+            ] );
+
+            echo self::render_header( 'Dashboard > &Eacute;tudiant' );
+            echo '<div class="pl-app-layout">';
+            echo self::render_sidebar( 'dashboard' );
+            echo '<main class="pl-app-main">';
+            ?>
+    <div class="pl-stu-page">
+            <div class="pl-stu-header">
+                <div>
+                    <h1 class="pl-stu-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
+                    <p class="pl-stu-subtitle">Votre espace d'apprentissage personnalis&eacute;.</p>
+                </div>
+            </div>
+            <div class="pl-stu-stats-grid">
+                <div class="pl-stu-stat-card">
+                    <div class="pl-stu-stat-icon pl-stu-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
+                    <div class="pl-stu-stat-info">
+                        <span class="pl-stu-stat-value"><?php echo $nb_courses; ?></span>
+                        <span class="pl-stu-stat-label">Cours disponibles</span>
+                    </div>
+                </div>
+                <div class="pl-stu-stat-card">
+                    <div class="pl-stu-stat-icon pl-stu-icon-violet"><span class="material-symbols-outlined">chat</span></div>
+                    <div class="pl-stu-stat-info">
+                        <span class="pl-stu-stat-value"><?php echo $nb_interactions; ?></span>
+                        <span class="pl-stu-stat-label">Conversations</span>
+                    </div>
+                </div>
+                <div class="pl-stu-stat-card">
+                    <div class="pl-stu-stat-icon pl-stu-icon-green"><span class="material-symbols-outlined">smart_toy</span></div>
+                    <div class="pl-stu-stat-info">
+                        <a href="<?php echo $twin_url; ?>" class="pl-stu-stat-value pl-stu-stat-link">Acc&eacute;der</a>
+                        <span class="pl-stu-stat-label">Assistant IA</span>
+                    </div>
+                </div>
+            </div>
+            <section class="pl-stu-activity">
+                <h2 class="pl-stu-activity-title">
+                    <span class="material-symbols-outlined">history</span>
+                    Historique r&eacute;cent
+                </h2>
+                <?php if ( empty( $recent_interactions ) ) : ?>
+                    <div class="pl-stu-empty-state">
+                        <span class="material-symbols-outlined">inbox</span>
+                        <p>Aucune activit&eacute; r&eacute;cente. Commencez par discuter avec votre assistant !</p>
+                    </div>
+                <?php else : ?>
+                    <div class="pl-stu-activity-list">
+                        <?php foreach ( $recent_interactions as $interaction ) :
+                            $date_str = esc_html( wp_date( 'j M Y &agrave; H:i', strtotime( $interaction->post_date ) ) );
+                        ?>
+                            <div class="pl-stu-activity-item">
+                                <div class="pl-stu-activity-icon"><span class="material-symbols-outlined">chat_bubble</span></div>
+                                <div class="pl-stu-activity-info">
+                                    <strong><?php echo esc_html( $interaction->post_title ?: 'Conversation' ); ?></strong>
+                                    <span class="pl-stu-activity-date"><?php echo $date_str; ?></span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+    </div>
+            <?php
+            echo '</main>';
+            echo '</div>';
+            echo self::render_footer();
+            return ob_get_clean();
         }
 
-        ob_start();
-        echo self::render_header('Dashboard > Étudiant');
-        echo '<div class="pl-app-layout">';
-        echo self::render_sidebar('dashboard');
-        echo '<main class="pl-app-main">';
 
-        // Bandeau aperçu enseignant
-        $current_user_roles = (array) wp_get_current_user()->roles;
-        $is_teacher_preview = in_array('administrator', $current_user_roles, true) || in_array('pedagolens_teacher', $current_user_roles, true);
-        if ($is_teacher_preview) :
-            $teacher_dash_url = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
-        ?>
-        <div class="pl-preview-banner">
-            <span class="material-symbols-outlined">visibility</span>
-            Vous êtes en mode aperçu étudiant
-            <a href="<?php echo $teacher_dash_url; ?>" class="pl-preview-banner-link">
-                <span class="material-symbols-outlined">arrow_back</span> Retour interface enseignant
-            </a>
-        </div>
-        <?php endif; ?>
-<div class="pl-stu-page">
-
-    <!-- ========== MAIN CONTENT ========== -->
-        <div class="pl-stu-header">
-            <div>
-                <h1 class="pl-stu-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
-                <p class="pl-stu-subtitle">Votre espace d'apprentissage personnalis&eacute;.</p>
-            </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="pl-stu-stats-grid">
-            <div class="pl-stu-stat-card">
-                <div class="pl-stu-stat-icon pl-stu-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
-                <div class="pl-stu-stat-info">
-                    <span class="pl-stu-stat-value"><?php echo $nb_courses; ?></span>
-                    <span class="pl-stu-stat-label">Cours disponibles</span>
-                </div>
-            </div>
-            <div class="pl-stu-stat-card">
-                <div class="pl-stu-stat-icon pl-stu-icon-violet"><span class="material-symbols-outlined">chat</span></div>
-                <div class="pl-stu-stat-info">
-                    <span class="pl-stu-stat-value"><?php echo $nb_interactions; ?></span>
-                    <span class="pl-stu-stat-label">Conversations</span>
-                </div>
-            </div>
-            <div class="pl-stu-stat-card">
-                <div class="pl-stu-stat-icon pl-stu-icon-green"><span class="material-symbols-outlined">smart_toy</span></div>
-                <div class="pl-stu-stat-info">
-                    <a href="<?php echo $twin_url; ?>" class="pl-stu-stat-value pl-stu-stat-link">Acc&eacute;der</a>
-                    <span class="pl-stu-stat-label">Assistant IA</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <section class="pl-stu-activity">
-            <h2 class="pl-stu-activity-title">
-                <span class="material-symbols-outlined">history</span>
-                Historique r&eacute;cent
-            </h2>
-            <?php if ( empty( $recent_interactions ) ) : ?>
-                <div class="pl-stu-empty-state">
-                    <span class="material-symbols-outlined">inbox</span>
-                    <p>Aucune activit&eacute; r&eacute;cente. Commencez par discuter avec votre assistant !</p>
-                </div>
-            <?php else : ?>
-                <div class="pl-stu-activity-list">
-                    <?php foreach ( $recent_interactions as $interaction ) :
-                        $date_str = esc_html( wp_date( 'j M Y &agrave; H:i', strtotime( $interaction->post_date ) ) );
-                    ?>
-                        <div class="pl-stu-activity-item">
-                            <div class="pl-stu-activity-icon"><span class="material-symbols-outlined">chat_bubble</span></div>
-                            <div class="pl-stu-activity-info">
-                                <strong><?php echo esc_html( $interaction->post_title ?: 'Conversation' ); ?></strong>
-                                <span class="pl-stu-activity-date"><?php echo $date_str; ?></span>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </section>
-
-</div><!-- .pl-stu-page -->
-        <?php
-        echo '</main>';
-        echo '</div>';
-        echo self::render_footer();
-        return ob_get_clean();
-    }
 
     // -------------------------------------------------------------------------
     // [pedagolens_courses] — Liste des cours et projets (front-end complet)
