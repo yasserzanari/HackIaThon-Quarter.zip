@@ -4,8 +4,8 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge.php 2>&1 && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge-settings.php 2>&1",
-      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); update_option('pl_bedrock_model_id','us.anthropic.claude-opus-4-6-v1'); update_option('pl_bedrock_max_tokens','128000'); update_option('pl_bedrock_timeout','120'); echo 'OK model=opus-4-6-v1 tokens=128000 timeout=120';\" 2>&1",
+      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-core/includes/class-core.php 2>&1",
+      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); \\$r = get_role('pedagolens_teacher'); if(\\$r){ foreach(['edit_posts','publish_posts','delete_posts','upload_files','edit_pl_courses','publish_pl_courses','read_pl_analyses','manage_pl_workbench'] as \\$c){ \\$r->add_cap(\\$c); } echo 'Teacher caps updated: ' . implode(', ', array_keys(array_filter(\\$r->capabilities))); } else { echo 'Role not found'; }\" 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }
