@@ -65,7 +65,20 @@ URL de base : `http://pedagolens.34.199.149.247.nip.io`
 | URL | `http://pedagolens.34.199.149.247.nip.io/dashboard-etudiant` |
 | Shortcode | `[pedagolens_student_dashboard]` |
 | Accès | `pedagolens_student` |
-| Description | Interface étudiant avec sidebar navigation. Contenu : message de bienvenue, profil d'apprentissage (scores par profil pédagogique), accès au jumeau numérique IA (Léa), liste des cours auxquels l'étudiant est inscrit, historique des sessions avec le jumeau. Paramètre optionnel : `[pedagolens_student_dashboard course_id="ID"]` pour fixer un cours. |
+| Description | Interface étudiant avec sidebar navigation. Deux vues selon le paramètre URL. |
+
+**Vue par défaut** (`/dashboard-etudiant/`) :
+- Message de bienvenue personnalisé, stats (cours, conversations, accès assistant IA)
+- Chat Léa intégré (tuteur IA)
+- Historique récent des conversations
+
+**Vue Jumeau IA** (`/dashboard-etudiant/?view=twin`) :
+- Layout plein écran dédié au chat avec Léa (tuteur IA)
+- Header compact avec sélecteur de cours (dropdown) et bouton retour au dashboard
+- Léa agit comme tuteur : aide l'étudiant à comprendre ses cours sans donner les réponses
+- Pas de sidebar — espace maximisé pour le chat
+- L'étudiant peut choisir un cours spécifique ou poser des questions générales
+- Le lien "Jumeau IA" dans la sidebar pointe vers `?view=twin`
 
 ---
 

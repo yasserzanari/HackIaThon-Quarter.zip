@@ -8169,6 +8169,10 @@ html { margin-top: 0 !important; }
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 9999;
+    background: #f8fafc;
 }
 
 /* --- Header compact --- */
@@ -8189,9 +8193,20 @@ html { margin-top: 0 !important; }
     gap: 12px;
     flex-shrink: 0;
 }
+.pl-twin-logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
 .pl-logo-img--twin {
     height: 36px;
     width: auto;
+}
+.pl-twin-header-sep {
+    width: 1px;
+    height: 24px;
+    background: #e2e8f0;
+    flex-shrink: 0;
 }
 .pl-twin-header-title {
     font-family: 'Manrope', sans-serif;
@@ -8225,7 +8240,23 @@ html { margin-top: 0 !important; }
     box-shadow: 0 0 0 3px rgba(99,102,241,.12);
 }
 .pl-twin-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     flex-shrink: 0;
+}
+.pl-twin-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+}
+.pl-twin-username {
+    font-size: .85rem;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
 }
 .pl-twin-back-btn {
     display: inline-flex;
@@ -8380,6 +8411,9 @@ html { margin-top: 0 !important; }
     .pl-twin-header-title {
         font-size: .95rem;
     }
+    .pl-twin-header-sep {
+        display: none;
+    }
     .pl-twin-header-center {
         order: 3;
         flex-basis: 100%;
@@ -8389,7 +8423,10 @@ html { margin-top: 0 !important; }
         max-width: none;
         min-width: 0;
     }
-    .pl-twin-back-btn span:not(.material-symbols-outlined) {
+    .pl-twin-back-label {
+        display: none;
+    }
+    .pl-twin-username {
         display: none;
     }
     .pl-twin-messages {

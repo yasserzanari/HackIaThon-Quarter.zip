@@ -1008,11 +1008,74 @@ class PedagoLens_Landing {
                 return ob_get_clean();
             }
 
+            // ── Jumeau IA full-screen view (?view=twin) ──
+            if ( isset( $_GET['view'] ) && $_GET['view'] === 'twin' ) {
+                $dash_url = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
+                $avatar_url = get_avatar_url( $user->ID, [ 'size' => 40 ] );
+                $display    = esc_html( $user->display_name );
+
+                // Get courses for the dropdown
+                $courses = get_posts( [
+                    'post_type'      => 'pl_course',
+                    'posts_per_page' => -1,
+                    'post_status'    => 'publish',
+                    'orderby'        => 'title',
+                    'order'          => 'ASC',
+                ] );
+                ?>
+<div class="pl-twin-page">
+    <header class="pl-twin-header">
+        <div class="pl-twin-header-left">
+            <a href="<?php echo $dash_url; ?>" class="pl-twin-logo-link">
+                <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="P&eacute;dagoLens" class="pl-logo-img pl-logo-img--twin" />
+            </a>
+            <a href="<?php echo $dash_url; ?>" class="pl-twin-back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="pl-twin-back-label">Dashboard</span>
+            </a>
+            <div class="pl-twin-header-sep"></div>
+            <h1 class="pl-twin-header-title">Jumeau IA &mdash; L&eacute;a</h1>
+        </div>
+        <div class="pl-twin-header-center">
+            <select class="pl-twin-course-select" id="pl-twin-course-select" aria-label="Choisir un cours">
+                <option value="0">G&eacute;n&eacute;ral (tous les cours)</option>
+                <?php foreach ( $courses as $c ) : ?>
+                <option value="<?php echo esc_attr( $c->ID ); ?>"><?php echo esc_html( $c->post_title ); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="pl-twin-header-right">
+            <img src="<?php echo esc_url( $avatar_url ); ?>" alt="" class="pl-twin-avatar" />
+            <span class="pl-twin-username"><?php echo $display; ?></span>
+        </div>
+    </header>
+
+    <div class="pl-twin-chat-area">
+        <div class="pl-twin-messages" id="pl-lea-messages">
+            <div class="pl-lea-msg pl-lea-msg--bot">
+                Bonjour <?php echo $first_name; ?> ! &#128075; Je suis L&eacute;a, ta tutrice IA. Je suis l&agrave; pour t'aider &agrave; comprendre tes cours &mdash; pas pour te donner les r&eacute;ponses, mais pour t'accompagner dans ta r&eacute;flexion. Choisis un cours ci-dessus ou pose-moi une question g&eacute;n&eacute;rale !
+            </div>
+        </div>
+
+        <div class="pl-twin-input-area">
+            <div class="pl-twin-input-wrap">
+                <textarea class="pl-twin-input" id="pl-lea-input" placeholder="Pose ta question &agrave; L&eacute;a..." rows="1"></textarea>
+                <button class="pl-twin-send-btn" id="pl-lea-send" title="Envoyer">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+                <?php
+                return ob_get_clean();
+            }
+
             // Student view (original)
             $logout_url  = esc_url( wp_logout_url( home_url( '/' ) ) );
             $dash_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
             $courses_url = esc_url( self::page_url( 'cours-projets', 'pl-course-workbench' ) );
-            $twin_url    = esc_url( self::page_url( 'jumeau-ia', '' ) );
+            $twin_url    = esc_url( self::page_url( 'dashboard-etudiant', '' ) . '?view=twin' );
             $account_url = esc_url( self::page_url( 'compte', '' ) );
 
             $nb_courses      = (int) ( wp_count_posts( 'pl_course' )->publish ?? 0 );
@@ -2282,7 +2345,7 @@ class PedagoLens_Landing {
         } else {
             $nav = [
                 [ 'slug' => 'dashboard', 'icon' => 'dashboard',   'label' => 'Dashboard',   'url' => $url_dash_student ],
-                [ 'slug' => 'twin',      'icon' => 'psychology',  'label' => 'Jumeau IA',   'url' => $url_twin ],
+                [ 'slug' => 'twin',      'icon' => 'psychology',  'label' => 'Jumeau IA',   'url' => $url_dash_student . '?view=twin' ],
                 [ 'slug' => 'history',   'icon' => 'history',     'label' => 'Historique',  'url' => $url_history ],
                 [ 'slug' => 'account',   'icon' => 'person',      'label' => 'Compte',      'url' => $url_account ],
             ];
