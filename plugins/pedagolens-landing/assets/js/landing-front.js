@@ -1873,6 +1873,168 @@
 
 
 /* ============================================================
+   TASK 37 — Workbench Course Selector Accordion
+   ============================================================ */
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('click', function(e) {
+            var header = e.target.closest('.pl-wb-selector-course-header');
+            if (!header) return;
+            // Don't toggle if clicking a link inside
+            if (e.target.closest('a')) return;
+
+            var course = header.closest('.pl-wb-selector-course');
+            if (!course) return;
+
+            var seances = course.querySelector('.pl-wb-selector-seances');
+            if (!seances) return;
+
+            var isOpen = course.classList.contains('pl-wb-course-open');
+
+            // Close all others
+            document.querySelectorAll('.pl-wb-selector-course.pl-wb-course-open').forEach(function(c) {
+                c.classList.remove('pl-wb-course-open');
+                var s = c.querySelector('.pl-wb-selector-seances');
+                if (s) s.style.display = 'none';
+            });
+
+            // Toggle current
+            if (!isOpen) {
+                course.classList.add('pl-wb-course-open');
+                seances.style.display = '';
+            }
+        });
+    });
+})();
+
+
+/* ============================================================
+   TASK 36 — Séances Modal WOW
+   ============================================================ */
+(function() {
+    'use strict';
+    document.addEventListener('DOMContentLoaded', function() {
+
+        var typeIcons = {
+            magistral: '🎓', exercice: '📝',
+            travail_equipe: '👥', evaluation: '📋'
+        };
+        var typeLabels = {
+            magistral: 'Magistral', exercice: 'Exercice',
+            travail_equipe: "Travail d'équipe", evaluation: 'Évaluation'
+        };
+
+        function openSeancesModal(card) {
+            var courseId    = card.getAttribute('data-course-id');
+            var courseTitle = card.getAttribute('data-course-title') || 'Cours';
+            var courseType  = card.getAttribute('data-course-type') || 'magistral';
+            var projects    = [];
+            try { projects = JSON.parse(card.getAttribute('data-course-projects') || '[]'); } catch(e) {}
+
+            // Populate header
+            var iconEl  = document.getElementById('pl-seances-modal-icon');
+            var titleEl = document.getElementById('pl-seances-modal-title');
+            var badgeEl = document.getElementById('pl-seances-modal-badge');
+            var bodyEl  = document.getElementById('pl-seances-modal-body');
+            var createBtn = document.getElementById('pl-seances-modal-create-btn');
+
+            if (iconEl)  iconEl.textContent = typeIcons[courseType] || '📚';
+            if (titleEl) titleEl.textContent = courseTitle;
+            if (badgeEl) badgeEl.textContent = projects.length + ' séance(s)';
+
+            // Populate body
+            if (bodyEl) {
+                if (projects.length === 0) {
+                    bodyEl.innerHTML =
+                        '<div class="pl-seances-empty">' +
+                        '  <div class="pl-seances-empty-icon">📭</div>' +
+                        '  <h3>Aucune séance</h3>' +
+                        '  <p>Créez votre première séance pour ce cours.</p>' +
+                        '</div>';
+                } else {
+                    var html = '<div class="pl-seances-grid">';
+                    projects.forEach(function(p) {
+                        var icon = typeIcons[p.type] || '📄';
+                        var label = typeLabels[p.type] || p.type;
+                        html +=
+                            '<a href="' + p.url + '" class="pl-seance-card">' +
+                            '  <div class="pl-seance-card-top">' +
+                            '    <span class="pl-seance-card-icon">' + icon + '</span>' +
+                            '    <h4>' + escHtml(p.title) + '</h4>' +
+                            '  </div>' +
+                            '  <span class="pl-badge pl-type-' + p.type + '">' + escHtml(label) + '</span>' +
+                            '  <span class="pl-seance-card-arrow">→</span>' +
+                            '</a>';
+                    });
+                    html += '</div>';
+                    bodyEl.innerHTML = html;
+                }
+            }
+
+            // Wire create button
+            if (createBtn) {
+                createBtn.onclick = function() {
+                    // Close seances modal
+                    var seancesModal = document.querySelector('[data-pl-modal="view-seances"]');
+                    if (seancesModal) seancesModal.classList.remove('pl-modal--open');
+                    // Open create-project modal with course info
+                    var projModal = document.querySelector('[data-pl-modal="create-project"]');
+                    if (projModal) {
+                        var cid = document.getElementById('pl-project-course-id');
+                        if (cid) cid.value = courseId;
+                        var clbl = document.getElementById('pl-project-course-label');
+                        if (clbl) clbl.textContent = courseTitle;
+                        projModal.classList.add('pl-modal--open');
+                    }
+                };
+            }
+
+            // Open modal
+            var modal = document.querySelector('[data-pl-modal="view-seances"]');
+            if (modal) {
+                modal.classList.add('pl-modal--open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function escHtml(str) {
+            var d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        // Click on "Voir les séances" button
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.pl-btn-open-seances');
+            if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                var card = btn.closest('.pl-course-card-front');
+                if (card) openSeancesModal(card);
+                return;
+            }
+
+            // Click on course card itself (but not on action buttons)
+            var card = e.target.closest('.pl-course-card-clickable');
+            if (card) {
+                // Don't trigger if clicking edit, delete, history, or create-project buttons
+                if (e.target.closest('.pl-course-card-edit-btn') ||
+                    e.target.closest('.pl-course-card-delete-btn') ||
+                    e.target.closest('.pl-btn-create-project') ||
+                    e.target.closest('.pl-wb-btn-outline') ||
+                    e.target.closest('a[href]')) {
+                    return;
+                }
+                e.preventDefault();
+                openSeancesModal(card);
+            }
+        });
+    });
+})();
+
+
+/* ============================================================
    Agent IA Léa — Chat Interface JS
    ============================================================ */
 (function() {

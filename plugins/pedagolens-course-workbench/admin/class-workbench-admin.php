@@ -536,19 +536,25 @@ class PedagoLens_Workbench_Admin {
 
         $project_id = (int) ( $_POST['project_id'] ?? 0 );
         $title      = sanitize_text_field( $_POST['title'] ?? 'Nouvelle section' );
+        $content    = sanitize_textarea_field( $_POST['content'] ?? '' );
+        $context    = sanitize_text_field( $_POST['context'] ?? 'admin' );
 
         $sections   = PedagoLens_Course_Workbench::get_content_sections( $project_id );
         $new_section = [
             'id'      => 'section_' . uniqid(),
             'title'   => $title,
-            'content' => '',
+            'content' => $content,
         ];
         $sections[] = $new_section;
 
         PedagoLens_Course_Workbench::save_content_sections( $project_id, $sections );
 
         ob_start();
-        self::render_section_block( $new_section, $project_id );
+        if ( $context === 'front' ) {
+            self::render_front_section( $new_section, $project_id, count( $sections ) );
+        } else {
+            self::render_section_block( $new_section, $project_id );
+        }
         $html = ob_get_clean();
 
         wp_send_json_success( [ 'html' => $html ] );
@@ -675,24 +681,7 @@ class PedagoLens_Workbench_Admin {
                 </div>
             </header>
 
-            <!-- ===== UPLOAD ZONE (hidden by default) ===== -->
-            <div id="pl-upload-zone" class="pl-stitch-upload-zone" style="display:none;">
-                <div class="pl-stitch-upload-dropzone" id="pl-dropzone">
-                    <div class="pl-stitch-upload-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    </div>
-                    <p class="pl-stitch-upload-text">Glissez vos fichiers ici ou <label for="pl-file-input" class="pl-stitch-upload-browse">parcourez</label></p>
-                    <p class="pl-stitch-upload-hint">PowerPoint (.pptx), Word (.docx), PDF (.pdf) — Limite : 25 Mo</p>
-                    <input type="file" id="pl-file-input" accept=".pptx,.docx,.pdf" multiple style="display:none;" />
-                </div>
-                <div id="pl-upload-progress" class="pl-upload-progress" style="display:none;">
-                    <div class="pl-progress-bar-wrap">
-                        <div class="pl-progress-bar" id="pl-progress-bar"></div>
-                    </div>
-                    <span class="pl-progress-text" id="pl-progress-text">Téléversement…</span>
-                </div>
-                <div id="pl-upload-result" class="pl-upload-result" style="display:none;"></div>
-            </div>
+            <!-- Upload zone moved into import modal below -->
 
             <!-- ===== MAIN 2-COLUMN LAYOUT ===== -->
             <div class="pl-stitch-wb-layout">
@@ -804,6 +793,60 @@ class PedagoLens_Workbench_Admin {
                         <h2>Historique des versions</h2>
                         <div id="pl-versions-content"></div>
                         <button type="button" id="pl-versions-close" class="pl-stitch-btn pl-stitch-btn-outline">Fermer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modale Ajouter une section -->
+            <div id="pl-modal-add-section" class="pl-stitch-modal" style="display:none;">
+                <div class="pl-stitch-modal-overlay"></div>
+                <div class="pl-stitch-modal-content">
+                    <div class="pl-stitch-modal-header">
+                        <h2>Ajouter une section</h2>
+                        <button type="button" class="pl-stitch-modal-close">&times;</button>
+                    </div>
+                    <div class="pl-stitch-modal-body">
+                        <label class="pl-stitch-label">Titre de la section</label>
+                        <input type="text" id="pl-new-section-title" class="pl-stitch-input" placeholder="Ex: Introduction, Chapitre 1..." autofocus />
+                        <label class="pl-stitch-label" style="margin-top:16px;">Contenu (optionnel)</label>
+                        <textarea id="pl-new-section-content" class="pl-stitch-textarea" rows="4" placeholder="Ajoutez du contenu initial..."></textarea>
+                    </div>
+                    <div class="pl-stitch-modal-footer">
+                        <button type="button" class="pl-stitch-btn pl-stitch-btn-outline pl-stitch-modal-cancel">Annuler</button>
+                        <button type="button" id="pl-confirm-add-section" class="pl-stitch-btn pl-stitch-btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Ajouter la section
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modale Importer un fichier -->
+            <div id="pl-modal-import" class="pl-stitch-modal" style="display:none;">
+                <div class="pl-stitch-modal-overlay"></div>
+                <div class="pl-stitch-modal-content pl-stitch-modal-lg">
+                    <div class="pl-stitch-modal-header">
+                        <h2>Importer un fichier</h2>
+                        <button type="button" class="pl-stitch-modal-close">&times;</button>
+                    </div>
+                    <div class="pl-stitch-modal-body">
+                        <div id="pl-upload-zone" class="pl-stitch-upload-zone">
+                            <div class="pl-stitch-upload-dropzone" id="pl-dropzone">
+                                <div class="pl-stitch-upload-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                </div>
+                                <p class="pl-stitch-upload-text">Glissez vos fichiers ici ou <label for="pl-file-input" class="pl-stitch-upload-browse">parcourez</label></p>
+                                <p class="pl-stitch-upload-hint">PowerPoint (.pptx), Word (.docx), PDF (.pdf) — Limite : 25 Mo</p>
+                                <input type="file" id="pl-file-input" accept=".pptx,.docx,.pdf" multiple style="display:none;" />
+                            </div>
+                            <div id="pl-upload-progress" class="pl-upload-progress" style="display:none;">
+                                <div class="pl-progress-bar-wrap">
+                                    <div class="pl-progress-bar" id="pl-progress-bar"></div>
+                                </div>
+                                <span class="pl-progress-text" id="pl-progress-text">Téléversement…</span>
+                            </div>
+                            <div id="pl-upload-result" class="pl-upload-result" style="display:none;"></div>
+                        </div>
                     </div>
                 </div>
             </div>

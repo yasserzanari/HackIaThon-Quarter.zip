@@ -1,5 +1,5 @@
 /**
- * PédagoLens Course Workbench — Admin JS
+ * PédagoLens Course Workbench — Front JS (WOW Refonte)
  */
 ( function ( $ ) {
     'use strict';
@@ -53,9 +53,7 @@
         ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId } )
             .done( res => {
                 if ( res.success ) {
-                    // Mettre à jour le textarea de la section
                     $( `.pl-section-content[data-section-id="${sectionId}"]` ).val( res.data.new_content );
-                    // Masquer la suggestion appliquée
                     $btn.closest( '.pl-suggestion-card' ).fadeOut( 300 );
                     showStatus( sectionId, '✓ Suggestion appliquée' );
                 } else {
@@ -82,7 +80,7 @@
     } );
 
     // -------------------------------------------------------------------------
-    // Sauvegarder une section
+    // Sauvegarder une section (bouton manuel)
     // -------------------------------------------------------------------------
     $( document ).on( 'click', '.pl-btn-save-section', function () {
         const $btn      = $( this );
@@ -101,6 +99,34 @@
             } )
             .fail( () => showStatus( sectionId, '✗ Erreur réseau', true ) )
             .always( () => $btn.prop( 'disabled', false ) );
+    } );
+
+    // -------------------------------------------------------------------------
+    // Auto-save sur les textareas (debounce 2s)
+    // -------------------------------------------------------------------------
+    var autoSaveTimers = {};
+    $( document ).on( 'input', '.pl-section-content, .pl-stitch-wb-textarea', function () {
+        var $textarea = $( this );
+        var sectionId = $textarea.data( 'section-id' );
+        if ( ! sectionId ) return;
+
+        clearTimeout( autoSaveTimers[ sectionId ] );
+        showStatus( sectionId, '⏳ Sauvegarde...', false );
+
+        autoSaveTimers[ sectionId ] = setTimeout( function () {
+            var content = $textarea.val();
+            ajax( 'pl_save_section', { section_id: sectionId, content: content } )
+                .done( function ( res ) {
+                    if ( res.success ) {
+                        showStatus( sectionId, '✓ Sauvegardé automatiquement' );
+                    } else {
+                        showStatus( sectionId, '✗ Erreur de sauvegarde', true );
+                    }
+                } )
+                .fail( function () {
+                    showStatus( sectionId, '✗ Erreur réseau', true );
+                } );
+        }, 2000 );
     } );
 
     // -------------------------------------------------------------------------
@@ -123,53 +149,92 @@
     $( document ).on( 'click', '#pl-versions-close', () => $( '#pl-versions-modal' ).hide() );
 
     // -------------------------------------------------------------------------
-    // Ajouter une section
+    // Modal: Ajouter une section (remplace prompt())
     // -------------------------------------------------------------------------
     $( '#pl-add-section' ).on( 'click', function () {
-        const title = prompt( 'Titre de la nouvelle section :' );
-        if ( ! title ) return;
+        $( '#pl-modal-add-section' ).fadeIn( 200 );
+        $( '#pl-new-section-title' ).val( '' ).focus();
+        $( '#pl-new-section-content' ).val( '' );
+    } );
 
-        ajax( 'pl_add_section', { title } )
-            .done( res => {
+    // Close any stitch modal
+    $( document ).on( 'click', '.pl-stitch-modal-close, .pl-stitch-modal-cancel, .pl-stitch-modal-overlay', function () {
+        $( this ).closest( '.pl-stitch-modal' ).fadeOut( 200 );
+    } );
+
+    // Escape key closes modals
+    $( document ).on( 'keydown', function ( e ) {
+        if ( e.key === 'Escape' ) {
+            $( '.pl-stitch-modal:visible' ).fadeOut( 200 );
+        }
+    } );
+
+    // Confirm add section
+    $( '#pl-confirm-add-section' ).on( 'click', function () {
+        var title = $( '#pl-new-section-title' ).val().trim();
+        if ( ! title ) {
+            $( '#pl-new-section-title' ).focus();
+            return;
+        }
+        var content = $( '#pl-new-section-content' ).val().trim();
+        var $btn = $( this );
+        $btn.prop( 'disabled', true ).text( 'Ajout en cours…' );
+
+        ajax( 'pl_add_section', { title: title, content: content, context: 'front' } )
+            .done( function ( res ) {
                 if ( res.success ) {
-                    $( '.pl-workbench-main' ).append( res.data.html );
-                    $( '.pl-empty-sections' ).hide();
+                    $( '.pl-stitch-wb-empty' ).hide();
+                    $( '.pl-wb-main' ).append( res.data.html );
+                    $( '#pl-modal-add-section' ).fadeOut( 200 );
                 }
+            } )
+            .always( function () {
+                $btn.prop( 'disabled', false ).html(
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter la section'
+                );
             } );
+    } );
+
+    // Enter key in title field triggers add
+    $( '#pl-new-section-title' ).on( 'keydown', function ( e ) {
+        if ( e.key === 'Enter' ) {
+            e.preventDefault();
+            $( '#pl-confirm-add-section' ).trigger( 'click' );
+        }
     } );
 
     // -------------------------------------------------------------------------
     // Helper : message de statut inline
     // -------------------------------------------------------------------------
-    function showStatus( sectionId, msg, isError = false ) {
-        const $status = $( `#pl-section-${sectionId} .pl-save-status` );
-        $status.text( msg ).css( 'color', isError ? '#d63638' : '#00a32a' );
-        setTimeout( () => $status.text( '' ), 3000 );
+    function showStatus( sectionId, msg, isError ) {
+        isError = isError || false;
+        const $status = $( '#pl-section-' + sectionId + ' .pl-save-status' );
+        $status.text( msg ).css( 'color', isError ? '#f87171' : '#4ade80' );
+        if ( msg.indexOf( '⏳' ) === -1 ) {
+            setTimeout( function () { $status.fadeOut( 300, function () { $( this ).text( '' ).show(); } ); }, 3000 );
+        }
     }
 
 } )( jQuery );
 
 
 // =============================================================================
-// FRONT-END: File Upload (drag & drop + browse)
+// FRONT-END: File Upload (drag & drop + browse) — via Import Modal
 // =============================================================================
 ( function ( $ ) {
     'use strict';
 
-    // Only run on front-end workbench pages
-    if ( ! $( '.pl-front-workbench-page' ).length ) return;
-
-    var ajaxUrl   = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.ajaxUrl : ( typeof plFront !== 'undefined' ? plFront.ajaxUrl : '' );
-    var nonce     = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.nonce   : ( typeof plFront !== 'undefined' ? ( plFront.nonces?.workbench || '' ) : '' );
+    var ajaxUrl   = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.ajaxUrl : '';
+    var nonce     = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.nonce   : '';
     var projectId = ( typeof plWorkbench !== 'undefined' ) ? plWorkbench.projectId : 0;
 
     if ( ! ajaxUrl ) return;
 
     // -------------------------------------------------------------------------
-    // Toggle upload zone
+    // Open import modal instead of slideToggle
     // -------------------------------------------------------------------------
     $( '#pl-upload-trigger' ).on( 'click', function () {
-        $( '#pl-upload-zone' ).slideToggle( 250 );
+        $( '#pl-modal-import' ).fadeIn( 200 );
     } );
 
     // -------------------------------------------------------------------------
@@ -228,7 +293,6 @@
             return;
         }
 
-        // Upload sequentially
         uploadNext( queue, 0 );
     }
 
@@ -271,23 +335,20 @@
                 if ( res.success ) {
                     showUploadResult( '✓ ' + res.data.message, false );
 
-                    // Append new sections to the main area
                     if ( res.data.sections_html ) {
                         $( '.pl-wb-main' ).append( res.data.sections_html );
-                        $( '.pl-wb-empty' ).hide();
+                        $( '.pl-stitch-wb-empty' ).hide();
                     }
 
-                    // Append file to sidebar list
                     if ( res.data.file_html ) {
                         var $list = $( '#pl-files-list' );
-                        $list.find( '.pl-wb-sidebar-empty' ).remove();
+                        $list.find( '.pl-stitch-wb-sidebar-empty' ).remove();
                         $list.append( res.data.file_html );
                     }
                 } else {
                     showUploadResult( '✗ ' + ( res.data?.message || 'Erreur.' ), true );
                 }
 
-                // Next file
                 uploadNext( queue, index + 1 );
             },
             error: function () {
@@ -322,11 +383,12 @@
 
         $btn.prop( 'disabled', true ).text( '⏳ Analyse en cours…' );
 
-        // Trigger suggestions for each section sequentially
         var index = 0;
         function analyzeNext() {
             if ( index >= $sections.length ) {
-                $btn.prop( 'disabled', false ).text( '🔍 Analyser tout le projet' );
+                $btn.prop( 'disabled', false ).html(
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> Demander de nouvelles suggestions'
+                );
                 return;
             }
             var $s = $sections.eq( index );

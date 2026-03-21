@@ -921,7 +921,6 @@ class PedagoLens_Landing {
         }
 
         $nav_links = self::get_nav_links();
-        $course_id = (int) ( $_GET['course_id'] ?? 0 );
 
         $courses = get_posts( [
             'post_type'      => 'pl_course',
@@ -989,8 +988,22 @@ class PedagoLens_Landing {
                         $projects    = class_exists( 'PedagoLens_Teacher_Dashboard' )
                             ? PedagoLens_Teacher_Dashboard::get_projects( $course->ID )
                             : [];
-                        $is_open     = $course_id === $course->ID;
                         $nb_projects = count( $projects );
+
+                        // Build projects JSON for modal
+                        $workbench_page = get_page_by_path( 'workbench' );
+                        $projects_json = [];
+                        foreach ( $projects as $p ) {
+                            $wb_url = $workbench_page
+                                ? get_permalink( $workbench_page ) . '?project_id=' . $p['id']
+                                : admin_url( 'admin.php?page=pl-course-workbench&project_id=' . $p['id'] );
+                            $projects_json[] = [
+                                'id'    => $p['id'],
+                                'title' => $p['title'],
+                                'type'  => $p['type'] ?? 'magistral',
+                                'url'   => $wb_url,
+                            ];
+                        }
 
                         // Last analysis date
                         $last_analysis = '';
@@ -1005,7 +1018,11 @@ class PedagoLens_Landing {
                             $last_analysis = wp_date( 'j M Y', strtotime( $analysis_posts[0]->post_date ) );
                         }
                         ?>
-                        <div class="pl-course-card-front pl-animate-in <?php echo $is_open ? 'pl-course-open' : ''; ?>">
+                        <div class="pl-course-card-front pl-animate-in pl-course-card-clickable"
+                            data-course-id="<?php echo (int) $course->ID; ?>"
+                            data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
+                            data-course-type="<?php echo esc_attr( $course_type ); ?>"
+                            data-course-projects="<?php echo esc_attr( wp_json_encode( $projects_json ) ); ?>">
                             <div class="pl-course-card-top">
                                 <div class="pl-course-card-header">
                                     <span class="pl-course-type-icon"><?php echo $type_icons[ $course_type ] ?? '📄'; ?></span>
@@ -1025,16 +1042,16 @@ class PedagoLens_Landing {
                                     <?php endif; ?>
                                 </div>
                                 <div class="pl-course-card-actions">
-                                    <a href="?course_id=<?php echo (int) $course->ID; ?>" class="pl-wb-btn pl-wb-btn-sm <?php echo $is_open ? 'pl-wb-btn-outline' : 'pl-wb-btn-accent'; ?>">
-                                        <?php echo $is_open ? '✕ Fermer' : '📂 Voir les s&eacute;ances'; ?>
-                                    </a>
-                                    <?php if ( $is_open ) : ?>
-                                        <button class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-glow pl-btn-create-project"
-                                            data-course-id="<?php echo (int) $course->ID; ?>"
-                                            data-course-title="<?php echo esc_attr( $course->post_title ); ?>">
-                                            + Cr&eacute;er une s&eacute;ance
-                                        </button>
-                                    <?php endif; ?>
+                                    <button class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-accent pl-btn-open-seances"
+                                        data-course-id="<?php echo (int) $course->ID; ?>">
+                                        <span class="material-symbols-outlined" style="font-size:1rem;">folder_open</span>
+                                        Voir les s&eacute;ances
+                                    </button>
+                                    <button class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-glow pl-btn-create-project"
+                                        data-course-id="<?php echo (int) $course->ID; ?>"
+                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>">
+                                        + Cr&eacute;er une s&eacute;ance
+                                    </button>
                                     <?php if ( ! empty( $analysis_posts ) ) : ?>
                                     <a href="<?php echo esc_url( self::page_url( 'historique', '' ) . '?course_id=' . $course->ID ); ?>" class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-outline" title="Historique des analyses">
                                         <span class="material-symbols-outlined" style="font-size:1rem;">history</span> Historique
@@ -1058,32 +1075,6 @@ class PedagoLens_Landing {
                                     </button>
                                 </div>
                             </div>
-
-                            <?php if ( $is_open ) : ?>
-                                <div class="pl-projects-panel-front">
-                                    <?php if ( empty( $projects ) ) : ?>
-                                        <p class="pl-wb-sidebar-empty">Aucune s&eacute;ance pour ce cours. Cr&eacute;ez-en une !</p>
-                                    <?php else : ?>
-                                        <div class="pl-projects-grid-front">
-                                            <?php foreach ( $projects as $project ) :
-                                                $workbench_page = get_page_by_path( 'workbench' );
-                                                $workbench_url  = $workbench_page
-                                                    ? get_permalink( $workbench_page ) . '?project_id=' . $project['id']
-                                                    : admin_url( 'admin.php?page=pl-course-workbench&project_id=' . $project['id'] );
-                                                $p_type = $project['type'] ?? 'magistral';
-                                                $p_icon = $type_icons[ $p_type ] ?? '📄';
-                                                ?>
-                                                <a href="<?php echo esc_url( $workbench_url ); ?>" class="pl-project-card-front">
-                                                    <span class="pl-project-card-icon"><?php echo $p_icon; ?></span>
-                                                    <h4><?php echo esc_html( $project['title'] ); ?></h4>
-                                                    <span class="pl-badge pl-type-<?php echo esc_attr( $p_type ); ?>"><?php echo esc_html( $type_labels[ $p_type ] ?? $p_type ); ?></span>
-                                                    <span class="pl-project-card-arrow">→</span>
-                                                </a>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                     <!-- Create course card at end of grid -->
@@ -1252,6 +1243,34 @@ class PedagoLens_Landing {
         </div>
 
         <?php
+        // ── Séances Modal (Task 36) ──
+        ?>
+        <div class="pl-modal pl-seances-modal" data-pl-modal="view-seances">
+          <div class="pl-modal-backdrop"></div>
+          <div class="pl-modal-content pl-seances-modal-content">
+            <div class="pl-modal-header pl-seances-modal-header">
+              <div class="pl-seances-modal-title-wrap">
+                <span class="pl-seances-modal-icon" id="pl-seances-modal-icon">📚</span>
+                <div>
+                  <h2 id="pl-seances-modal-title">Séances du cours</h2>
+                  <span class="pl-seances-modal-badge" id="pl-seances-modal-badge"></span>
+                </div>
+              </div>
+              <button data-pl-modal-close class="pl-modal-close-btn"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="pl-seances-modal-body" id="pl-seances-modal-body">
+              <!-- Populated by JS -->
+            </div>
+            <div class="pl-seances-modal-footer">
+              <button class="pl-btn pl-btn--primary pl-btn--icon pl-seances-modal-create-btn" id="pl-seances-modal-create-btn">
+                <span class="material-symbols-outlined">add</span>
+                Créer une séance
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <?php
         echo '</main>';
         echo '</div>';
         echo self::render_footer();
@@ -1273,12 +1292,91 @@ class PedagoLens_Landing {
         if ( ! $project_id ) {
             $courses_page = get_page_by_path( 'cours-projets' );
             $courses_url  = $courses_page ? get_permalink( $courses_page ) : home_url( '/' );
+            $workbench_page = get_page_by_path( 'workbench' );
+
+            // Fetch all courses + their projects for the selector
+            $courses = get_posts( [
+                'post_type'      => 'pl_course',
+                'posts_per_page' => -1,
+                'post_status'    => 'publish',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+            ] );
+
+            $type_icons = [
+                'magistral' => '🎓', 'exercice' => '📝',
+                'travail_equipe' => '👥', 'evaluation' => '📋',
+            ];
+            $type_labels = [
+                'magistral' => 'Magistral', 'exercice' => 'Exercice',
+                'travail_equipe' => 'Travail d\'équipe', 'evaluation' => 'Évaluation',
+            ];
+
             ob_start();
             echo self::render_header('Atelier');
             echo '<div class="pl-app-layout">';
             echo self::render_sidebar('workbench');
             echo '<main class="pl-app-main">';
-            echo '<div class="pl-wb-empty"><div class="pl-wb-empty-icon">📄</div><p>Aucun projet sélectionné. <a href="' . esc_url( $courses_url ) . '">Retour aux cours</a></p></div>';
+            ?>
+            <div class="pl-wb-selector">
+                <div class="pl-wb-selector-header">
+                    <span class="pl-section-tag">🔬 Atelier pédagogique</span>
+                    <h1 class="pl-wb-selector-title">Choisissez une séance</h1>
+                    <p class="pl-wb-selector-subtitle">Sélectionnez un cours puis une séance pour ouvrir l'atelier d'analyse IA.</p>
+                </div>
+
+                <?php if ( empty( $courses ) ) : ?>
+                    <div class="pl-wb-selector-empty">
+                        <div class="pl-wb-selector-empty-icon">📚</div>
+                        <h3>Aucun cours</h3>
+                        <p>Créez d'abord un cours sur la page <a href="<?php echo esc_url( $courses_url ); ?>">Cours &amp; Séances</a>.</p>
+                    </div>
+                <?php else : ?>
+                    <div class="pl-wb-selector-grid">
+                        <?php foreach ( $courses as $course ) :
+                            $c_type = get_post_meta( $course->ID, '_pl_course_type', true ) ?: 'magistral';
+                            $projects = class_exists( 'PedagoLens_Teacher_Dashboard' )
+                                ? PedagoLens_Teacher_Dashboard::get_projects( $course->ID )
+                                : [];
+                            $c_icon = $type_icons[ $c_type ] ?? '📄';
+                            ?>
+                            <div class="pl-wb-selector-course" data-wb-course-id="<?php echo (int) $course->ID; ?>">
+                                <div class="pl-wb-selector-course-header">
+                                    <span class="pl-wb-selector-course-icon"><?php echo $c_icon; ?></span>
+                                    <div>
+                                        <h3><?php echo esc_html( $course->post_title ); ?></h3>
+                                        <span class="pl-badge pl-type-<?php echo esc_attr( $c_type ); ?>"><?php echo esc_html( $type_labels[ $c_type ] ?? $c_type ); ?></span>
+                                    </div>
+                                    <span class="pl-wb-selector-chevron material-symbols-outlined">expand_more</span>
+                                </div>
+                                <div class="pl-wb-selector-seances" style="display:none;">
+                                    <?php if ( empty( $projects ) ) : ?>
+                                        <p class="pl-wb-selector-no-seance">Aucune séance. <a href="<?php echo esc_url( $courses_url ); ?>">Créer une séance</a></p>
+                                    <?php else : ?>
+                                        <?php foreach ( $projects as $p ) :
+                                            $wb_url = $workbench_page
+                                                ? get_permalink( $workbench_page ) . '?project_id=' . $p['id']
+                                                : admin_url( 'admin.php?page=pl-course-workbench&project_id=' . $p['id'] );
+                                            $p_type = $p['type'] ?? 'magistral';
+                                            $p_icon = $type_icons[ $p_type ] ?? '📄';
+                                            ?>
+                                            <a href="<?php echo esc_url( $wb_url ); ?>" class="pl-wb-selector-seance-card">
+                                                <span class="pl-wb-selector-seance-icon"><?php echo $p_icon; ?></span>
+                                                <div>
+                                                    <h4><?php echo esc_html( $p['title'] ); ?></h4>
+                                                    <span class="pl-badge pl-type-<?php echo esc_attr( $p_type ); ?>"><?php echo esc_html( $type_labels[ $p_type ] ?? $p_type ); ?></span>
+                                                </div>
+                                                <span class="material-symbols-outlined pl-wb-selector-arrow">arrow_forward</span>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <?php
             echo '</main>';
             echo '</div>';
             echo self::render_footer();
