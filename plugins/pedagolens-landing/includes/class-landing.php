@@ -2061,7 +2061,7 @@ class PedagoLens_Landing {
         // Profiles (read-only for teachers)
         $profiles = [];
         if ( class_exists( 'PedagoLens_Profile_Manager' ) ) {
-            $profiles = PedagoLens_Profile_Manager::get_all_profiles();
+            $profiles = PedagoLens_Profile_Manager::get_all();
         }
         if ( empty( $profiles ) ) {
             $profiles = [

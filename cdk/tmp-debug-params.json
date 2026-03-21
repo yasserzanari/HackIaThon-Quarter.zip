@@ -1,0 +1,10 @@
+{
+  "InstanceIds": ["i-0c837343e3ded4133"],
+  "DocumentName": "AWS-RunShellScript",
+  "Parameters": {
+    "commands": [
+      "echo '=== WP DEBUG ===' && tail -80 /var/www/html/wp-content/debug.log 2>/dev/null || echo 'NO_DEBUG_LOG'",
+      "echo '=== APACHE ERROR ===' && tail -30 /var/log/apache2/error.log 2>/dev/null || echo 'NO_APACHE_LOG'"
+    ]
+  }
+}
