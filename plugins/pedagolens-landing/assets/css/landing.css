@@ -1998,7 +1998,6 @@ img {
 /* ── Layout ─────────────────────────────────────────────────── */
 .pl-hi-page {
   display: flex;
-  min-height: 100vh;
   font-family: var(--pl-font-body);
   background: var(--pl-background);
   color: var(--pl-on-surface);
@@ -4092,7 +4091,6 @@ img {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  overflow: hidden;
   height: 100%;
 }
 
@@ -6495,24 +6493,110 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
 }
 
 /* ============================================================
-   Agent IA Léa — Teacher Analytics + Chat Interface
+   Agent IA Léa — Teacher Tabbed Interface (Analytics + Simulation)
    ============================================================ */
-.pl-lea-page {
+.pl-lea-page--tabbed {
   display: flex;
-  gap: 0;
-  height: calc(100vh - 5rem);
-  position: relative;
-}
-.pl-lea-page--analytics {
-  display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 0;
+  flex-direction: column;
+  height: calc(100vh - 4.5rem);
+  overflow: hidden;
+  min-height: 0;
 }
 
-/* ---- Analytics Panel (left) ---- */
+/* ---- Tab Navigation ---- */
+.pl-lea-tabs {
+  display: flex;
+  gap: 0;
+  background: #fff;
+  border-bottom: 2px solid rgba(0,0,0,0.06);
+  padding: 0 1.25rem;
+  flex-shrink: 0;
+}
+.pl-lea-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  color: #757682;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.pl-lea-tab .material-symbols-outlined { font-size: 1.125rem; }
+.pl-lea-tab:hover { color: #00236f; }
+.pl-lea-tab--active {
+  color: #00236f;
+  border-bottom-color: #712ae2;
+}
+
+/* ---- Tab Content Panels ---- */
+.pl-lea-tab-content {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.pl-lea-tab-content--active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Analytics Tab (scrollable) ---- */
+#pl-lea-tab-analytics .pl-lea-analytics {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: none;
+  padding: 1.25rem;
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+/* ---- Simulation Tab (full-height chat) ---- */
+.pl-lea-sim-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #f7f9fb;
+}
+.pl-lea-sim-header {
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.pl-lea-sim-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.pl-lea-sim-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pl-lea-sim-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #191c1e;
+}
+
+/* ---- Shared Analytics Styles ---- */
 .pl-lea-analytics {
   background: #fff;
-  border-right: 1px solid rgba(0,0,0,0.06);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -6843,28 +6927,19 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
   color: #00236f;
 }
 @media (max-width: 900px) {
-  .pl-lea-page--analytics {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    height: auto;
-    min-height: calc(100vh - 5rem);
+  .pl-lea-tabs {
+    padding: 0 0.75rem;
   }
-  .pl-lea-analytics {
-    max-height: 0;
-    overflow: hidden;
-    padding: 0;
-    border-right: none;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
-    transition: max-height 0.3s ease, padding 0.3s ease;
+  .pl-lea-tab {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
   }
-  .pl-lea-analytics.open {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1rem;
-  }
-  .pl-lea-toggle-analytics { display: flex; }
-  .pl-lea-chat-area { min-height: 50vh; }
   .pl-lea-msg { max-width: 90%; }
+  .pl-lea-sim-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
 }
 
 /* ============================================================
@@ -8762,59 +8837,27 @@ html { margin-top: 0 !important; }
   padding: 1.5rem 2rem 2rem;
 }
 
+/* Tabbed Léa page: no outer scroll, tabs + content fill space */
+.pl-app-main > .pl-lea-page--tabbed {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Historique page: remove its own min-height:100vh since it's inside pl-app-main */
 .pl-app-main > .pl-hi-page {
   min-height: 0;
 }
 
-/* Student dashboard: scrollable content area */
-.pl-app-main > .pl-stu-page {
-  gap: 1.5rem;
-  overflow: hidden;
-  height: 100%;
-}
+/* Student dashboard: scrollable content area (overridden by NO-SCROLL FIX section at EOF) */
 
 /* ============================================================
    ACCOUNT PAGE REFONTE — 2-column horizontal layout (no scroll)
+   (Main layout rules moved to NO-SCROLL FIX section at EOF)
    ============================================================ */
-.pl-account-page {
-  display: grid !important;
-  grid-template-columns: 350px 1fr;
-  gap: 2rem;
-  height: 100%;
-  overflow: hidden;
-  max-width: 100% !important;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  padding: 1.5rem 2rem 2rem;
-}
-
-/* ── Left column ─────────────────────────────────────────── */
-.pl-account-left {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* ── Right column ────────────────────────────────────────── */
-.pl-account-right {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  min-height: 0;
-  padding-right: .5rem;
-}
-
-/* Custom scrollbar for right column */
-.pl-account-right::-webkit-scrollbar { width: 5px; }
-.pl-account-right::-webkit-scrollbar-track { background: transparent; }
-.pl-account-right::-webkit-scrollbar-thumb { background: rgba(0,35,111,.12); border-radius: 10px; }
-.pl-account-right::-webkit-scrollbar-thumb:hover { background: rgba(0,35,111,.25); }
 
 /* ── Profile Card (left) ─────────────────────────────────── */
 .pl-account-profile-card {
@@ -9103,5 +9146,185 @@ html { margin-top: 0 !important; }
   .pl-account-left,
   .pl-account-right {
     overflow: visible;
+  }
+}
+
+/* ============================================================
+   NO-SCROLL FIX — Student Dashboard, Historique, Compte
+   Enforce viewport-height layout, no vertical page scroll.
+   Does NOT affect twin view (?view=twin) or teacher dashboard.
+   ============================================================ */
+
+/* ── Global: pl-app-layout already has height:100vh + overflow:hidden ─
+     Ensure pl-app-main fills remaining space as a flex column ──────── */
+.pl-app-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Student Dashboard (pl-stu-page) ─────────────────────── */
+.pl-app-main > .pl-stu-page {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding: 1.5rem 2rem 2rem;
+}
+
+/* ── Historique (pl-hi-page) ─────────────────────────────── */
+.pl-app-main > .pl-hi-page {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding: 1.5rem 2rem 2rem;
+}
+/* When inside pl-app-main, the hi-main doesn't need its own margin/padding —
+   the sidebar is handled by pl-app-sidebar, not pl-hi-sidebar */
+.pl-app-main > .pl-hi-page .pl-hi-main {
+  margin-left: 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Account Page (pl-account-page) — Full-width 2-column ── */
+.pl-app-main > .pl-account-page {
+  display: grid !important;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  padding: 1.5rem 2rem 2rem;
+  max-width: 100% !important;
+  width: 100%;
+}
+
+.pl-app-main > .pl-account-page .pl-account-left {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  gap: 1rem;
+}
+
+.pl-app-main > .pl-account-page .pl-account-right {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  gap: 1rem;
+  padding-right: .25rem;
+}
+
+/* Profile card: more compact for no-scroll */
+.pl-app-main > .pl-account-page .pl-account-profile-card {
+  flex-shrink: 0;
+}
+.pl-app-main > .pl-account-page .pl-account-profile-top {
+  padding: 1.5rem 1.25rem 1.25rem;
+  gap: .35rem;
+}
+.pl-app-main > .pl-account-page .pl-account-avatar-img {
+  width: 72px !important;
+  height: 72px !important;
+}
+.pl-app-main > .pl-account-page .pl-account-name {
+  font-size: 1.1rem;
+}
+.pl-app-main > .pl-account-page .pl-account-mini-stats {
+  padding: 0 1.25rem 1.25rem;
+  gap: .35rem;
+}
+.pl-app-main > .pl-account-page .pl-account-mini-stat {
+  padding: .5rem .75rem;
+}
+
+/* Section cards: tighter padding */
+.pl-app-main > .pl-account-page .pl-account-section {
+  padding: 1.25rem 1.5rem !important;
+}
+.pl-app-main > .pl-account-page .pl-account-section h3 {
+  font-size: .95rem;
+  margin-bottom: .75rem;
+  padding-bottom: .5rem;
+}
+
+/* Difficulties grid: 3 columns compact */
+.pl-app-main > .pl-account-page .pl-difficulties-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: .35rem;
+}
+.pl-app-main > .pl-account-page .pl-difficulty-checkbox {
+  padding: .4rem .6rem;
+  font-size: .78rem;
+}
+
+/* Form inputs: slightly more compact */
+.pl-app-main > .pl-account-page .pl-account-form .pl-form-group input {
+  padding: .5rem .75rem;
+  font-size: .82rem;
+}
+.pl-app-main > .pl-account-page .pl-account-form .pl-form-group label {
+  font-size: .78rem;
+  margin-bottom: .2rem;
+}
+
+/* Quick links: compact */
+.pl-app-main > .pl-account-page .pl-quick-link-card {
+  padding: .65rem .6rem;
+  font-size: .78rem;
+}
+.pl-app-main > .pl-account-page .pl-ql-icon {
+  font-size: 1.25rem;
+}
+
+/* Preferences: compact */
+.pl-app-main > .pl-account-page .pl-toggle-row {
+  padding: .5rem .85rem;
+  font-size: .82rem;
+}
+
+/* ── Student account: side-by-side grid for difficulties + links ── */
+.pl-account-right-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  min-height: 0;
+}
+.pl-account-right-grid > .pl-account-section {
+  min-height: 0;
+  overflow-y: auto;
+}
+@media (max-width: 1100px) {
+  .pl-account-right-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Custom scrollbar for both columns */
+.pl-app-main > .pl-account-page .pl-account-left::-webkit-scrollbar,
+.pl-app-main > .pl-account-page .pl-account-right::-webkit-scrollbar { width: 4px; }
+.pl-app-main > .pl-account-page .pl-account-left::-webkit-scrollbar-track,
+.pl-app-main > .pl-account-page .pl-account-right::-webkit-scrollbar-track { background: transparent; }
+.pl-app-main > .pl-account-page .pl-account-left::-webkit-scrollbar-thumb,
+.pl-app-main > .pl-account-page .pl-account-right::-webkit-scrollbar-thumb { background: rgba(0,35,111,.1); border-radius: 10px; }
+
+/* ── Responsive: account stacks on small screens ─────────── */
+@media (max-width: 900px) {
+  .pl-app-main > .pl-account-page {
+    grid-template-columns: 1fr !important;
+    overflow-y: auto;
+  }
+  .pl-app-main > .pl-account-page .pl-account-left,
+  .pl-app-main > .pl-account-page .pl-account-right {
+    overflow: visible;
+  }
+  .pl-app-main > .pl-account-page .pl-difficulties-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

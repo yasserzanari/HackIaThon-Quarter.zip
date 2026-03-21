@@ -142,16 +142,128 @@ class PedagoLens_API_Bridge {
     /**
      * Retourne les credentials AWS.
      *
-     * Priorité : constantes wp-config.php → variables d'environnement → options WP (fallback hackathon).
-     * En production, définir AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
-     * dans wp-config.php ou en variables d'environnement — jamais dans les options WP.
+     * Priorité :
+     *   1. Constantes wp-config.php
+     *   2. Variables d'environnement
+     *   3. Options WP (fallback hackathon)
+     *   4. EC2 Instance Profile via IMDS v2 (IAM role)
      */
     public static function get_aws_credentials(): array {
-        return [
+        $creds = [
             'access_key_id'     => defined( 'AWS_ACCESS_KEY_ID' )     ? AWS_ACCESS_KEY_ID     : ( getenv( 'AWS_ACCESS_KEY_ID' )     ?: get_option( 'pl_aws_access_key_id',     '' ) ),
             'secret_access_key' => defined( 'AWS_SECRET_ACCESS_KEY' ) ? AWS_SECRET_ACCESS_KEY : ( getenv( 'AWS_SECRET_ACCESS_KEY' ) ?: get_option( 'pl_aws_secret_access_key', '' ) ),
             'session_token'     => defined( 'AWS_SESSION_TOKEN' )     ? AWS_SESSION_TOKEN     : ( getenv( 'AWS_SESSION_TOKEN' )     ?: get_option( 'pl_aws_session_token',      '' ) ),
         ];
+
+        // If we already have valid static credentials, return them.
+        if ( ! empty( $creds['access_key_id'] ) && ! empty( $creds['secret_access_key'] ) ) {
+            return $creds;
+        }
+
+        // Fallback: EC2 Instance Profile via IMDS v2.
+        return self::get_imds_credentials();
+    }
+
+    /**
+     * Fetch temporary credentials from EC2 Instance Metadata Service (IMDS v2).
+     *
+     * Uses a WP transient to cache credentials until ~5 min before expiration.
+     *
+     * @return array Credentials array (may have empty values on failure).
+     */
+    private static function get_imds_credentials(): array {
+        $empty = [ 'access_key_id' => '', 'secret_access_key' => '', 'session_token' => '' ];
+
+        // Check transient cache first.
+        $cached = get_transient( 'pl_imds_credentials' );
+        if ( is_array( $cached ) && ! empty( $cached['access_key_id'] ) ) {
+            return $cached;
+        }
+
+        // Step 1: Get IMDS v2 token (required for IMDSv2).
+        $token_response = wp_remote_request( 'http://169.254.169.254/latest/api/token', [
+            'method'  => 'PUT',
+            'headers' => [ 'X-aws-ec2-metadata-token-ttl-seconds' => '21600' ],
+            'timeout' => 2,
+        ] );
+
+        if ( is_wp_error( $token_response ) || wp_remote_retrieve_response_code( $token_response ) !== 200 ) {
+            if ( class_exists( 'PedagoLens_Core' ) ) {
+                $err = is_wp_error( $token_response ) ? $token_response->get_error_message() : 'HTTP ' . wp_remote_retrieve_response_code( $token_response );
+                PedagoLens_Core::log( 'error', "IMDS v2 token request failed: {$err}" );
+            }
+            return $empty;
+        }
+
+        $token = wp_remote_retrieve_body( $token_response );
+
+        // Step 2: Get the IAM role name attached to this instance.
+        $role_response = wp_remote_get( 'http://169.254.169.254/latest/meta-data/iam/security-credentials/', [
+            'headers' => [ 'X-aws-ec2-metadata-token' => $token ],
+            'timeout' => 2,
+        ] );
+
+        if ( is_wp_error( $role_response ) || wp_remote_retrieve_response_code( $role_response ) !== 200 ) {
+            if ( class_exists( 'PedagoLens_Core' ) ) {
+                PedagoLens_Core::log( 'error', 'IMDS: unable to retrieve IAM role name.' );
+            }
+            return $empty;
+        }
+
+        $role_name = trim( wp_remote_retrieve_body( $role_response ) );
+        if ( empty( $role_name ) ) {
+            if ( class_exists( 'PedagoLens_Core' ) ) {
+                PedagoLens_Core::log( 'error', 'IMDS: IAM role name is empty — no role attached?' );
+            }
+            return $empty;
+        }
+
+        // Step 3: Fetch the temporary credentials for that role.
+        $creds_response = wp_remote_get(
+            "http://169.254.169.254/latest/meta-data/iam/security-credentials/{$role_name}",
+            [
+                'headers' => [ 'X-aws-ec2-metadata-token' => $token ],
+                'timeout' => 2,
+            ]
+        );
+
+        if ( is_wp_error( $creds_response ) || wp_remote_retrieve_response_code( $creds_response ) !== 200 ) {
+            if ( class_exists( 'PedagoLens_Core' ) ) {
+                PedagoLens_Core::log( 'error', "IMDS: unable to retrieve credentials for role {$role_name}." );
+            }
+            return $empty;
+        }
+
+        $data = json_decode( wp_remote_retrieve_body( $creds_response ), true );
+        if ( ! is_array( $data ) || empty( $data['AccessKeyId'] ) ) {
+            if ( class_exists( 'PedagoLens_Core' ) ) {
+                PedagoLens_Core::log( 'error', 'IMDS: credential response is invalid or missing AccessKeyId.' );
+            }
+            return $empty;
+        }
+
+        $creds = [
+            'access_key_id'     => $data['AccessKeyId'],
+            'secret_access_key' => $data['SecretAccessKey'],
+            'session_token'     => $data['Token'] ?? '',
+        ];
+
+        // Cache in a transient. Credentials typically last 6 hours;
+        // we cache for (expiration - 5 minutes) or 50 minutes as a safe default.
+        $ttl = 50 * MINUTE_IN_SECONDS;
+        if ( ! empty( $data['Expiration'] ) ) {
+            $expires_at = strtotime( $data['Expiration'] );
+            if ( $expires_at ) {
+                $ttl = max( 60, $expires_at - time() - 5 * MINUTE_IN_SECONDS );
+            }
+        }
+        set_transient( 'pl_imds_credentials', $creds, $ttl );
+
+        if ( class_exists( 'PedagoLens_Core' ) ) {
+            PedagoLens_Core::log( 'info', "IMDS: credentials fetched for role {$role_name}, cached for {$ttl}s." );
+        }
+
+        return $creds;
     }
 
     public static function get_ai_mode(): string {
@@ -166,6 +278,7 @@ class PedagoLens_API_Bridge {
         $credentials = self::get_aws_credentials();
 
         if ( empty( $credentials['access_key_id'] ) || empty( $credentials['secret_access_key'] ) ) {
+            self::log_error( 'pl_bedrock_auth_error', 'Credentials AWS manquants (constantes, env, options WP et IMDS tous vides).', [ 'prompt_key' => $prompt_key ] );
             return self::error( 'pl_bedrock_auth_error', 'Credentials AWS manquants.' );
         }
 
@@ -173,6 +286,7 @@ class PedagoLens_API_Bridge {
         $template = self::get_prompt_template( $prompt_key );
 
         if ( $template === '' ) {
+            self::log_error( 'pl_prompt_not_found', "Template absent pour la clé : {$prompt_key}" );
             return self::error( 'pl_prompt_not_found', "Template absent pour la clé : {$prompt_key}" );
         }
 
@@ -184,6 +298,7 @@ class PedagoLens_API_Bridge {
         $response = self::http_post_bedrock( $endpoint, $payload, $credentials, $config );
 
         if ( is_wp_error( $response ) ) {
+            self::log_error( 'pl_bedrock_timeout', $response->get_error_message(), [ 'prompt_key' => $prompt_key, 'model' => $config['model_id'] ] );
             return self::error( 'pl_bedrock_timeout', $response->get_error_message() );
         }
 
@@ -191,33 +306,61 @@ class PedagoLens_API_Bridge {
         $body = wp_remote_retrieve_body( $response );
 
         if ( $code === 429 ) {
+            self::log_error( 'pl_bedrock_rate_limit', 'Quota Bedrock dépassé.', [ 'prompt_key' => $prompt_key ] );
             return self::error( 'pl_bedrock_rate_limit', 'Quota Bedrock dépassé.' );
         }
 
         if ( $code !== 200 ) {
+            self::log_error( 'pl_bedrock_invalid_response', "HTTP {$code} reçu de Bedrock.", [
+                'prompt_key' => $prompt_key,
+                'model'      => $config['model_id'],
+                'body'       => mb_substr( $body, 0, 500 ),
+            ] );
             return self::error( 'pl_bedrock_invalid_response', "HTTP {$code} reçu de Bedrock." );
         }
 
         $decoded = json_decode( $body, true );
         if ( ! is_array( $decoded ) ) {
+            self::log_error( 'pl_bedrock_invalid_response', 'Réponse Bedrock non JSON.', [ 'body_preview' => mb_substr( $body, 0, 300 ) ] );
             return self::error( 'pl_bedrock_invalid_response', 'Réponse Bedrock non JSON.' );
         }
 
         // Extraire le contenu texte de la réponse Claude
         $text = $decoded['content'][0]['text'] ?? '';
-        $result = json_decode( $text, true );
+
+        // Claude may wrap JSON in markdown code fences — strip them.
+        $clean_text = trim( $text );
+        if ( preg_match( '/^```(?:json)?\s*\n?(.*?)\n?\s*```$/s', $clean_text, $m ) ) {
+            $clean_text = trim( $m[1] );
+        }
+
+        $result = json_decode( $clean_text, true );
 
         if ( ! is_array( $result ) ) {
+            self::log_error( 'pl_bedrock_invalid_response', 'Contenu Claude non JSON.', [ 'text_preview' => mb_substr( $text, 0, 300 ) ] );
             return self::error( 'pl_bedrock_invalid_response', 'Contenu Claude non JSON.' );
         }
 
         if ( ! self::validate_response( $result, $prompt_key ) ) {
+            self::log_error( 'pl_bedrock_invalid_response', 'Structure de réponse non conforme au schéma.', [
+                'prompt_key' => $prompt_key,
+                'keys'       => array_keys( $result ),
+            ] );
             return self::error( 'pl_bedrock_invalid_response', 'Structure de réponse non conforme au schéma.' );
         }
 
         do_action( 'pedagolens_after_ai_invoke', $prompt_key, $result );
 
         return array_merge( [ 'success' => true ], $result );
+    }
+
+    /**
+     * Log an error via PedagoLens_Core if available.
+     */
+    private static function log_error( string $code, string $message, array $context = [] ): void {
+        if ( class_exists( 'PedagoLens_Core' ) ) {
+            PedagoLens_Core::log( 'error', "[API Bridge] {$code}: {$message}", $context );
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -413,10 +556,17 @@ class PedagoLens_API_Bridge {
                 "Section : {section}\nContenu : {content}",
 
             'student_twin_response' =>
-                "Tu es un jumeau numérique pédagogique. Réponds à l'étudiant de façon guidée.\n" .
-                "Retourne un JSON avec : reply (string), guardrail_triggered (bool), " .
-                "guardrail_reason (string|null), follow_up_questions (array).\n\n" .
-                "Message : {message}\nContexte cours : {course_context}",
+                "Tu es Léa, une tutrice étudiante virtuelle bienveillante et pédagogue. " .
+                "Tu t'adresses à l'étudiant(e) {student_name} de façon chaleureuse, en le/la tutoyant. " .
+                "Tu guides l'étudiant(e) vers la compréhension sans jamais donner la réponse directement. " .
+                "Tu poses des questions de relance pour stimuler la réflexion. " .
+                "Tu réponds TOUJOURS en français.\n\n" .
+                "Contexte du cours : {course_context}\n" .
+                "Message de l'étudiant(e) : {message}\n\n" .
+                "Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans code fence) contenant :\n" .
+                "- \"reply\" (string) : ta réponse à l'étudiant(e), en français, chaleureuse et pédagogique\n" .
+                "- \"guardrail_triggered\" (bool) : true si l'étudiant demande de faire son travail à sa place\n" .
+                "- \"follow_up_questions\" (array de strings) : 2-3 questions de relance pour approfondir la réflexion",
 
             'student_guardrail_check' =>
                 "Vérifie si ce message étudiant contient une demande de travail académique direct.\n" .

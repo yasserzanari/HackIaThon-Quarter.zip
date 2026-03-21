@@ -2041,13 +2041,34 @@
     'use strict';
 
     function initLeaChat() {
+        // ── Tab switching (teacher view) ──
+        var tabs = document.querySelectorAll('.pl-lea-tab');
+        var tabContents = {
+            analytics:  document.getElementById('pl-lea-tab-analytics'),
+            simulation: document.getElementById('pl-lea-tab-simulation')
+        };
+
+        if (tabs.length) {
+            tabs.forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    var target = this.getAttribute('data-tab');
+                    tabs.forEach(function(t) { t.classList.remove('pl-lea-tab--active'); });
+                    this.classList.add('pl-lea-tab--active');
+                    Object.keys(tabContents).forEach(function(key) {
+                        if (tabContents[key]) {
+                            tabContents[key].classList.toggle('pl-lea-tab-content--active', key === target);
+                        }
+                    });
+                });
+            });
+        }
+
+        // ── Simulation chat ──
         var messagesEl = document.getElementById('pl-lea-messages');
         var inputEl    = document.getElementById('pl-lea-input');
         var sendBtn    = document.getElementById('pl-lea-send');
         var profileSelect  = document.getElementById('pl-lea-profile-select');
         var activeProfileEl = document.getElementById('pl-lea-active-profile');
-        var toggleBtn  = document.getElementById('pl-lea-toggle-analytics');
-        var analyticsPanel = document.getElementById('pl-lea-analytics');
 
         if (!messagesEl || !inputEl || !sendBtn) return;
 
@@ -2077,24 +2098,52 @@
                 greeting: 'un étudiant avec TDAH',
                 traits: 'J\'ai besoin de contenu court, structuré et interactif. Les longues lectures me perdent rapidement.'
             },
+            'concentration_tdah': {
+                style: 'J\'ai du mal à rester concentré longtemps.',
+                greeting: 'un étudiant avec TDAH',
+                traits: 'J\'ai besoin de contenu court, structuré et interactif. Les longues lectures me perdent rapidement.'
+            },
             'allophone': {
                 style: 'Le français n\'est pas ma langue maternelle.',
                 greeting: 'un étudiant allophone',
+                traits: 'J\'ai parfois du mal avec le vocabulaire technique. Des définitions simples et du contexte m\'aident beaucoup.'
+            },
+            'langue_seconde': {
+                style: 'Le français n\'est pas ma langue maternelle.',
+                greeting: 'un étudiant en langue seconde',
                 traits: 'J\'ai parfois du mal avec le vocabulaire technique. Des définitions simples et du contexte m\'aident beaucoup.'
             },
             'anxieux': {
                 style: 'Le stress d\'évaluation me bloque souvent.',
                 greeting: 'un étudiant anxieux',
                 traits: 'J\'ai besoin de renforcement positif et de consignes très claires pour me sentir en confiance.'
+            },
+            'anxieux_consignes': {
+                style: 'Le stress d\'évaluation me bloque souvent.',
+                greeting: 'un étudiant anxieux face aux consignes',
+                traits: 'J\'ai besoin de renforcement positif et de consignes très claires pour me sentir en confiance.'
+            },
+            'surcharge_cognitive': {
+                style: 'Trop d\'information d\'un coup me submerge.',
+                greeting: 'un étudiant en surcharge cognitive',
+                traits: 'J\'ai besoin que le contenu soit découpé en petites portions. Les résumés et les listes m\'aident à structurer.'
+            },
+            'faible_autonomie': {
+                style: 'J\'ai besoin d\'être guidé étape par étape.',
+                greeting: 'un étudiant à faible autonomie',
+                traits: 'Sans consignes claires et un accompagnement structuré, je me perds facilement dans les tâches.'
+            },
+            'usage_passif_ia': {
+                style: 'J\'ai tendance à copier-coller les réponses de l\'IA.',
+                greeting: 'un étudiant à usage passif de l\'IA',
+                traits: 'J\'utilise l\'IA comme raccourci plutôt que comme outil d\'apprentissage. J\'ai besoin qu\'on me pousse à réfléchir.'
+            },
+            'avance_rapide': {
+                style: 'Je comprends vite et je m\'ennuie facilement.',
+                greeting: 'un étudiant avancé rapide',
+                traits: 'J\'ai besoin de défis supplémentaires et de contenu enrichi pour rester engagé.'
             }
         };
-
-        // Toggle analytics panel (mobile)
-        if (toggleBtn && analyticsPanel) {
-            toggleBtn.addEventListener('click', function() {
-                analyticsPanel.classList.toggle('open');
-            });
-        }
 
         // Profile selection via dropdown
         if (profileSelect) {
@@ -2104,7 +2153,10 @@
                 if (activeProfileEl) {
                     activeProfileEl.textContent = 'Profil : ' + currentProfile;
                 }
-                addMessage('bot', 'Profil chang\u00e9 ! Je suis maintenant ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].greeting : currentProfile) + '. ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].traits : '') + ' Posez-moi une question !');
+                var info = profileResponses[currentSlug];
+                var greeting = info ? info.greeting : currentProfile;
+                var traits = info ? ' ' + info.traits : '';
+                addMessage('bot', '<em>Profil chang\u00e9.</em> Je simule maintenant <strong>' + greeting + '</strong>.' + traits + ' Posez-moi une question !');
             });
         }
 
@@ -2126,10 +2178,6 @@
             messagesEl.appendChild(typingEl);
             messagesEl.scrollTop = messagesEl.scrollHeight;
 
-            // Course select: twin view or dashboard
-            var chatArea = document.getElementById('pl-twin-chat-area');
-            var courseId = chatArea ? chatArea.getAttribute('data-course-id') : 0;
-
             // Call backend API Bridge (Bedrock or mock PHP)
             if (window.plFront && plFront.ajaxUrl) {
                 jQuery.ajax({
@@ -2139,7 +2187,8 @@
                         action: 'pl_lea_chat',
                         _wpnonce: plFront.nonce,
                         message: text,
-                        course_id: courseId
+                        profile: currentSlug,
+                        course_id: 0
                     },
                     success: function(res) {
                         if (typingEl.parentNode) messagesEl.removeChild(typingEl);
@@ -2148,7 +2197,6 @@
                         if (res.success && res.data && res.data.response) {
                             addMessage('bot', res.data.response);
                         } else {
-                            // Fallback to JS mock if backend fails
                             addMessage('bot', generateResponse(text, currentSlug));
                         }
                     },
@@ -2156,13 +2204,12 @@
                         if (typingEl.parentNode) messagesEl.removeChild(typingEl);
                         isTyping = false;
                         sendBtn.disabled = false;
-                        // Fallback to JS mock on network error
                         addMessage('bot', generateResponse(text, currentSlug));
                     }
                 });
             } else {
                 // No plFront available — pure JS fallback
-                var delay = 1000 + Math.random() * 2000;
+                var delay = 800 + Math.random() * 1500;
                 setTimeout(function() {
                     if (typingEl.parentNode) messagesEl.removeChild(typingEl);
                     isTyping = false;
@@ -2195,28 +2242,26 @@
         }
 
         function generateResponse(question, slug) {
-            var profile = profileResponses[slug] || profileResponses['visuel-spatial'];
+            var profile = profileResponses[slug] || profileResponses['visuel-spatial'] || { style: 'Je suis un étudiant.', greeting: 'un étudiant' };
             var q = question.toLowerCase();
 
-            // Context-aware mock responses
             if (q.indexOf('comprend') !== -1 || q.indexOf('compris') !== -1 || q.indexOf('clair') !== -1) {
-                return '<strong>Réaction (' + currentProfile + ') :</strong> ' + profile.style + ' Pour ce concept, j\'aurais besoin que vous me l\'expliquiez différemment. Peut-être avec un exemple concret ?';
+                return '<strong>R\u00e9action (' + currentProfile + ') :</strong> ' + profile.style + ' Pour ce concept, j\'aurais besoin que vous me l\'expliquiez diff\u00e9remment. Peut-\u00eatre avec un exemple concret ?';
             }
             if (q.indexOf('exercice') !== -1 || q.indexOf('pratique') !== -1 || q.indexOf('exemple') !== -1) {
-                return '<strong>Réaction (' + currentProfile + ') :</strong> Les exercices pratiques m\'aident beaucoup ! ' + profile.style + ' Est-ce que vous pourriez me donner un cas concret à résoudre étape par étape ?';
+                return '<strong>R\u00e9action (' + currentProfile + ') :</strong> Les exercices pratiques m\'aident beaucoup ! ' + profile.style + ' Est-ce que vous pourriez me donner un cas concret \u00e0 r\u00e9soudre \u00e9tape par \u00e9tape ?';
             }
-            if (q.indexOf('examen') !== -1 || q.indexOf('évaluation') !== -1 || q.indexOf('test') !== -1 || q.indexOf('note') !== -1) {
-                return '<strong>Réaction (' + currentProfile + ') :</strong> Quand je pense à l\'évaluation... ' + profile.style + ' J\'aimerais savoir exactement ce qui sera évalué et comment me préparer efficacement.';
+            if (q.indexOf('examen') !== -1 || q.indexOf('\u00e9valuation') !== -1 || q.indexOf('test') !== -1 || q.indexOf('note') !== -1) {
+                return '<strong>R\u00e9action (' + currentProfile + ') :</strong> Quand je pense \u00e0 l\'\u00e9valuation... ' + profile.style + ' J\'aimerais savoir exactement ce qui sera \u00e9valu\u00e9 et comment me pr\u00e9parer efficacement.';
             }
-            if (q.indexOf('cours') !== -1 || q.indexOf('matière') !== -1 || q.indexOf('sujet') !== -1) {
-                return '<strong>Réaction (' + currentProfile + ') :</strong> Pour bien suivre ce cours, ' + profile.style.toLowerCase() + ' Pourriez-vous me donner un aperçu de la structure du cours ?';
+            if (q.indexOf('cours') !== -1 || q.indexOf('mati\u00e8re') !== -1 || q.indexOf('sujet') !== -1) {
+                return '<strong>R\u00e9action (' + currentProfile + ') :</strong> Pour bien suivre ce cours, ' + profile.style.toLowerCase() + ' Pourriez-vous me donner un aper\u00e7u de la structure du cours ?';
             }
-            if (q.indexOf('aide') !== -1 || q.indexOf('difficulté') !== -1 || q.indexOf('problème') !== -1 || q.indexOf('bloqué') !== -1) {
-                return '<strong>Réaction (' + currentProfile + ') :</strong> Je rencontre parfois des difficultés parce que ' + profile.style.toLowerCase() + ' Quand je suis bloqué, j\'ai besoin qu\'on me guide pas à pas sans me donner directement la réponse.';
+            if (q.indexOf('aide') !== -1 || q.indexOf('difficult\u00e9') !== -1 || q.indexOf('probl\u00e8me') !== -1 || q.indexOf('bloqu\u00e9') !== -1) {
+                return '<strong>R\u00e9action (' + currentProfile + ') :</strong> Je rencontre parfois des difficult\u00e9s parce que ' + profile.style.toLowerCase() + ' Quand je suis bloqu\u00e9, j\'ai besoin qu\'on me guide pas \u00e0 pas sans me donner directement la r\u00e9ponse.';
             }
 
-            // Default response
-            return '<strong>Réaction (' + currentProfile + ') :</strong> ' + profile.style + ' Concernant votre question, je dirais que j\'ai besoin de plus de contexte pour bien comprendre. Pourriez-vous reformuler ou me donner un exemple ?';
+            return '<strong>R\u00e9action (' + currentProfile + ') :</strong> ' + profile.style + ' Concernant votre question, je dirais que j\'ai besoin de plus de contexte pour bien comprendre. Pourriez-vous reformuler ou me donner un exemple ?';
         }
     }
 

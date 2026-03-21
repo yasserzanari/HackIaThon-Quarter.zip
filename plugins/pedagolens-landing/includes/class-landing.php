@@ -875,133 +875,147 @@ class PedagoLens_Landing {
                 $total_sessions = 234;
                 $active_students = 42;
                 ?>
-    <div class="pl-lea-page pl-lea-page--analytics">
+    <div class="pl-lea-page pl-lea-page--tabbed">
 
-        <!-- LEFT: Analytics Dashboard -->
-        <div class="pl-lea-analytics" id="pl-lea-analytics">
-            <div class="pl-lea-analytics-header">
-                <h2><span class="material-symbols-outlined">insights</span> Analytics &Eacute;tudiants</h2>
-                <p>Donn&eacute;es agr&eacute;g&eacute;es des interactions avec L&eacute;a</p>
-            </div>
-
-            <!-- KPI row -->
-            <div class="pl-lea-kpi-row">
-                <div class="pl-lea-kpi">
-                    <span class="pl-lea-kpi-val"><?php echo $total_sessions; ?></span>
-                    <span class="pl-lea-kpi-lbl">Sessions</span>
-                </div>
-                <div class="pl-lea-kpi">
-                    <span class="pl-lea-kpi-val"><?php echo $active_students; ?></span>
-                    <span class="pl-lea-kpi-lbl">&Eacute;tudiants actifs</span>
-                </div>
-                <div class="pl-lea-kpi">
-                    <span class="pl-lea-kpi-val"><?php echo count( $mock_alerts ); ?></span>
-                    <span class="pl-lea-kpi-lbl">Alertes</span>
-                </div>
-            </div>
-
-            <!-- Topics les moins compris -->
-            <section class="pl-lea-analytics-section">
-                <h3><span class="material-symbols-outlined">trending_down</span> Topics les moins compris</h3>
-                <div class="pl-lea-topics-list">
-                    <?php foreach ( $mock_topics as $t ) :
-                        $bar_color = $t['score'] < 40 ? '#ef4444' : ( $t['score'] < 55 ? '#f59e0b' : '#10b981' );
-                    ?>
-                    <div class="pl-lea-topic-row">
-                        <div class="pl-lea-topic-info">
-                            <span class="pl-lea-topic-name"><?php echo $t['topic']; ?></span>
-                            <span class="pl-lea-topic-meta"><?php echo $t['questions']; ?> questions</span>
-                        </div>
-                        <div class="pl-lea-topic-bar-wrap">
-                            <div class="pl-lea-topic-bar" style="width:<?php echo $t['score']; ?>%;background:<?php echo $bar_color; ?>"></div>
-                        </div>
-                        <span class="pl-lea-topic-score"><?php echo $t['score']; ?>%</span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-
-            <!-- Scores par profil -->
-            <section class="pl-lea-analytics-section">
-                <h3><span class="material-symbols-outlined">group</span> Compr&eacute;hension par profil</h3>
-                <div class="pl-lea-profile-bars">
-                    <?php foreach ( $mock_profile_scores as $ps ) : ?>
-                    <div class="pl-lea-pbar-row">
-                        <span class="pl-lea-pbar-label"><?php echo $ps['label']; ?></span>
-                        <div class="pl-lea-pbar-track">
-                            <div class="pl-lea-pbar-fill" style="width:<?php echo $ps['score']; ?>%;background:<?php echo $ps['color']; ?>"></div>
-                        </div>
-                        <span class="pl-lea-pbar-val"><?php echo $ps['score']; ?>%</span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-
-            <!-- Alertes -->
-            <section class="pl-lea-analytics-section">
-                <h3><span class="material-symbols-outlined">warning</span> &Eacute;tudiants &agrave; surveiller</h3>
-                <div class="pl-lea-alerts-list">
-                    <?php foreach ( $mock_alerts as $a ) :
-                        $lvl_cls = $a['level'] === 'high' ? 'pl-lea-alert--high' : 'pl-lea-alert--medium';
-                    ?>
-                    <div class="pl-lea-alert-card <?php echo $lvl_cls; ?>">
-                        <div class="pl-lea-alert-top">
-                            <strong><?php echo $a['name']; ?></strong>
-                            <span class="pl-lea-alert-badge"><?php echo $a['profile']; ?></span>
-                        </div>
-                        <span class="pl-lea-alert-issue"><?php echo $a['issue']; ?></span>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-
-            <!-- Questions fréquentes -->
-            <section class="pl-lea-analytics-section">
-                <h3><span class="material-symbols-outlined">help</span> Questions fr&eacute;quentes</h3>
-                <ol class="pl-lea-faq-list">
-                    <?php foreach ( $mock_questions as $q ) : ?>
-                    <li><?php echo $q; ?></li>
-                    <?php endforeach; ?>
-                </ol>
-            </section>
+        <!-- Tab navigation -->
+        <div class="pl-lea-tabs">
+            <button class="pl-lea-tab pl-lea-tab--active" data-tab="analytics">
+                <span class="material-symbols-outlined">insights</span>
+                Analytiques &Eacute;tudiants
+            </button>
+            <button class="pl-lea-tab" data-tab="simulation">
+                <span class="material-symbols-outlined">psychology</span>
+                Simulation
+            </button>
         </div>
 
-        <!-- RIGHT: Chat with Léa -->
-        <div class="pl-lea-chat-area">
-            <div class="pl-lea-chat-header">
-                <div class="pl-lea-chat-header-left">
-                    <button class="pl-lea-toggle-analytics" id="pl-lea-toggle-analytics" title="Analytics">
-                        <span class="material-symbols-outlined">insights</span>
-                    </button>
-                    <div class="pl-lea-chat-avatar">
-                        <span class="material-symbols-outlined">psychology</span>
+        <!-- Tab 1: Analytics -->
+        <div class="pl-lea-tab-content pl-lea-tab-content--active" id="pl-lea-tab-analytics">
+            <div class="pl-lea-analytics" id="pl-lea-analytics">
+                <div class="pl-lea-analytics-header">
+                    <h2><span class="material-symbols-outlined">insights</span> Analytics &Eacute;tudiants</h2>
+                    <p>Donn&eacute;es agr&eacute;g&eacute;es des interactions avec L&eacute;a</p>
+                </div>
+
+                <!-- KPI row -->
+                <div class="pl-lea-kpi-row">
+                    <div class="pl-lea-kpi">
+                        <span class="pl-lea-kpi-val"><?php echo $total_sessions; ?></span>
+                        <span class="pl-lea-kpi-lbl">Sessions</span>
                     </div>
-                    <div class="pl-lea-chat-info">
-                        <h3>Agent IA L&eacute;a</h3>
-                        <p id="pl-lea-active-profile">Profil : <?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></p>
+                    <div class="pl-lea-kpi">
+                        <span class="pl-lea-kpi-val"><?php echo $active_students; ?></span>
+                        <span class="pl-lea-kpi-lbl">&Eacute;tudiants actifs</span>
+                    </div>
+                    <div class="pl-lea-kpi">
+                        <span class="pl-lea-kpi-val"><?php echo count( $mock_alerts ); ?></span>
+                        <span class="pl-lea-kpi-lbl">Alertes</span>
                     </div>
                 </div>
-                <div class="pl-lea-chat-header-right">
-                    <select class="pl-lea-profile-select" id="pl-lea-profile-select">
-                        <?php foreach ( $profiles as $i => $p ) : ?>
-                        <option value="<?php echo esc_attr( $p['slug'] ); ?>" <?php selected( $i, 0 ); ?>><?php echo esc_html( $p['label'] ); ?></option>
+
+                <!-- Topics les moins compris -->
+                <section class="pl-lea-analytics-section">
+                    <h3><span class="material-symbols-outlined">trending_down</span> Topics les moins compris</h3>
+                    <div class="pl-lea-topics-list">
+                        <?php foreach ( $mock_topics as $t ) :
+                            $bar_color = $t['score'] < 40 ? '#ef4444' : ( $t['score'] < 55 ? '#f59e0b' : '#10b981' );
+                        ?>
+                        <div class="pl-lea-topic-row">
+                            <div class="pl-lea-topic-info">
+                                <span class="pl-lea-topic-name"><?php echo $t['topic']; ?></span>
+                                <span class="pl-lea-topic-meta"><?php echo $t['questions']; ?> questions</span>
+                            </div>
+                            <div class="pl-lea-topic-bar-wrap">
+                                <div class="pl-lea-topic-bar" style="width:<?php echo $t['score']; ?>%;background:<?php echo $bar_color; ?>"></div>
+                            </div>
+                            <span class="pl-lea-topic-score"><?php echo $t['score']; ?>%</span>
+                        </div>
                         <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
+                    </div>
+                </section>
 
-            <div class="pl-lea-chat-messages" id="pl-lea-messages">
-                <div class="pl-lea-msg pl-lea-msg--bot">
-                    Bonjour <?php echo $first_name; ?> ! Je suis L&eacute;a, votre jumeau num&eacute;rique &eacute;tudiant. Je simule les r&eacute;actions d'un &eacute;tudiant au profil <strong><?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></strong>. Posez-moi une question sur votre cours ou testez une explication.
-                </div>
-            </div>
+                <!-- Scores par profil -->
+                <section class="pl-lea-analytics-section">
+                    <h3><span class="material-symbols-outlined">group</span> Compr&eacute;hension par profil</h3>
+                    <div class="pl-lea-profile-bars">
+                        <?php foreach ( $mock_profile_scores as $ps ) : ?>
+                        <div class="pl-lea-pbar-row">
+                            <span class="pl-lea-pbar-label"><?php echo $ps['label']; ?></span>
+                            <div class="pl-lea-pbar-track">
+                                <div class="pl-lea-pbar-fill" style="width:<?php echo $ps['score']; ?>%;background:<?php echo $ps['color']; ?>"></div>
+                            </div>
+                            <span class="pl-lea-pbar-val"><?php echo $ps['score']; ?>%</span>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
 
-            <div class="pl-lea-chat-input-area">
-                <div class="pl-lea-chat-input-wrap">
-                    <textarea class="pl-lea-chat-input" id="pl-lea-input" placeholder="Posez une question &agrave; L&eacute;a..." rows="1"></textarea>
-                    <button class="pl-lea-chat-send" id="pl-lea-send" title="Envoyer">
-                        <span class="material-symbols-outlined">send</span>
-                    </button>
+                <!-- Alertes -->
+                <section class="pl-lea-analytics-section">
+                    <h3><span class="material-symbols-outlined">warning</span> &Eacute;tudiants &agrave; surveiller</h3>
+                    <div class="pl-lea-alerts-list">
+                        <?php foreach ( $mock_alerts as $a ) :
+                            $lvl_cls = $a['level'] === 'high' ? 'pl-lea-alert--high' : 'pl-lea-alert--medium';
+                        ?>
+                        <div class="pl-lea-alert-card <?php echo $lvl_cls; ?>">
+                            <div class="pl-lea-alert-top">
+                                <strong><?php echo $a['name']; ?></strong>
+                                <span class="pl-lea-alert-badge"><?php echo $a['profile']; ?></span>
+                            </div>
+                            <span class="pl-lea-alert-issue"><?php echo $a['issue']; ?></span>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+
+                <!-- Questions fréquentes -->
+                <section class="pl-lea-analytics-section">
+                    <h3><span class="material-symbols-outlined">help</span> Questions fr&eacute;quentes</h3>
+                    <ol class="pl-lea-faq-list">
+                        <?php foreach ( $mock_questions as $q ) : ?>
+                        <li><?php echo $q; ?></li>
+                        <?php endforeach; ?>
+                    </ol>
+                </section>
+            </div>
+        </div>
+
+        <!-- Tab 2: Simulation -->
+        <div class="pl-lea-tab-content" id="pl-lea-tab-simulation">
+            <div class="pl-lea-sim-layout">
+                <div class="pl-lea-sim-header">
+                    <div class="pl-lea-sim-header-left">
+                        <div class="pl-lea-chat-avatar">
+                            <span class="material-symbols-outlined">psychology</span>
+                        </div>
+                        <div class="pl-lea-chat-info">
+                            <h3>Simulation &Eacute;tudiant</h3>
+                            <p id="pl-lea-active-profile">Profil : <?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></p>
+                        </div>
+                    </div>
+                    <div class="pl-lea-sim-header-right">
+                        <label for="pl-lea-profile-select" class="pl-lea-sim-label">Profil :</label>
+                        <select class="pl-lea-profile-select" id="pl-lea-profile-select">
+                            <?php foreach ( $profiles as $i => $p ) : ?>
+                            <option value="<?php echo esc_attr( $p['slug'] ); ?>" <?php selected( $i, 0 ); ?>><?php echo esc_html( $p['label'] ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pl-lea-chat-messages" id="pl-lea-messages">
+                    <div class="pl-lea-msg pl-lea-msg--bot">
+                        Bonjour <?php echo $first_name; ?> ! Je suis L&eacute;a en mode simulation. Je r&eacute;agis comme un &eacute;tudiant au profil <strong><?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></strong>. Testez vos explications ou posez-moi une question pour voir comment cet &eacute;tudiant r&eacute;agirait.
+                    </div>
+                </div>
+
+                <div class="pl-lea-chat-input-area">
+                    <div class="pl-lea-chat-input-wrap">
+                        <textarea class="pl-lea-chat-input" id="pl-lea-input" placeholder="Testez une explication ou posez une question..." rows="1"></textarea>
+                        <button class="pl-lea-chat-send" id="pl-lea-send" title="Envoyer">
+                            <span class="material-symbols-outlined">send</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2048,47 +2062,50 @@ class PedagoLens_Landing {
                     $courses_url  = $courses_page ? get_permalink( $courses_page ) : '#';
                 ?>
 
-                    <!-- Mes difficultés -->
-                    <div class="pl-account-section pl-glass-card pl-animate-in">
-                        <h3>&#128203; Mes difficult&eacute;s / troubles</h3>
-                        <p class="pl-text-muted" style="font-size:.8rem;margin-bottom:.75rem;">Ces informations aident vos enseignants &agrave; adapter leur p&eacute;dagogie.</p>
-                        <div id="pl-diff-msg" class="pl-account-msg" style="display:none;"></div>
-                        <form id="pl-difficulties-form">
-                            <input type="hidden" name="_wpnonce" value="<?php echo $diff_nonce; ?>" />
-                            <div class="pl-difficulties-grid">
-                                <?php foreach ( $difficulty_options as $key => $label ) : ?>
-                                    <label class="pl-difficulty-checkbox">
-                                        <input type="checkbox" name="difficulties[]" value="<?php echo esc_attr( $key ); ?>"
-                                            <?php checked( in_array( $key, $checked_keys, true ) ); ?> />
-                                        <span class="pl-checkbox-custom"></span>
-                                        <span><?php echo $label; ?></span>
-                                    </label>
-                                    <?php if ( $key === 'autre' ) : ?>
-                                        <div class="pl-autre-field" style="<?php echo in_array( 'autre', $checked_keys, true ) ? '' : 'display:none;'; ?>">
-                                            <input type="text" name="autre_text" placeholder="Pr&eacute;cisez…"
-                                                   value="<?php echo esc_attr( $other_text ); ?>" />
-                                        </div>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </div>
-                            <button type="submit" class="pl-btn pl-btn-primary pl-btn-sm" style="margin-top:.75rem;">Sauvegarder</button>
-                        </form>
-                    </div>
-
-                    <!-- Liens rapides étudiant -->
-                    <div class="pl-account-section pl-glass-card pl-animate-in">
-                        <h3>&#128279; Liens rapides</h3>
-                        <div class="pl-quick-links">
-                            <a href="<?php echo esc_url( $student_url ); ?>" class="pl-quick-link-card">
-                                <span class="pl-ql-icon">&#129302;</span>
-                                <span>Jumeau num&eacute;rique</span>
-                            </a>
-                            <a href="<?php echo esc_url( $courses_url ); ?>" class="pl-quick-link-card">
-                                <span class="pl-ql-icon">&#128218;</span>
-                                <span>Cours</span>
-                            </a>
+                    <!-- Student right column: 2-column grid for profile + difficulties -->
+                    <div class="pl-account-right-grid">
+                        <!-- Mes difficultés -->
+                        <div class="pl-account-section pl-glass-card pl-animate-in">
+                            <h3>&#128203; Mes difficult&eacute;s / troubles</h3>
+                            <p class="pl-text-muted" style="font-size:.78rem;margin-bottom:.5rem;">Ces informations aident vos enseignants &agrave; adapter leur p&eacute;dagogie.</p>
+                            <div id="pl-diff-msg" class="pl-account-msg" style="display:none;"></div>
+                            <form id="pl-difficulties-form">
+                                <input type="hidden" name="_wpnonce" value="<?php echo $diff_nonce; ?>" />
+                                <div class="pl-difficulties-grid">
+                                    <?php foreach ( $difficulty_options as $key => $label ) : ?>
+                                        <label class="pl-difficulty-checkbox">
+                                            <input type="checkbox" name="difficulties[]" value="<?php echo esc_attr( $key ); ?>"
+                                                <?php checked( in_array( $key, $checked_keys, true ) ); ?> />
+                                            <span class="pl-checkbox-custom"></span>
+                                            <span><?php echo $label; ?></span>
+                                        </label>
+                                        <?php if ( $key === 'autre' ) : ?>
+                                            <div class="pl-autre-field" style="<?php echo in_array( 'autre', $checked_keys, true ) ? '' : 'display:none;'; ?>">
+                                                <input type="text" name="autre_text" placeholder="Pr&eacute;cisez…"
+                                                       value="<?php echo esc_attr( $other_text ); ?>" />
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                                <button type="submit" class="pl-btn pl-btn-primary pl-btn-sm" style="margin-top:.5rem;">Sauvegarder</button>
+                            </form>
                         </div>
-                    </div>
+
+                        <!-- Liens rapides étudiant -->
+                        <div class="pl-account-section pl-glass-card pl-animate-in">
+                            <h3>&#128279; Liens rapides</h3>
+                            <div class="pl-quick-links">
+                                <a href="<?php echo esc_url( $student_url ); ?>" class="pl-quick-link-card">
+                                    <span class="pl-ql-icon">&#129302;</span>
+                                    <span>Jumeau num&eacute;rique</span>
+                                </a>
+                                <a href="<?php echo esc_url( $courses_url ); ?>" class="pl-quick-link-card">
+                                    <span class="pl-ql-icon">&#128218;</span>
+                                    <span>Cours</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div><!-- .pl-account-right-grid -->
 
                 <?php endif; ?>
 

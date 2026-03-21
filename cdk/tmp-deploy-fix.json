@@ -3,11 +3,7 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe Profile Manager ===' && php -l /opt/pedagolens/plugins/pedagolens-core/includes/class-profile-manager.php 2>&1",
-      "echo '=== Syntaxe Admin Profiles ===' && php -l /opt/pedagolens/plugins/pedagolens-core/admin/class-admin-profiles.php 2>&1",
-      "echo '=== Syntaxe Core ===' && php -l /opt/pedagolens/plugins/pedagolens-core/pedagolens-core.php 2>&1",
-      "systemctl restart apache2 && echo 'Apache restarted OK'"
+      "export HOME=/root && cat > /tmp/pl-set-mock.php << 'EOFPHP'\n<?php\nrequire_once('/var/www/html/wp-load.php');\nupdate_option('pl_ai_mode', 'mock');\necho 'pl_ai_mode set to: ' . get_option('pl_ai_mode') . PHP_EOL;\nEOFPHP\nphp /tmp/pl-set-mock.php 2>&1"
     ]
   }
 }
