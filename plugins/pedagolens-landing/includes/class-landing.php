@@ -1023,57 +1023,37 @@ class PedagoLens_Landing {
                             data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
                             data-course-type="<?php echo esc_attr( $course_type ); ?>"
                             data-course-projects="<?php echo esc_attr( wp_json_encode( $projects_json ) ); ?>">
-                            <div class="pl-course-card-top">
-                                <div class="pl-course-card-header">
-                                    <span class="pl-course-type-icon"><?php echo $type_icons[ $course_type ] ?? '📄'; ?></span>
-                                    <div>
-                                        <h3 class="pl-course-card-title"><?php echo esc_html( $course->post_title ); ?></h3>
-                                        <span class="pl-badge pl-type-<?php echo esc_attr( $course_type ); ?>">
-                                            <?php echo esc_html( $type_labels[ $course_type ] ?? $course_type ); ?>
-                                        </span>
-                                    </div>
-                                </div>
+                            <div class="pl-course-card-toolbar">
+                                <button class="pl-course-card-edit-btn"
+                                    data-course-id="<?php echo (int) $course->ID; ?>"
+                                    data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
+                                    data-course-code="<?php echo esc_attr( get_post_meta( $course->ID, '_pl_course_code', true ) ); ?>"
+                                    data-course-session="<?php echo esc_attr( get_post_meta( $course->ID, '_pl_session', true ) ); ?>"
+                                    data-course-desc="<?php echo esc_attr( $course->post_content ); ?>"
+                                    data-course-type="<?php echo esc_attr( $course_type ); ?>"
+                                    title="Modifier ce cours">
+                                    <span class="material-symbols-outlined">edit</span>
+                                </button>
+                                <button class="pl-course-card-delete-btn"
+                                    data-course-id="<?php echo (int) $course->ID; ?>"
+                                    data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
+                                    title="Supprimer ce cours">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                            <div class="pl-course-card-body">
+                                <span class="pl-course-type-icon"><?php echo $type_icons[ $course_type ] ?? '📄'; ?></span>
+                                <h3 class="pl-course-card-title"><?php echo esc_html( $course->post_title ); ?></h3>
+                                <span class="pl-badge pl-type-<?php echo esc_attr( $course_type ); ?>">
+                                    <?php echo esc_html( $type_labels[ $course_type ] ?? $course_type ); ?>
+                                </span>
                                 <div class="pl-course-card-meta">
                                     <span>📁 <?php echo $nb_projects; ?> s&eacute;ance(s)</span>
                                     <?php if ( $last_analysis ) : ?>
-                                        <span>🔍 Dernière analyse : <?php echo esc_html( $last_analysis ); ?></span>
-                                    <?php else : ?>
-                                        <span class="pl-text-muted">Aucune analyse</span>
+                                        <span>🔍 <?php echo esc_html( $last_analysis ); ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="pl-course-card-actions">
-                                    <button class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-accent pl-btn-open-seances"
-                                        data-course-id="<?php echo (int) $course->ID; ?>">
-                                        <span class="material-symbols-outlined" style="font-size:1rem;">folder_open</span>
-                                        Voir les s&eacute;ances
-                                    </button>
-                                    <button class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-glow pl-btn-create-project"
-                                        data-course-id="<?php echo (int) $course->ID; ?>"
-                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>">
-                                        + Cr&eacute;er une s&eacute;ance
-                                    </button>
-                                    <?php if ( ! empty( $analysis_posts ) ) : ?>
-                                    <a href="<?php echo esc_url( self::page_url( 'historique', '' ) . '?course_id=' . $course->ID ); ?>" class="pl-wb-btn pl-wb-btn-sm pl-wb-btn-outline" title="Historique des analyses">
-                                        <span class="material-symbols-outlined" style="font-size:1rem;">history</span> Historique
-                                    </a>
-                                    <?php endif; ?>
-                                    <button class="pl-course-card-edit-btn"
-                                        data-course-id="<?php echo (int) $course->ID; ?>"
-                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
-                                        data-course-code="<?php echo esc_attr( get_post_meta( $course->ID, '_pl_course_code', true ) ); ?>"
-                                        data-course-session="<?php echo esc_attr( get_post_meta( $course->ID, '_pl_session', true ) ); ?>"
-                                        data-course-desc="<?php echo esc_attr( $course->post_content ); ?>"
-                                        data-course-type="<?php echo esc_attr( $course_type ); ?>"
-                                        title="Modifier ce cours">
-                                        <span class="material-symbols-outlined" style="font-size:1.1rem;">edit</span>
-                                    </button>
-                                    <button class="pl-course-card-delete-btn"
-                                        data-course-id="<?php echo (int) $course->ID; ?>"
-                                        data-course-title="<?php echo esc_attr( $course->post_title ); ?>"
-                                        title="Supprimer ce cours">
-                                        <span class="material-symbols-outlined" style="font-size:1.1rem;">delete</span>
-                                    </button>
-                                </div>
+                                <span class="pl-course-card-hint">Cliquer pour voir les s&eacute;ances</span>
                             </div>
                         </div>
                     <?php endforeach; ?>

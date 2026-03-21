@@ -7641,3 +7641,106 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
         padding: 0 1.15rem 1rem;
     }
 }
+
+
+/* ============================================================
+   Course Card v2 — Clean centered layout
+   ============================================================ */
+
+/* Card body — centered vertical layout */
+.pl-course-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 2rem 1.5rem 1.5rem;
+}
+.pl-course-card-body .pl-course-type-icon {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #f0f4ff 0%, #ede7ff 100%);
+    border-radius: 1.25rem;
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+}
+.pl-course-card-body .pl-course-card-title {
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #00236f;
+    margin: 0;
+}
+.pl-course-card-body .pl-course-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* Hint text */
+.pl-course-card-hint {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+    transition: color 0.2s;
+}
+.pl-course-card-clickable:hover .pl-course-card-hint {
+    color: #712ae2;
+}
+
+/* Toolbar — top right, hidden by default, shown on hover */
+.pl-course-card-toolbar {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    gap: 0.35rem;
+    opacity: 0;
+    transition: opacity 0.25s;
+    z-index: 2;
+}
+.pl-course-card-clickable {
+    position: relative;
+}
+.pl-course-card-clickable:hover .pl-course-card-toolbar {
+    opacity: 1;
+}
+.pl-course-card-toolbar .pl-course-card-edit-btn,
+.pl-course-card-toolbar .pl-course-card-delete-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.6rem;
+    border: 1px solid rgba(0,35,111,0.08);
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+}
+.pl-course-card-toolbar .pl-course-card-edit-btn .material-symbols-outlined,
+.pl-course-card-toolbar .pl-course-card-delete-btn .material-symbols-outlined {
+    font-size: 1rem;
+    color: #64748b;
+}
+.pl-course-card-toolbar .pl-course-card-edit-btn:hover {
+    background: #eef2ff;
+    border-color: #712ae2;
+}
+.pl-course-card-toolbar .pl-course-card-edit-btn:hover .material-symbols-outlined {
+    color: #712ae2;
+}
+.pl-course-card-toolbar .pl-course-card-delete-btn:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+.pl-course-card-toolbar .pl-course-card-delete-btn:hover .material-symbols-outlined {
+    color: #ef4444;
+}

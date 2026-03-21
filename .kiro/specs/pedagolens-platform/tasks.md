@@ -449,7 +449,7 @@ La page Atelier doit être spectaculaire — modals au lieu de prompts JS, auto-
 - [x] 35.4 Fix le bug d'ajout de section — le JS append dans `.pl-workbench-main` mais le empty state utilise `.pl-stitch-wb-empty`, corriger les sélecteurs
 - [x] 35.5 Améliorer le CSS du workbench — sections avec glass cards, animations d'entrée, boutons avec hover glow, sidebar suggestions plus premium
 - [x] 35.6 Ajouter les styles CSS pour les nouvelles modals workbench dans workbench-admin.css
-- [ ] 35.7 Tester le flux complet via Chrome MCP — ajouter section via modal, upload fichier, auto-save, suggestions IA
+- [x] 35.7 Tester le flux complet via Chrome MCP — ajouter section via modal, upload fichier, auto-save, suggestions IA
 
 ---
 
@@ -457,10 +457,10 @@ La page Atelier doit être spectaculaire — modals au lieu de prompts JS, auto-
 
 Quand on sélectionne un cours sur la page Analyses IA (cours-projets), une popup WOW s'ouvre avec les séances à l'intérieur.
 
-- [ ] 36.1 Remplacer le lien "Voir les séances" par un clic sur la course card qui ouvre une modal WOW — modal avec titre du cours, grille de séances cliquables, bouton créer séance
-- [ ] 36.2 Ajouter les styles CSS pour la modal cours/séances dans landing.css
-- [ ] 36.3 Ajouter le JS pour ouvrir/fermer la modal et charger les séances via AJAX dans landing-front.js
-- [ ] 36.4 Tester via Chrome MCP — cliquer sur un cours, vérifier la modal, cliquer sur une séance
+- [x] 36.1 Remplacer le lien "Voir les séances" par un clic sur la course card qui ouvre une modal WOW — modal avec titre du cours, grille de séances cliquables, bouton créer séance
+- [x] 36.2 Ajouter les styles CSS pour la modal cours/séances dans landing.css
+- [x] 36.3 Ajouter le JS pour ouvrir/fermer la modal et charger les séances via AJAX dans landing-front.js
+- [x] 36.4 Tester via Chrome MCP — cliquer sur un cours, vérifier la modal, cliquer sur une séance
 
 ---
 
@@ -468,6 +468,6 @@ Quand on sélectionne un cours sur la page Analyses IA (cours-projets), une popu
 
 Quand on arrive sur /workbench/ sans project_id, afficher un beau menu de sélection de cours/séances au lieu du message "Aucun projet sélectionné".
 
-- [ ] 37.1 Remplacer le message vide par un sélecteur de cours WOW dans shortcode_workbench() — grille de cours cards, clic ouvre les séances, clic séance redirige vers le workbench
-- [ ] 37.2 Ajouter les styles CSS pour le sélecteur de cours workbench
-- [ ] 37.3 Tester via Chrome MCP — aller sur /workbench/ sans paramètre, vérifier le sélecteur
+- [x] 37.1 Remplacer le message vide par un sélecteur de cours WOW dans shortcode_workbench() — grille de cours cards, clic ouvre les séances, clic séance redirige vers le workbench
+- [x] 37.2 Ajouter les styles CSS pour le sélecteur de cours workbench
+- [x] 37.3 Tester via Chrome MCP — aller sur /workbench/ sans paramètre, vérifier le sélecteur
