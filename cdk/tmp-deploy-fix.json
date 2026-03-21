@@ -4,6 +4,8 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
+      "echo '=== Syntaxe workbench ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1",
+      "echo '=== Syntaxe bootstrap ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/pedagolens-course-workbench.php 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }

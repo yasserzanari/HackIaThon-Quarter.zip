@@ -2044,15 +2044,15 @@
         var messagesEl = document.getElementById('pl-lea-messages');
         var inputEl    = document.getElementById('pl-lea-input');
         var sendBtn    = document.getElementById('pl-lea-send');
-        var profileCards = document.querySelectorAll('.pl-lea-profile-card');
+        var profileSelect  = document.getElementById('pl-lea-profile-select');
         var activeProfileEl = document.getElementById('pl-lea-active-profile');
-        var toggleBtn  = document.getElementById('pl-lea-toggle-panel');
-        var panel      = document.getElementById('pl-lea-profiles-panel');
+        var toggleBtn  = document.getElementById('pl-lea-toggle-analytics');
+        var analyticsPanel = document.getElementById('pl-lea-analytics');
 
         if (!messagesEl || !inputEl || !sendBtn) return;
 
-        var currentProfile = profileCards.length > 0 ? profileCards[0].getAttribute('data-label') : 'Visuel-Spatial';
-        var currentSlug    = profileCards.length > 0 ? profileCards[0].getAttribute('data-profile') : 'visuel-spatial';
+        var currentProfile = profileSelect ? profileSelect.options[profileSelect.selectedIndex].text : 'Visuel-Spatial';
+        var currentSlug    = profileSelect ? profileSelect.value : 'visuel-spatial';
         var isTyping = false;
 
         // Profile responses based on student type
@@ -2089,29 +2089,24 @@
             }
         };
 
-        // Toggle panel (mobile)
-        if (toggleBtn && panel) {
+        // Toggle analytics panel (mobile)
+        if (toggleBtn && analyticsPanel) {
             toggleBtn.addEventListener('click', function() {
-                panel.classList.toggle('open');
+                analyticsPanel.classList.toggle('open');
             });
         }
 
-        // Profile selection
-        profileCards.forEach(function(card) {
-            card.addEventListener('click', function() {
-                profileCards.forEach(function(c) { c.classList.remove('active'); });
-                card.classList.add('active');
-                currentProfile = card.getAttribute('data-label');
-                currentSlug = card.getAttribute('data-profile');
+        // Profile selection via dropdown
+        if (profileSelect) {
+            profileSelect.addEventListener('change', function() {
+                currentProfile = profileSelect.options[profileSelect.selectedIndex].text;
+                currentSlug = profileSelect.value;
                 if (activeProfileEl) {
                     activeProfileEl.textContent = 'Profil : ' + currentProfile;
                 }
-                // Add system message about profile change
-                addMessage('bot', 'Profil changé ! Je suis maintenant ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].greeting : currentProfile) + '. ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].traits : '') + ' Posez-moi une question !');
-                // Close panel on mobile
-                if (panel) panel.classList.remove('open');
+                addMessage('bot', 'Profil chang\u00e9 ! Je suis maintenant ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].greeting : currentProfile) + '. ' + (profileResponses[currentSlug] ? profileResponses[currentSlug].traits : '') + ' Posez-moi une question !');
             });
-        });
+        }
 
         // Send message
         function sendMessage() {

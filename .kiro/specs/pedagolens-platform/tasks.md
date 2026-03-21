@@ -835,24 +835,24 @@ Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible,
   - Tout doit tenir dans 100vh sans scroll — utiliser des grilles adaptatives
   - Vérifier via Chrome MCP que rien ne scroll en bas
 
-- [ ] 48.2 Vérifier et corriger `shortcode_courses()` — page Cours & Séances
+- [x] 48.2 Vérifier et corriger `shortcode_courses()` — page Cours & Séances
   - Utiliser la full largeur, pas de marges excessives
   - Cards de cours compactes si nécessaire pour tout afficher sans scroll
   - Vérifier via Chrome MCP
 
-- [ ] 48.3 Vérifier et corriger `shortcode_history()` — page Historique
+- [x] 48.3 Vérifier et corriger `shortcode_history()` — page Historique
   - Tableau compact, filtres en ligne, pas de scroll vertical
   - Vérifier via Chrome MCP
 
-- [ ] 48.4 Vérifier et corriger `shortcode_settings()` — page Paramètres
+- [x] 48.4 Vérifier et corriger `shortcode_settings()` — page Paramètres
   - Formulaire compact, sections en colonnes si nécessaire
   - Vérifier via Chrome MCP
 
-- [ ] 48.5 Vérifier et corriger `shortcode_institutional()` — page Lumière institutionnelle
+- [x] 48.5 Vérifier et corriger `shortcode_institutional()` — page Lumière institutionnelle
   - KPI et graphiques en grille, pas de scroll
   - Vérifier via Chrome MCP
 
-- [ ] 48.6 Vérifier et corriger `shortcode_account()` — page Compte
+- [x] 48.6 Vérifier et corriger `shortcode_account()` — page Compte
   - Card profil compacte, pas de scroll
   - Vérifier via Chrome MCP
 
@@ -860,7 +860,7 @@ Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible,
 
 ## 49. Agent IA Léa — Dashboard prof avec analytics
 
-- [ ] 49.1 Créer un layout 2 panneaux pour la page Agent IA Léa (accessible depuis sidebar enseignant)
+- [-] 49.1 Créer un layout 2 panneaux pour la page Agent IA Léa (accessible depuis sidebar enseignant)
   - Panel gauche : Dashboard analytics — topics les moins bien compris, questions fréquentes, déficits détectés par profil
   - Panel droit : Chat avec l'agent IA Léa (interface existante du jumeau numérique)
   - Les données analytics sont basées sur les interactions étudiants avec le LLM (mock en mode mock)
@@ -979,4 +979,4 @@ Objectif : Transformer le canvas central du workbench en un vrai rendu visuel de
   - Auto-save après modification (debounce 2s)
   - Bouton toggle "Vue visuelle / Vue texte" pour basculer entre les deux modes
 
-- [-] 52.7 Version bump `PL_WORKBENCH_VERSION` 3.0.0 → 4.0.0 + commit + push + déploiement SSM
+- [x] 52.7 Version bump `PL_WORKBENCH_VERSION` 3.0.0 → 4.0.0 + commit + push + déploiement SSM

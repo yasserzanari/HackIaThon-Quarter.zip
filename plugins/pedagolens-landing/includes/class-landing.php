@@ -785,7 +785,7 @@ class PedagoLens_Landing {
 
             ob_start();
 
-            // Teacher/Admin → Agent IA Léa interface
+            // Teacher/Admin → Agent IA Léa interface with analytics
             if ( $is_teacher ) {
                 echo self::render_header( 'Agent IA L&eacute;a' );
                 echo '<div class="pl-app-layout">';
@@ -808,57 +808,143 @@ class PedagoLens_Landing {
                 }
                 if ( empty( $profiles ) ) {
                     $profiles = [
-                        [ 'slug' => 'visuel-spatial',    'label' => 'Visuel-Spatial',    'description' => 'Apprend mieux avec des diagrammes, schémas et représentations visuelles.', 'icon' => 'visibility', 'traits' => ['Visuel', 'Spatial', 'Diagrammes'] ],
-                        [ 'slug' => 'auditif-verbal',    'label' => 'Auditif-Verbal',    'description' => 'Retient mieux par l\'écoute, les discussions et les explications orales.', 'icon' => 'hearing', 'traits' => ['Auditif', 'Verbal', 'Discussion'] ],
-                        [ 'slug' => 'kinesthesique',     'label' => 'Kinesthésique',     'description' => 'Apprend par la pratique, les exercices concrets et la manipulation.', 'icon' => 'touch_app', 'traits' => ['Pratique', 'Concret', 'Manipulation'] ],
-                        [ 'slug' => 'tdah',              'label' => 'TDAH',              'description' => 'Besoin de contenu structuré, court et interactif pour maintenir l\'attention.', 'icon' => 'psychology', 'traits' => ['Attention', 'Structure', 'Interactif'] ],
-                        [ 'slug' => 'allophone',         'label' => 'Allophone',         'description' => 'Français langue seconde — besoin de vocabulaire simplifié et de contexte culturel.', 'icon' => 'translate', 'traits' => ['Langue', 'Vocabulaire', 'Contexte'] ],
-                        [ 'slug' => 'anxieux',           'label' => 'Anxieux',           'description' => 'Sensible au stress d\'évaluation, besoin de renforcement positif et de clarté.', 'icon' => 'favorite', 'traits' => ['Stress', 'Renforcement', 'Clarté'] ],
+                        [ 'slug' => 'visuel-spatial',    'label' => 'Visuel-Spatial',    'icon' => 'visibility' ],
+                        [ 'slug' => 'auditif-verbal',    'label' => 'Auditif-Verbal',    'icon' => 'hearing' ],
+                        [ 'slug' => 'kinesthesique',     'label' => 'Kin&eacute;sth&eacute;sique', 'icon' => 'touch_app' ],
+                        [ 'slug' => 'tdah',              'label' => 'TDAH',              'icon' => 'psychology' ],
+                        [ 'slug' => 'allophone',         'label' => 'Allophone',         'icon' => 'translate' ],
+                        [ 'slug' => 'anxieux',           'label' => 'Anxieux',           'icon' => 'favorite' ],
                     ];
                 }
+
+                // Mock analytics data
+                $mock_topics = [
+                    [ 'topic' => 'Accord du participe pass&eacute;', 'score' => 32, 'questions' => 47 ],
+                    [ 'topic' => 'Subjonctif pr&eacute;sent',        'score' => 41, 'questions' => 38 ],
+                    [ 'topic' => 'Pronoms relatifs compos&eacute;s',  'score' => 48, 'questions' => 29 ],
+                    [ 'topic' => 'Concordance des temps',             'score' => 55, 'questions' => 24 ],
+                    [ 'topic' => 'Voix passive',                      'score' => 62, 'questions' => 18 ],
+                ];
+                $mock_questions = [
+                    'Pourquoi le participe pass&eacute; s\'accorde avec le COD plac&eacute; avant ?',
+                    'Quand utiliser le subjonctif vs l\'indicatif ?',
+                    'C\'est quoi la diff&eacute;rence entre &laquo; dont &raquo; et &laquo; duquel &raquo; ?',
+                    'Comment conjuguer au plus-que-parfait du subjonctif ?',
+                    'Pourquoi on dit &laquo; il faut que je sois &raquo; et pas &laquo; je suis &raquo; ?',
+                ];
+                $mock_alerts = [
+                    [ 'name' => '&Eacute;tudiant A.', 'profile' => 'TDAH',     'issue' => '3 sessions sans progression', 'level' => 'high' ],
+                    [ 'name' => '&Eacute;tudiant B.', 'profile' => 'Anxieux',  'issue' => 'Score en baisse (-15%)',      'level' => 'medium' ],
+                    [ 'name' => '&Eacute;tudiant C.', 'profile' => 'Allophone','issue' => 'Difficult&eacute; vocabulaire technique', 'level' => 'medium' ],
+                ];
+                $mock_profile_scores = [
+                    [ 'label' => 'Visuel-Spatial',    'score' => 74, 'color' => '#3b82f6' ],
+                    [ 'label' => 'Auditif-Verbal',    'score' => 68, 'color' => '#8b5cf6' ],
+                    [ 'label' => 'Kin&eacute;sth&eacute;sique', 'score' => 81, 'color' => '#10b981' ],
+                    [ 'label' => 'TDAH',              'score' => 45, 'color' => '#f59e0b' ],
+                    [ 'label' => 'Allophone',         'score' => 52, 'color' => '#ef4444' ],
+                    [ 'label' => 'Anxieux',           'score' => 59, 'color' => '#ec4899' ],
+                ];
+                $total_sessions = 234;
+                $active_students = 42;
                 ?>
-    <div class="pl-lea-page">
-        <!-- Profile Selector Side Panel -->
-        <div class="pl-lea-profiles-panel" id="pl-lea-profiles-panel">
-            <div class="pl-lea-profiles-header">
-                <h3><span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;margin-right:0.25rem;">group</span> Profils &eacute;tudiants</h3>
-                <p>S&eacute;lectionnez un profil pour simuler les r&eacute;ponses de L&eacute;a.</p>
+    <div class="pl-lea-page pl-lea-page--analytics">
+
+        <!-- LEFT: Analytics Dashboard -->
+        <div class="pl-lea-analytics" id="pl-lea-analytics">
+            <div class="pl-lea-analytics-header">
+                <h2><span class="material-symbols-outlined">insights</span> Analytics &Eacute;tudiants</h2>
+                <p>Donn&eacute;es agr&eacute;g&eacute;es des interactions avec L&eacute;a</p>
             </div>
-            <div class="pl-lea-profiles-list">
-                <?php foreach ( $profiles as $i => $profile ) :
-                    $slug  = esc_attr( $profile['slug'] ?? $profile['label'] ?? 'profil-' . $i );
-                    $label = esc_html( $profile['label'] ?? $profile['slug'] ?? 'Profil' );
-                    $desc  = esc_html( $profile['description'] ?? '' );
-                    $icon  = esc_attr( $profile['icon'] ?? 'person' );
-                    $traits = $profile['traits'] ?? [];
-                    $active_cls = $i === 0 ? ' active' : '';
-                ?>
-                <div class="pl-lea-profile-card<?php echo $active_cls; ?>" data-profile="<?php echo $slug; ?>" data-label="<?php echo $label; ?>">
-                    <div class="pl-lea-profile-card-name">
-                        <span class="material-symbols-outlined"><?php echo $icon; ?></span>
-                        <?php echo $label; ?>
-                    </div>
-                    <?php if ( $desc ) : ?>
-                    <div class="pl-lea-profile-card-desc"><?php echo $desc; ?></div>
-                    <?php endif; ?>
-                    <?php if ( ! empty( $traits ) ) : ?>
-                    <div class="pl-lea-profile-card-traits">
-                        <?php foreach ( $traits as $trait ) : ?>
-                        <span class="pl-lea-profile-trait"><?php echo esc_html( $trait ); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
+
+            <!-- KPI row -->
+            <div class="pl-lea-kpi-row">
+                <div class="pl-lea-kpi">
+                    <span class="pl-lea-kpi-val"><?php echo $total_sessions; ?></span>
+                    <span class="pl-lea-kpi-lbl">Sessions</span>
                 </div>
-                <?php endforeach; ?>
+                <div class="pl-lea-kpi">
+                    <span class="pl-lea-kpi-val"><?php echo $active_students; ?></span>
+                    <span class="pl-lea-kpi-lbl">&Eacute;tudiants actifs</span>
+                </div>
+                <div class="pl-lea-kpi">
+                    <span class="pl-lea-kpi-val"><?php echo count( $mock_alerts ); ?></span>
+                    <span class="pl-lea-kpi-lbl">Alertes</span>
+                </div>
             </div>
+
+            <!-- Topics les moins compris -->
+            <section class="pl-lea-analytics-section">
+                <h3><span class="material-symbols-outlined">trending_down</span> Topics les moins compris</h3>
+                <div class="pl-lea-topics-list">
+                    <?php foreach ( $mock_topics as $t ) :
+                        $bar_color = $t['score'] < 40 ? '#ef4444' : ( $t['score'] < 55 ? '#f59e0b' : '#10b981' );
+                    ?>
+                    <div class="pl-lea-topic-row">
+                        <div class="pl-lea-topic-info">
+                            <span class="pl-lea-topic-name"><?php echo $t['topic']; ?></span>
+                            <span class="pl-lea-topic-meta"><?php echo $t['questions']; ?> questions</span>
+                        </div>
+                        <div class="pl-lea-topic-bar-wrap">
+                            <div class="pl-lea-topic-bar" style="width:<?php echo $t['score']; ?>%;background:<?php echo $bar_color; ?>"></div>
+                        </div>
+                        <span class="pl-lea-topic-score"><?php echo $t['score']; ?>%</span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- Scores par profil -->
+            <section class="pl-lea-analytics-section">
+                <h3><span class="material-symbols-outlined">group</span> Compr&eacute;hension par profil</h3>
+                <div class="pl-lea-profile-bars">
+                    <?php foreach ( $mock_profile_scores as $ps ) : ?>
+                    <div class="pl-lea-pbar-row">
+                        <span class="pl-lea-pbar-label"><?php echo $ps['label']; ?></span>
+                        <div class="pl-lea-pbar-track">
+                            <div class="pl-lea-pbar-fill" style="width:<?php echo $ps['score']; ?>%;background:<?php echo $ps['color']; ?>"></div>
+                        </div>
+                        <span class="pl-lea-pbar-val"><?php echo $ps['score']; ?>%</span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- Alertes -->
+            <section class="pl-lea-analytics-section">
+                <h3><span class="material-symbols-outlined">warning</span> &Eacute;tudiants &agrave; surveiller</h3>
+                <div class="pl-lea-alerts-list">
+                    <?php foreach ( $mock_alerts as $a ) :
+                        $lvl_cls = $a['level'] === 'high' ? 'pl-lea-alert--high' : 'pl-lea-alert--medium';
+                    ?>
+                    <div class="pl-lea-alert-card <?php echo $lvl_cls; ?>">
+                        <div class="pl-lea-alert-top">
+                            <strong><?php echo $a['name']; ?></strong>
+                            <span class="pl-lea-alert-badge"><?php echo $a['profile']; ?></span>
+                        </div>
+                        <span class="pl-lea-alert-issue"><?php echo $a['issue']; ?></span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+
+            <!-- Questions fréquentes -->
+            <section class="pl-lea-analytics-section">
+                <h3><span class="material-symbols-outlined">help</span> Questions fr&eacute;quentes</h3>
+                <ol class="pl-lea-faq-list">
+                    <?php foreach ( $mock_questions as $q ) : ?>
+                    <li><?php echo $q; ?></li>
+                    <?php endforeach; ?>
+                </ol>
+            </section>
         </div>
 
-        <!-- Chat Area -->
+        <!-- RIGHT: Chat with Léa -->
         <div class="pl-lea-chat-area">
             <div class="pl-lea-chat-header">
                 <div class="pl-lea-chat-header-left">
-                    <button class="pl-lea-toggle-panel" id="pl-lea-toggle-panel" title="Profils">
-                        <span class="material-symbols-outlined">menu</span>
+                    <button class="pl-lea-toggle-analytics" id="pl-lea-toggle-analytics" title="Analytics">
+                        <span class="material-symbols-outlined">insights</span>
                     </button>
                     <div class="pl-lea-chat-avatar">
                         <span class="material-symbols-outlined">psychology</span>
@@ -868,11 +954,18 @@ class PedagoLens_Landing {
                         <p id="pl-lea-active-profile">Profil : <?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></p>
                     </div>
                 </div>
+                <div class="pl-lea-chat-header-right">
+                    <select class="pl-lea-profile-select" id="pl-lea-profile-select">
+                        <?php foreach ( $profiles as $i => $p ) : ?>
+                        <option value="<?php echo esc_attr( $p['slug'] ); ?>" <?php selected( $i, 0 ); ?>><?php echo esc_html( $p['label'] ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
 
             <div class="pl-lea-chat-messages" id="pl-lea-messages">
                 <div class="pl-lea-msg pl-lea-msg--bot">
-                    Bonjour <?php echo $first_name; ?> ! Je suis L&eacute;a, votre jumeau num&eacute;rique &eacute;tudiant. Je simule les r&eacute;actions d'un &eacute;tudiant au profil <strong><?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></strong>. Posez-moi une question sur votre cours ou testez une explication — je r&eacute;pondrai comme le ferait un &eacute;tudiant de ce profil.
+                    Bonjour <?php echo $first_name; ?> ! Je suis L&eacute;a, votre jumeau num&eacute;rique &eacute;tudiant. Je simule les r&eacute;actions d'un &eacute;tudiant au profil <strong><?php echo esc_html( $profiles[0]['label'] ?? 'Visuel-Spatial' ); ?></strong>. Posez-moi une question sur votre cours ou testez une explication.
                 </div>
             </div>
 
