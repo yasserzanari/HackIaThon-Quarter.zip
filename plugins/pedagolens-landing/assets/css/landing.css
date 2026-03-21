@@ -5378,7 +5378,7 @@ body.admin-bar .pl-app-main     { padding-top: calc(4.5rem + 32px); }
 .pl-logo-img--sidebar { height: 40px; width: auto; }
 .pl-logo-img--header { height: 36px; width: auto; }
 .pl-logo-img--landing { height: 36px; width: auto; }
-.pl-logo-img--landing-nav { height: 44px; width: auto; object-fit: contain; display: block; }
+.pl-logo-img--landing-nav { height: 52px; width: auto; object-fit: contain; display: block; }
 .pl-logo-img--footer { height: 32px; width: auto; filter: brightness(0) invert(1); }
 .pl-logo-img--login { height: 48px; width: auto; display: block; margin: 0 auto 1rem; }
 
