@@ -6758,3 +6758,196 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
   .pl-lea-chat-area { min-height: 60vh; }
   .pl-lea-msg { max-width: 90%; }
 }
+
+/* ============================================================
+   WORKBENCH ATELIER — Override pour fond clair dans pl-app-main
+   ============================================================ */
+.pl-app-main .pl-stitch-workbench {
+    --stitch-bg: #f8fafc;
+    --stitch-surface: rgba(0, 35, 111, 0.03);
+    --stitch-surface-hover: rgba(0, 35, 111, 0.06);
+    --stitch-border: rgba(0, 35, 111, 0.1);
+    --stitch-border-light: rgba(0, 35, 111, 0.15);
+    --stitch-text: #00236f;
+    --stitch-text-muted: #475569;
+    --stitch-text-dim: #94a3b8;
+    --stitch-violet: #712ae2;
+    --stitch-violet-glow: rgba(113, 42, 226, 0.1);
+    --stitch-blue: #00236f;
+    --stitch-blue-glow: rgba(0, 35, 111, 0.1);
+    color: #00236f;
+}
+.pl-app-main .pl-stitch-wb-title {
+    color: #00236f !important;
+}
+.pl-app-main .pl-stitch-wb-back {
+    color: #712ae2;
+}
+.pl-app-main .pl-stitch-wb-back:hover {
+    color: #712ae2;
+    opacity: 0.7;
+}
+.pl-app-main .pl-stitch-wb-ai-badge {
+    color: #475569;
+}
+.pl-app-main .pl-stitch-wb-type-badge {
+    background: rgba(113, 42, 226, 0.08);
+    color: #712ae2;
+    border-color: rgba(113, 42, 226, 0.2);
+}
+.pl-app-main .pl-stitch-type-magistral {
+    background: rgba(0, 35, 111, 0.06);
+    color: #00236f;
+    border-color: rgba(0, 35, 111, 0.15);
+}
+.pl-app-main .pl-stitch-wb-header {
+    border-bottom-color: rgba(0, 35, 111, 0.1);
+}
+/* Buttons */
+.pl-app-main .pl-stitch-btn-primary {
+    background: linear-gradient(135deg, #712ae2, #00236f);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(113, 42, 226, 0.2);
+}
+.pl-app-main .pl-stitch-btn-primary:hover {
+    box-shadow: 0 8px 28px rgba(113, 42, 226, 0.3);
+}
+.pl-app-main .pl-stitch-btn-outline {
+    color: #475569;
+    border-color: rgba(0, 35, 111, 0.15);
+    background: transparent;
+}
+.pl-app-main .pl-stitch-btn-outline:hover {
+    border-color: #712ae2;
+    color: #712ae2;
+}
+.pl-app-main .pl-stitch-btn-accent {
+    background: rgba(113, 42, 226, 0.08);
+    color: #712ae2;
+    border-color: rgba(113, 42, 226, 0.2);
+}
+.pl-app-main .pl-stitch-btn-accent:hover {
+    background: rgba(113, 42, 226, 0.15);
+    border-color: #712ae2;
+}
+.pl-app-main .pl-stitch-btn-glow {
+    background: linear-gradient(135deg, #712ae2, #00236f);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(113, 42, 226, 0.15);
+}
+.pl-app-main .pl-stitch-btn-glow:hover {
+    box-shadow: 0 0 32px rgba(113, 42, 226, 0.3);
+}
+/* Empty state */
+.pl-app-main .pl-stitch-wb-empty {
+    background: rgba(0, 35, 111, 0.02);
+    border: 2px dashed rgba(0, 35, 111, 0.12);
+    color: #475569;
+}
+.pl-app-main .pl-stitch-wb-empty svg {
+    stroke: #94a3b8;
+}
+/* Upload zone */
+.pl-app-main .pl-stitch-upload-zone .pl-stitch-upload-dropzone,
+.pl-app-main #pl-upload-zone .pl-stitch-upload-dropzone,
+.pl-app-main #pl-dropzone {
+    border-color: rgba(113, 42, 226, 0.2);
+    background: rgba(113, 42, 226, 0.02);
+}
+.pl-app-main .pl-stitch-upload-text {
+    color: #475569;
+}
+.pl-app-main .pl-stitch-upload-browse {
+    color: #712ae2;
+}
+.pl-app-main .pl-stitch-upload-hint {
+    color: #94a3b8;
+}
+/* Sections */
+.pl-app-main .pl-stitch-wb-section {
+    background: #fff;
+    border: 1px solid rgba(0, 35, 111, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 35, 111, 0.04);
+}
+.pl-app-main .pl-stitch-wb-section-header {
+    background: rgba(0, 35, 111, 0.02);
+    border-bottom-color: rgba(0, 35, 111, 0.06);
+}
+.pl-app-main .pl-stitch-wb-section-title {
+    color: #00236f;
+}
+.pl-app-main .pl-stitch-wb-section-num {
+    background: rgba(113, 42, 226, 0.08);
+    color: #712ae2;
+}
+.pl-app-main .pl-stitch-wb-textarea {
+    background: #f8fafc;
+    border-color: rgba(0, 35, 111, 0.1);
+    color: #1e293b;
+}
+.pl-app-main .pl-stitch-wb-textarea:focus {
+    border-color: rgba(113, 42, 226, 0.4);
+    box-shadow: 0 0 0 3px rgba(113, 42, 226, 0.08);
+}
+/* Sidebar cards */
+.pl-app-main .pl-stitch-wb-card {
+    background: #fff;
+    border: 1px solid rgba(0, 35, 111, 0.08);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 35, 111, 0.04);
+}
+.pl-app-main .pl-stitch-wb-card-header h3 {
+    color: #00236f;
+}
+.pl-app-main .pl-stitch-wb-ai-active-badge {
+    background: rgba(113, 42, 226, 0.08);
+    color: #712ae2;
+}
+.pl-app-main .pl-stitch-wb-sidebar-empty {
+    color: #94a3b8;
+}
+/* Score bars */
+.pl-app-main .pl-stitch-score-label {
+    color: #475569;
+}
+.pl-app-main .pl-stitch-score-bar-wrap {
+    background: rgba(0, 35, 111, 0.06);
+}
+.pl-app-main .pl-stitch-score-high { background: linear-gradient(90deg, #059669, #10b981); }
+.pl-app-main .pl-stitch-score-mid { background: linear-gradient(90deg, #00236f, #3b82f6); }
+.pl-app-main .pl-stitch-score-warn { background: linear-gradient(90deg, #d97706, #f59e0b); }
+.pl-app-main .pl-stitch-score-low { background: linear-gradient(90deg, #dc2626, #ef4444); }
+.pl-app-main .pl-stitch-score-value {
+    color: #712ae2;
+}
+.pl-app-main .pl-stitch-delta-pos { color: #059669; }
+.pl-app-main .pl-stitch-delta-neg { color: #dc2626; }
+/* File rows */
+.pl-app-main .pl-file-row {
+    background: rgba(0, 35, 111, 0.02);
+    color: #475569;
+}
+/* Workbench layout */
+.pl-app-main .pl-stitch-wb-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 28px;
+    align-items: start;
+}
+.pl-app-main .pl-stitch-wb-sidebar {
+    position: sticky;
+    top: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+@media (max-width: 1100px) {
+    .pl-app-main .pl-stitch-wb-layout {
+        grid-template-columns: 1fr;
+    }
+    .pl-app-main .pl-stitch-wb-sidebar {
+        position: static;
+    }
+}
