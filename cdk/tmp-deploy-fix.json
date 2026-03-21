@@ -5,7 +5,6 @@
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
       "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
-      "echo '=== Syntaxe JS ===' && node -c /opt/pedagolens/plugins/pedagolens-landing/assets/js/landing-front.js 2>&1 || echo 'JS check skipped'",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }

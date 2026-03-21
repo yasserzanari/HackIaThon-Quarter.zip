@@ -1,0 +1,101 @@
+{
+  "slug": "faible_autonomie",
+  "name": "Faible autonomie",
+  "description": "Profil représentant un étudiant postsecondaire ayant des difficultés d'autorégulation et un besoin marqué de guidage structuré dans ses apprentissages. Selon le modèle de Zimmerman (2002), l'apprentissage autorégulé implique trois phases cycliques — anticipation, exécution et autoréflexion — que cet étudiant peine à mettre en œuvre de façon autonome. Le concept de zone proximale de développement de Vygotsky (1978) et la stratégie d'étayage (scaffolding) sont au cœur des interventions recommandées : fournir un soutien structuré qui est graduellement retiré à mesure que l'étudiant développe son autonomie.",
+  "scientific_basis": {
+    "theories": [
+      "Zone proximale de développement et étayage (Vygotsky, 1978)",
+      "Modèle cyclique de l'apprentissage autorégulé (Zimmerman, 2002)",
+      "Théorie de l'autodétermination — continuum d'autonomie (Deci & Ryan, 2000)",
+      "Étayage pédagogique (scaffolding) (Wood, Bruner & Ross, 1976)",
+      "Modèle COPES de l'autorégulation (Winne & Hadwin, 1998)"
+    ],
+    "key_researchers": [
+      "Vygotsky, L.S. (1978) — Zone proximale de développement",
+      "Zimmerman, B.J. (2002) — Apprentissage autorégulé",
+      "Deci, E.L. & Ryan, R.M. (2000) — Théorie de l'autodétermination",
+      "Wood, D., Bruner, J.S. & Ross, G. (1976) — Concept d'étayage",
+      "Winne, P.H. & Hadwin, A.F. (1998) — Modèle COPES d'autorégulation"
+    ],
+    "prevalence": "Les recherches indiquent que 30 à 40 % des étudiants de première année au postsecondaire présentent des lacunes significatives en autorégulation. Au Québec, la transition du secondaire au cégep est particulièrement critique, les étudiants passant d'un encadrement scolaire structuré à un environnement exigeant davantage d'autonomie."
+  },
+  "cognitive_characteristics": {
+    "attention_span": "moyen",
+    "working_memory": "moyen",
+    "processing_speed": "moyen",
+    "executive_function": "faible",
+    "metacognition": "faible"
+  },
+  "learning_challenges": [
+    "Difficulté à planifier et organiser son travail sans directives explicites",
+    "Incapacité à décomposer une tâche complexe en sous-étapes gérables",
+    "Tendance à attendre des instructions détaillées avant de commencer une tâche",
+    "Faible capacité d'autoévaluation et de monitoring de sa propre compréhension",
+    "Difficulté à identifier et utiliser les ressources disponibles de façon autonome",
+    "Procrastination liée à l'incertitude sur la marche à suivre",
+    "Dépendance excessive envers l'enseignant pour la validation de chaque étape",
+    "Difficulté à transférer les stratégies apprises d'un contexte à un autre"
+  ],
+  "pedagogical_recommendations": {
+    "content_structure": [
+      "Fournir des plans de travail détaillés avec des étapes numérotées et des échéanciers",
+      "Inclure des listes de vérification (checklists) pour chaque tâche ou projet",
+      "Proposer des gabarits et des modèles pour les travaux (templates structurés)",
+      "Décomposer les objectifs d'apprentissage en sous-objectifs mesurables et progressifs",
+      "Intégrer des jalons intermédiaires obligatoires avec rétroaction avant la remise finale"
+    ],
+    "visual_design": [
+      "Utiliser des diagrammes de flux et des cartes de progression visuelle",
+      "Afficher clairement les étapes à suivre avec des indicateurs de progression",
+      "Employer des codes couleur pour distinguer les actions requises des informations de référence",
+      "Proposer des tableaux de bord visuels montrant l'avancement dans le cours",
+      "Intégrer des rappels visuels des échéances et des livrables"
+    ],
+    "assessment": [
+      "Fragmenter les évaluations en étapes avec remises intermédiaires obligatoires",
+      "Fournir des grilles d'évaluation détaillées avec des critères explicites et des exemples",
+      "Offrir de la rétroaction formative fréquente et spécifique à chaque étape",
+      "Proposer des autoévaluations guidées avec des questions de réflexion structurées",
+      "Permettre la révision et la resoumission après rétroaction pour les travaux formatifs"
+    ],
+    "interaction": [
+      "Mettre en place un système de mentorat ou de tutorat par les pairs",
+      "Proposer des séances de travail dirigé avec accompagnement structuré",
+      "Intégrer des activités de planification collaborative en début de projet",
+      "Offrir des consultations individuelles à des moments clés du parcours",
+      "Utiliser des forums de questions structurés avec des catégories prédéfinies"
+    ]
+  },
+  "risk_indicators": [
+    "Consignes vagues du type « faites une recherche sur le sujet » sans balises",
+    "Projets à long terme sans jalons intermédiaires ni points de contrôle",
+    "Absence de gabarits ou de modèles pour les travaux demandés",
+    "Évaluations sommatives sans rétroaction formative préalable",
+    "Contenu qui suppose une capacité d'organisation autonome sans la soutenir",
+    "Manque de critères d'évaluation explicites et d'exemples de travaux réussis"
+  ],
+  "ai_analysis_criteria": {
+    "slide_max_words": 45,
+    "ideal_segment_duration_minutes": 15,
+    "visual_ratio_minimum": 0.30,
+    "interaction_frequency_per_hour": 5,
+    "readability_level": "moyen"
+  },
+  "system_prompt_template": "Tu analyses ce contenu pédagogique du point de vue d'un étudiant postsecondaire québécois ayant une faible autonomie dans ses apprentissages et un besoin de guidage structuré. Évalue la présence et la qualité des éléments d'étayage (scaffolding) : consignes détaillées et numérotées, plans de travail explicites, jalons intermédiaires, gabarits, grilles d'évaluation, et mécanismes de rétroaction. Identifie les zones où l'étudiant risque de se sentir perdu ou paralysé par le manque de structure. Propose des améliorations concrètes inspirées du modèle d'apprentissage autorégulé de Zimmerman et du concept d'étayage de Vygotsky, adaptées au contexte des cégeps et universités du Québec.",
+  "scoring_weights": {
+    "structure_clarity": 0.30,
+    "visual_engagement": 0.10,
+    "content_density": 0.15,
+    "interaction_opportunities": 0.15,
+    "language_accessibility": 0.10,
+    "assessment_adaptability": 0.20
+  },
+  "references": [
+    "Vygotsky, L.S. (1978). Mind in Society: The Development of Higher Psychological Processes. Harvard University Press.",
+    "Zimmerman, B.J. (2002). Becoming a self-regulated learner: An overview. Theory Into Practice, 41(2), 64-70.",
+    "Deci, E.L. & Ryan, R.M. (2000). The 'what' and 'why' of goal pursuits: Human needs and the self-determination of behavior. Psychological Inquiry, 11(4), 227-268.",
+    "Wood, D., Bruner, J.S. & Ross, G. (1976). The role of tutoring in problem solving. Journal of Child Psychology and Psychiatry, 17(2), 89-100.",
+    "Winne, P.H. & Hadwin, A.F. (1998). Studying as self-regulated learning. Dans D.J. Hacker et al. (dir.), Metacognition in Educational Theory and Practice. Erlbaum.",
+    "Pintrich, P.R. (2000). The role of goal orientation in self-regulated learning. Dans M. Boekaerts et al. (dir.), Handbook of Self-Regulation. Academic Press."
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "slug": "usage_passif_ia",
+  "name": "Usage passif IA",
+  "description": "Profil à risque représentant un étudiant postsecondaire qui utilise les outils d'intelligence artificielle générative (ChatGPT, Copilot, etc.) de manière passive, c'est-à-dire pour obtenir des réponses toutes faites sans s'engager dans le processus de compréhension et d'apprentissage. Les recherches récentes (2024-2025) montrent que cette dépendance à l'IA réduit la pensée critique, diminue la rétention à long terme et érode l'intégrité académique. Ce profil vise à détecter les contenus pédagogiques vulnérables à un usage passif de l'IA et à proposer des stratégies pour encourager un engagement cognitif authentique.",
+  "scientific_basis": {
+    "theories": [
+      "Théorie de la charge cognitive et effort désirable (Bjork & Bjork, 2011)",
+      "Théorie de la pratique de récupération (retrieval practice) (Roediger & Karpicke, 2006)",
+      "Modèle de la dépendance à l'IA et auto-efficacité académique (Educationaltechnologyjournal, 2024)",
+      "Cadre de l'intégrité académique à l'ère de l'IA générative (UNESCO, 2023)",
+      "Théorie de l'apprentissage génératif (Fiorella & Mayer, 2015)"
+    ],
+    "key_researchers": [
+      "Bjork, R.A. & Bjork, E.L. (2011) — Difficultés désirables et apprentissage durable",
+      "Roediger, H.L. & Karpicke, J.D. (2006) — Effet de testing et récupération active",
+      "Fiorella, L. & Mayer, R.E. (2015) — Stratégies d'apprentissage génératif",
+      "UNESCO (2023) — Cadre éthique pour l'IA en éducation",
+      "Lodge, J.M. et al. (2023) — Impact de l'IA générative sur l'apprentissage"
+    ],
+    "prevalence": "Selon les enquêtes récentes, plus de 85 % des étudiants postsecondaires utilisent des outils d'IA générative. Une étude de 2025 rapporte que la proportion d'étudiants n'utilisant pas l'IA est passée de 47 % en 2024 à seulement 12 % en 2025. Au Québec, les cégeps et universités sont en pleine élaboration de politiques encadrant l'usage de l'IA, avec des approches variant de l'interdiction à l'intégration encadrée."
+  },
+  "cognitive_characteristics": {
+    "attention_span": "court",
+    "working_memory": "moyen",
+    "processing_speed": "rapide",
+    "executive_function": "moyen",
+    "metacognition": "faible"
+  },
+  "learning_challenges": [
+    "Contournement de l'effort cognitif nécessaire à l'apprentissage profond",
+    "Érosion progressive de la pensée critique et de la capacité d'analyse autonome",
+    "Rétention à long terme compromise par l'absence de pratique de récupération active",
+    "Difficulté croissante à rédiger, synthétiser ou argumenter sans assistance IA",
+    "Fausse impression de maîtrise basée sur la qualité des réponses générées par l'IA",
+    "Incapacité à détecter les erreurs ou hallucinations dans les réponses de l'IA",
+    "Perte de motivation intrinsèque et de sentiment de compétence personnelle",
+    "Risque d'intégrité académique : soumission de travaux générés par l'IA comme travail personnel"
+  ],
+  "pedagogical_recommendations": {
+    "content_structure": [
+      "Concevoir des activités qui exigent un raisonnement personnel vérifiable et non substituable par l'IA",
+      "Intégrer des étapes de réflexion métacognitive obligatoires (journaux d'apprentissage, autoévaluations)",
+      "Proposer des tâches contextualisées et personnalisées difficiles à déléguer à l'IA",
+      "Inclure des activités de pratique de récupération (retrieval practice) régulières",
+      "Structurer les travaux en étapes visibles avec des traces du processus de réflexion"
+    ],
+    "visual_design": [
+      "Intégrer des schémas à compléter plutôt que des schémas préfabriqués",
+      "Proposer des exercices de cartographie conceptuelle à construire manuellement",
+      "Utiliser des études de cas visuelles nécessitant une analyse contextuelle",
+      "Inclure des données brutes à interpréter plutôt que des synthèses toutes faites",
+      "Proposer des activités de comparaison critique entre une réponse IA et une réponse experte"
+    ],
+    "assessment": [
+      "Privilégier les évaluations en classe ou synchrones qui limitent l'accès à l'IA",
+      "Intégrer des évaluations orales ou des soutenances pour vérifier la compréhension réelle",
+      "Demander la justification du raisonnement et des sources, pas seulement la réponse finale",
+      "Proposer des évaluations processuelles qui valorisent les brouillons et les itérations",
+      "Utiliser des questions nécessitant l'application à des contextes locaux ou personnels"
+    ],
+    "interaction": [
+      "Organiser des débats et discussions en classe qui exigent une argumentation spontanée",
+      "Proposer des activités collaboratives où chaque contribution individuelle est identifiable",
+      "Intégrer des séances de rétroaction par les pairs avec justification critique",
+      "Enseigner explicitement l'usage éthique et critique de l'IA comme outil d'apprentissage",
+      "Créer des activités où l'étudiant doit évaluer et corriger des réponses générées par l'IA"
+    ]
+  },
+  "risk_indicators": [
+    "Évaluations basées uniquement sur des productions écrites à la maison sans vérification orale",
+    "Questions factuelles ou de synthèse facilement délégables à un chatbot IA",
+    "Absence d'exigence de justification du raisonnement ou de citation des sources",
+    "Travaux sans étapes intermédiaires visibles ni traces du processus de réflexion",
+    "Consignes génériques non contextualisées au vécu de l'étudiant ou au contexte local",
+    "Absence de politique claire sur l'usage de l'IA dans le cours"
+  ],
+  "ai_analysis_criteria": {
+    "slide_max_words": 50,
+    "ideal_segment_duration_minutes": 15,
+    "visual_ratio_minimum": 0.25,
+    "interaction_frequency_per_hour": 6,
+    "readability_level": "moyen"
+  },
+  "system_prompt_template": "Tu analyses ce contenu pédagogique sous l'angle du risque d'usage passif de l'intelligence artificielle par un étudiant postsecondaire québécois. Évalue la vulnérabilité du contenu et des évaluations à la délégation passive à l'IA en vérifiant : la nature des tâches demandées (substituables par l'IA ou non), la présence d'exigences de raisonnement personnel vérifiable, les mécanismes de traçabilité du processus d'apprentissage, et les stratégies d'évaluation authentique. Identifie les activités et évaluations qui pourraient être facilement contournées par un usage passif de l'IA générative. Propose des modifications concrètes pour encourager l'engagement cognitif authentique tout en permettant un usage éthique et critique de l'IA, dans le contexte des cégeps et universités du Québec.",
+  "scoring_weights": {
+    "structure_clarity": 0.10,
+    "visual_engagement": 0.10,
+    "content_density": 0.15,
+    "interaction_opportunities": 0.25,
+    "language_accessibility": 0.10,
+    "assessment_adaptability": 0.30
+  },
+  "references": [
+    "Bjork, R.A. & Bjork, E.L. (2011). Making things hard on yourself, but in a good way: Creating desirable difficulties to enhance learning. Dans M.A. Gernsbacher et al. (dir.), Psychology and the Real World. Worth Publishers.",
+    "Roediger, H.L. & Karpicke, J.D. (2006). Test-enhanced learning: Taking memory tests improves long-term retention. Psychological Science, 17(3), 249-255.",
+    "Fiorella, L. & Mayer, R.E. (2015). Learning as a Generative Activity: Eight Learning Strategies that Promote Understanding. Cambridge University Press.",
+    "UNESCO (2023). Guidance for Generative AI in Education and Research. UNESCO Publishing.",
+    "Educationaltechnologyjournal (2024). Do you have AI dependency? The roles of academic self-efficacy, academic stress, and performance expectations on problematic AI usage behavior. International Journal of Educational Technology in Higher Education, 21.",
+    "Lodge, J.M., Thompson, K. & Corrin, L. (2023). The concerning implications of generative AI for higher education. ASCILITE Conference Proceedings."
+  ]
+}

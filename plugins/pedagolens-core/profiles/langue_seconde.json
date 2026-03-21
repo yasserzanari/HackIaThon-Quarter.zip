@@ -1,0 +1,101 @@
+{
+  "slug": "langue_seconde",
+  "name": "Langue seconde",
+  "description": "Profil représentant un étudiant allophone ou en contexte de langue seconde au postsecondaire québécois. Cet étudiant doit simultanément acquérir le contenu disciplinaire et développer sa compétence linguistique dans la langue d'enseignement (français ou anglais). Selon l'hypothèse de l'input compréhensible de Krashen (1985), l'acquisition linguistique optimale se produit lorsque l'apprenant est exposé à un input légèrement au-dessus de son niveau actuel (i+1). La double tâche cognitive — comprendre la langue ET le contenu — crée une charge supplémentaire qui nécessite des adaptations pédagogiques spécifiques.",
+  "scientific_basis": {
+    "theories": [
+      "Hypothèse de l'input compréhensible (Krashen, 1985)",
+      "Théorie de l'interdépendance linguistique (Cummins, 1979)",
+      "Distinction BICS/CALP — compétence communicative vs académique (Cummins, 2000)",
+      "Hypothèse du filtre affectif (Krashen, 1982)",
+      "Approche intégrée langue-contenu (CLIL/EMILE)"
+    ],
+    "key_researchers": [
+      "Krashen, S.D. (1985) — Hypothèse de l'input compréhensible et filtre affectif",
+      "Cummins, J. (1979, 2000) — Interdépendance linguistique et distinction BICS/CALP",
+      "Swain, M. (1985) — Hypothèse de l'output compréhensible",
+      "Coyle, D., Hood, P. & Marsh, D. (2010) — Enseignement intégré langue-contenu",
+      "Armand, F. (2005) — Intégration linguistique des allophones au Québec"
+    ],
+    "prevalence": "Au Québec, environ 25 % des étudiants des cégeps de la région métropolitaine de Montréal sont allophones. Avec la Loi 96 (Loi 14), les étudiants des cégeps anglophones doivent désormais suivre des cours supplémentaires en français, augmentant le nombre d'étudiants en situation de langue seconde dans le réseau collégial."
+  },
+  "cognitive_characteristics": {
+    "attention_span": "moyen",
+    "working_memory": "moyen",
+    "processing_speed": "lent",
+    "executive_function": "moyen",
+    "metacognition": "moyen"
+  },
+  "learning_challenges": [
+    "Double charge cognitive : traiter simultanément le contenu disciplinaire et la langue d'enseignement",
+    "Vocabulaire spécialisé et jargon disciplinaire difficile à décoder sans contexte",
+    "Difficulté à comprendre les consignes implicites ou les expressions idiomatiques québécoises",
+    "Temps de lecture et de traitement significativement plus long que pour les locuteurs natifs",
+    "Barrière du filtre affectif : anxiété liée à la peur de ne pas comprendre ou de mal s'exprimer",
+    "Difficulté à participer aux discussions de groupe et aux travaux collaboratifs",
+    "Écart entre la compétence communicative quotidienne (BICS) et la compétence académique (CALP)",
+    "Références culturelles implicites dans le matériel pédagogique qui peuvent être opaques"
+  ],
+  "pedagogical_recommendations": {
+    "content_structure": [
+      "Fournir un glossaire des termes spécialisés en début de chaque module",
+      "Utiliser des phrases courtes et une syntaxe simple sans sacrifier la rigueur du contenu",
+      "Offrir des résumés en langage simplifié en complément du contenu principal",
+      "Présenter le vocabulaire clé avant d'aborder le contenu (pré-enseignement lexical)",
+      "Structurer le contenu avec des repères visuels et des organisateurs graphiques multilingues"
+    ],
+    "visual_design": [
+      "Accompagner le texte d'images, schémas et vidéos pour soutenir la compréhension",
+      "Utiliser des icônes et symboles universels pour les consignes récurrentes",
+      "Mettre en évidence les mots-clés et les définitions dans le texte",
+      "Proposer des sous-titres pour tout contenu audio ou vidéo",
+      "Utiliser des codes couleur cohérents pour distinguer les types d'information"
+    ],
+    "assessment": [
+      "Distinguer l'évaluation de la compétence linguistique de celle du contenu disciplinaire",
+      "Accorder du temps supplémentaire pour les évaluations écrites",
+      "Permettre l'utilisation de dictionnaires ou d'outils de traduction pour les examens de contenu",
+      "Proposer des formats d'évaluation variés qui ne dépendent pas uniquement de l'écrit",
+      "Fournir des exemples de réponses attendues pour clarifier les attentes"
+    ],
+    "interaction": [
+      "Encourager le travail en dyades mixtes (locuteur natif + allophone) pour les activités collaboratives",
+      "Offrir des forums de discussion écrits en complément des discussions orales",
+      "Proposer des activités de reformulation et de paraphrase pour vérifier la compréhension",
+      "Créer un environnement bienveillant qui réduit le filtre affectif",
+      "Intégrer des activités d'écriture collaborative avec rétroaction par les pairs"
+    ]
+  },
+  "risk_indicators": [
+    "Texte dense sans glossaire ni définitions des termes spécialisés",
+    "Consignes longues utilisant des expressions idiomatiques ou du jargon informel",
+    "Contenu audio ou vidéo sans sous-titres ni transcription",
+    "Évaluations qui confondent compétence linguistique et maîtrise du contenu",
+    "Absence de support visuel pour les concepts abstraits",
+    "Références culturelles implicites non explicitées"
+  ],
+  "ai_analysis_criteria": {
+    "slide_max_words": 35,
+    "ideal_segment_duration_minutes": 15,
+    "visual_ratio_minimum": 0.45,
+    "interaction_frequency_per_hour": 5,
+    "readability_level": "simple"
+  },
+  "system_prompt_template": "Tu analyses ce contenu pédagogique du point de vue d'un étudiant allophone ou en contexte de langue seconde au postsecondaire québécois. Évalue l'accessibilité linguistique du contenu en vérifiant : la complexité du vocabulaire et de la syntaxe, la présence de glossaires et de définitions pour les termes spécialisés, la disponibilité de supports visuels et multimédias, la clarté des consignes, et l'absence d'expressions idiomatiques non expliquées. Identifie les barrières linguistiques potentielles et propose des adaptations concrètes qui respectent la rigueur académique tout en rendant le contenu accessible. Tiens compte du contexte québécois, incluant les particularités du français québécois et les exigences de la Loi sur la langue officielle et commune du Québec.",
+  "scoring_weights": {
+    "structure_clarity": 0.15,
+    "visual_engagement": 0.15,
+    "content_density": 0.15,
+    "interaction_opportunities": 0.15,
+    "language_accessibility": 0.30,
+    "assessment_adaptability": 0.10
+  },
+  "references": [
+    "Krashen, S.D. (1985). The Input Hypothesis: Issues and Implications. Longman.",
+    "Cummins, J. (2000). Language, Power and Pedagogy: Bilingual Children in the Crossfire. Multilingual Matters.",
+    "Swain, M. (1985). Communicative competence: Some roles of comprehensible input and comprehensible output in its development. Dans S. Gass & C. Madden (dir.), Input in Second Language Acquisition. Newbury House.",
+    "Coyle, D., Hood, P. & Marsh, D. (2010). CLIL: Content and Language Integrated Learning. Cambridge University Press.",
+    "Armand, F. (2005). Les élèves immigrants nouvellement arrivés et l'école québécoise. Santé, Société et Solidarité, 4(1), 141-152.",
+    "Gouvernement du Québec (2022). Loi sur la langue officielle et commune du Québec, le français (Loi 96)."
+  ]
+}

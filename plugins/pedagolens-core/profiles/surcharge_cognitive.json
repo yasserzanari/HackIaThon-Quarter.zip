@@ -1,0 +1,102 @@
+{
+  "slug": "surcharge_cognitive",
+  "name": "Surcharge cognitive",
+  "description": "Profil représentant un étudiant postsecondaire en situation de surcharge cognitive, c'est-à-dire dont la mémoire de travail est saturée par un excès d'informations à traiter simultanément. Selon la théorie de la charge cognitive de Sweller (1988), l'apprentissage est compromis lorsque la charge totale (intrinsèque + extrinsèque + pertinente) dépasse la capacité limitée de la mémoire de travail. Ce profil est particulièrement pertinent dans les cours à contenu dense, les programmes techniques et les sessions intensives où les étudiants doivent intégrer rapidement de grandes quantités d'information nouvelle.",
+  "scientific_basis": {
+    "theories": [
+      "Théorie de la charge cognitive (Sweller, 1988, 1994)",
+      "Architecture cognitive humaine — mémoire de travail limitée (Miller, 1956; Cowan, 2001)",
+      "Effet de redondance et effet de modalité (Sweller, Ayres & Kalyuga, 2011)",
+      "Théorie de l'apprentissage multimédia (Mayer, 2009)",
+      "Effet d'attention partagée (split-attention effect)"
+    ],
+    "key_researchers": [
+      "Sweller, J. (1988, 2011) — Fondateur de la théorie de la charge cognitive",
+      "Mayer, R.E. (2009) — Principes de l'apprentissage multimédia",
+      "Kalyuga, S. (2007) — Effet d'expertise inversée (expertise reversal effect)",
+      "Chandler, P. & Sweller, J. (1991) — Effet d'attention partagée",
+      "Paas, F. & van Merriënboer, J.J.G. (1994) — Mesure de la charge cognitive"
+    ],
+    "prevalence": "La surcharge cognitive n'est pas un diagnostic clinique mais un état situationnel qui peut affecter tout étudiant. Les recherches indiquent que 60 à 70 % des étudiants postsecondaires rapportent des épisodes réguliers de surcharge informationnelle, particulièrement en première session de cégep et lors des périodes d'examens."
+  },
+  "cognitive_characteristics": {
+    "attention_span": "moyen",
+    "working_memory": "faible",
+    "processing_speed": "lent",
+    "executive_function": "moyen",
+    "metacognition": "moyen"
+  },
+  "learning_challenges": [
+    "Saturation de la mémoire de travail face à un contenu trop dense ou mal structuré",
+    "Difficulté à distinguer l'information essentielle de l'information accessoire",
+    "Perte de compréhension lorsque plusieurs sources d'information doivent être intégrées simultanément",
+    "Effet d'attention partagée : difficulté à relier un texte explicatif à un schéma éloigné",
+    "Ralentissement du traitement lorsque le contenu exige trop de connaissances préalables",
+    "Fatigue cognitive accélérée lors de sessions d'apprentissage prolongées",
+    "Difficulté à transférer les apprentissages vers de nouveaux contextes quand la charge est élevée",
+    "Sentiment de submersion face à des consignes multiples ou des évaluations cumulatives"
+  ],
+  "pedagogical_recommendations": {
+    "content_structure": [
+      "Appliquer le principe de segmentation : découper le contenu en unités autonomes et progressives",
+      "Éliminer les informations redondantes ou décoratives qui n'ajoutent pas à la compréhension",
+      "Introduire les concepts nouveaux un à la fois, avec des exemples travaillés (worked examples)",
+      "Utiliser le principe de pré-entraînement : présenter le vocabulaire et les concepts clés avant le contenu principal",
+      "Structurer le contenu du simple au complexe (principe de complexité croissante)"
+    ],
+    "visual_design": [
+      "Intégrer texte et images de manière contiguë (principe de contiguïté spatiale)",
+      "Synchroniser narration et animation (principe de contiguïté temporelle)",
+      "Éviter la redondance : ne pas afficher le même texte qui est narré oralement",
+      "Utiliser des organisateurs graphiques pour représenter les relations entre concepts",
+      "Limiter les éléments visuels décoratifs non informatifs (principe de cohérence)"
+    ],
+    "assessment": [
+      "Proposer des évaluations formatives fréquentes et à faible enjeu pour vérifier la compréhension",
+      "Utiliser des problèmes partiellement résolus (completion problems) pour réduire la charge",
+      "Espacer les évaluations sommatives pour éviter l'accumulation de charge",
+      "Fournir des grilles d'évaluation claires et des exemples de travaux attendus",
+      "Permettre la consultation de notes ou d'aide-mémoire pour les évaluations complexes"
+    ],
+    "interaction": [
+      "Alterner entre présentation de contenu et pratique guidée",
+      "Intégrer des pauses de consolidation après chaque nouveau concept",
+      "Proposer des activités de récupération espacée (retrieval practice)",
+      "Utiliser le questionnement socratique pour guider la réflexion sans surcharger",
+      "Offrir des parcours adaptatifs qui ajustent la complexité selon la maîtrise démontrée"
+    ]
+  },
+  "risk_indicators": [
+    "Plus de 7 concepts nouveaux introduits sans consolidation intermédiaire",
+    "Diapositives combinant texte dense, schéma complexe et narration simultanée",
+    "Absence d'exemples travaillés pour les procédures complexes",
+    "Texte explicatif séparé physiquement du schéma qu'il décrit",
+    "Évaluations cumulatives sans jalons intermédiaires de vérification",
+    "Contenu qui suppose des prérequis non explicitement vérifiés"
+  ],
+  "ai_analysis_criteria": {
+    "slide_max_words": 35,
+    "ideal_segment_duration_minutes": 10,
+    "visual_ratio_minimum": 0.35,
+    "interaction_frequency_per_hour": 8,
+    "readability_level": "simple"
+  },
+  "system_prompt_template": "Tu analyses ce contenu pédagogique du point de vue d'un étudiant postsecondaire québécois en situation de surcharge cognitive. Applique les principes de la théorie de la charge cognitive de Sweller pour évaluer : la densité informationnelle par segment, la présence d'éléments redondants ou décoratifs, l'intégration spatiale et temporelle des éléments multimédias, la progression du simple au complexe, et la présence d'exemples travaillés. Identifie les zones où la charge extrinsèque est excessive et propose des modifications concrètes pour réduire la charge inutile tout en préservant la charge pertinente à l'apprentissage. Contextualise tes recommandations pour les cégeps et universités du Québec.",
+  "scoring_weights": {
+    "structure_clarity": 0.25,
+    "visual_engagement": 0.15,
+    "content_density": 0.25,
+    "interaction_opportunities": 0.15,
+    "language_accessibility": 0.10,
+    "assessment_adaptability": 0.10
+  },
+  "references": [
+    "Sweller, J. (1988). Cognitive load during problem solving: Effects on learning. Cognitive Science, 12(2), 257-285.",
+    "Sweller, J., Ayres, P. & Kalyuga, S. (2011). Cognitive Load Theory. Springer.",
+    "Mayer, R.E. (2009). Multimedia Learning (2e éd.). Cambridge University Press.",
+    "Chandler, P. & Sweller, J. (1991). Cognitive load theory and the format of instruction. Cognition and Instruction, 8(4), 293-332.",
+    "Paas, F. & van Merriënboer, J.J.G. (1994). Instructional control of cognitive load in the training of complex cognitive tasks. Educational Psychology Review, 6(4), 351-371.",
+    "Kalyuga, S. (2007). Expertise reversal effect and its implications for learner-tailored instruction. Educational Psychology Review, 19(4), 509-539.",
+    "Miller, G.A. (1956). The magical number seven, plus or minus two. Psychological Review, 63(2), 81-97."
+  ]
+}

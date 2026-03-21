@@ -1,0 +1,101 @@
+{
+  "slug": "avance_rapide",
+  "name": "Avancé / Rapide",
+  "description": "Profil de référence représentant un étudiant postsecondaire avancé, autonome et performant qui maîtrise rapidement les contenus et cherche des défis intellectuels supplémentaires. Selon le modèle de différenciation pédagogique de Tomlinson (2001), ces étudiants nécessitent un enrichissement du contenu, une accélération du rythme et des opportunités d'approfondissement pour maintenir leur engagement. Sans stimulation adéquate, ils risquent le désengagement, l'ennui et le sous-rendement paradoxal. Ce profil sert aussi de référence positive pour calibrer les analyses des autres profils.",
+  "scientific_basis": {
+    "theories": [
+      "Modèle de différenciation pédagogique (Tomlinson, 2001)",
+      "Théorie de la douance et du développement du talent (Gagné, 2004)",
+      "Théorie du flow — état d'engagement optimal (Csikszentmihalyi, 1990)",
+      "Compactage du curriculum (Reis, Burns & Renzulli, 1992)",
+      "Taxonomie de Bloom révisée — niveaux supérieurs (Anderson & Krathwohl, 2001)"
+    ],
+    "key_researchers": [
+      "Tomlinson, C.A. (2001) — Différenciation pédagogique en classe",
+      "Gagné, F. (2004) — Modèle différencié de la douance et du talent (MDDT)",
+      "Csikszentmihalyi, M. (1990) — Théorie du flow et engagement optimal",
+      "Reis, S.M., Burns, D.E. & Renzulli, J.S. (1992) — Compactage du curriculum",
+      "Kanevsky, L. (2011) — Différenciation pour apprenants doués"
+    ],
+    "prevalence": "On estime que 10 à 15 % des étudiants postsecondaires possèdent des capacités nettement supérieures à la moyenne dans au moins un domaine. Au Québec, les programmes de Sciences de la nature et Sciences humaines profil Honours dans certains cégeps accueillent spécifiquement ces étudiants, mais la majorité se retrouve dans des classes régulières sans différenciation."
+  },
+  "cognitive_characteristics": {
+    "attention_span": "long",
+    "working_memory": "fort",
+    "processing_speed": "rapide",
+    "executive_function": "fort",
+    "metacognition": "fort"
+  },
+  "learning_challenges": [
+    "Ennui et désengagement face à un contenu perçu comme trop facile ou répétitif",
+    "Frustration devant un rythme d'enseignement trop lent pour leur capacité de traitement",
+    "Sous-rendement paradoxal : performance en deçà du potentiel par manque de stimulation",
+    "Tendance au perfectionnisme excessif et à l'autocritique sévère",
+    "Isolement social lorsque les pairs ne partagent pas le même niveau d'engagement intellectuel",
+    "Difficulté à développer des stratégies d'étude efficaces (n'ayant jamais eu besoin d'en développer)",
+    "Impatience face aux activités de révision ou de consolidation jugées superflues",
+    "Risque de développer une mentalité fixe (fixed mindset) plutôt qu'une mentalité de croissance"
+  ],
+  "pedagogical_recommendations": {
+    "content_structure": [
+      "Proposer des parcours d'enrichissement optionnels avec du contenu avancé",
+      "Permettre le compactage du curriculum : sauter les sections déjà maîtrisées",
+      "Intégrer des problèmes ouverts et des défis de niveau supérieur (analyse, synthèse, création)",
+      "Offrir des lectures complémentaires et des ressources approfondies",
+      "Proposer des projets de recherche autonomes liés aux intérêts de l'étudiant"
+    ],
+    "visual_design": [
+      "Inclure des schémas conceptuels complexes montrant les interconnexions entre les concepts",
+      "Proposer des visualisations de données avancées et des représentations multidimensionnelles",
+      "Utiliser des infographies synthétiques qui permettent une vue d'ensemble rapide",
+      "Intégrer des liens vers des ressources externes de niveau avancé",
+      "Offrir des cartes conceptuelles interactives permettant l'exploration autonome"
+    ],
+    "assessment": [
+      "Proposer des évaluations à niveaux de complexité variable (tiered assessments)",
+      "Offrir des options de projets créatifs ou de recherche en remplacement d'évaluations standard",
+      "Intégrer des évaluations qui sollicitent les niveaux supérieurs de la taxonomie de Bloom",
+      "Permettre la démonstration de compétences par des formats non conventionnels",
+      "Proposer des défis bonus ou des questions d'approfondissement optionnelles"
+    ],
+    "interaction": [
+      "Faciliter le mentorat par les pairs où l'étudiant avancé aide ses collègues",
+      "Proposer des groupes de discussion avancés ou des clubs académiques",
+      "Offrir des opportunités de collaboration avec des étudiants de niveaux supérieurs",
+      "Encourager la participation à des concours académiques ou des projets de recherche",
+      "Proposer des rôles de leadership dans les travaux d'équipe"
+    ]
+  },
+  "risk_indicators": [
+    "Contenu entièrement linéaire sans possibilité d'accélération ou de saut",
+    "Absence de défis supplémentaires ou d'activités d'enrichissement",
+    "Évaluations uniquement axées sur la mémorisation et la restitution",
+    "Rythme imposé identique pour tous sans flexibilité",
+    "Manque d'opportunités pour l'exploration autonome et la créativité",
+    "Activités de révision obligatoires sans possibilité de les contourner si la maîtrise est démontrée"
+  ],
+  "ai_analysis_criteria": {
+    "slide_max_words": 60,
+    "ideal_segment_duration_minutes": 20,
+    "visual_ratio_minimum": 0.25,
+    "interaction_frequency_per_hour": 3,
+    "readability_level": "avance"
+  },
+  "system_prompt_template": "Tu analyses ce contenu pédagogique du point de vue d'un étudiant postsecondaire québécois avancé, autonome et performant. Ce profil sert de référence positive. Évalue la capacité du contenu à stimuler intellectuellement cet étudiant en vérifiant : la présence de parcours d'enrichissement ou d'approfondissement, la possibilité d'accélérer le rythme, l'intégration de défis cognitifs de haut niveau (analyse, synthèse, évaluation, création selon Bloom), et les opportunités d'exploration autonome. Identifie les zones où l'étudiant risque de s'ennuyer ou de se désengager par manque de stimulation. Propose des ajouts concrets pour différencier le contenu vers le haut, dans le contexte des cégeps et universités du Québec.",
+  "scoring_weights": {
+    "structure_clarity": 0.15,
+    "visual_engagement": 0.10,
+    "content_density": 0.15,
+    "interaction_opportunities": 0.20,
+    "language_accessibility": 0.10,
+    "assessment_adaptability": 0.30
+  },
+  "references": [
+    "Tomlinson, C.A. (2001). How to Differentiate Instruction in Mixed-Ability Classrooms (2e éd.). ASCD.",
+    "Gagné, F. (2004). Transforming gifts into talents: The DMGT as a developmental theory. High Ability Studies, 15(2), 119-147.",
+    "Csikszentmihalyi, M. (1990). Flow: The Psychology of Optimal Experience. Harper & Row.",
+    "Reis, S.M., Burns, D.E. & Renzulli, J.S. (1992). Curriculum Compacting: The Complete Guide to Modifying the Regular Curriculum for High Ability Students. Creative Learning Press.",
+    "Anderson, L.W. & Krathwohl, D.R. (dir.) (2001). A Taxonomy for Learning, Teaching, and Assessing: A Revision of Bloom's Taxonomy. Longman.",
+    "Kanevsky, L. (2011). Deferential differentiation: What types of differentiation do students want? Gifted Child Quarterly, 55(4), 279-299."
+  ]
+}

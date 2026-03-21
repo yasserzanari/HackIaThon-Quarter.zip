@@ -1,0 +1,101 @@
+{
+  "slug": "anxieux_consignes",
+  "name": "Anxieux / Consignes",
+  "description": "Profil représentant un étudiant postsecondaire souffrant d'anxiété de performance, particulièrement exacerbée par des consignes floues, ambiguës ou incomplètes. L'anxiété académique, selon le modèle de Zeidner (1998), implique une composante cognitive (inquiétude, pensées intrusives) et une composante émotionnelle (tension physiologique) qui interfèrent avec le traitement de l'information et la performance. Chez cet étudiant, l'ambiguïté des attentes déclenche un cycle d'inquiétude qui paralyse l'action et amplifie le perfectionnisme dysfonctionnel.",
+  "scientific_basis": {
+    "theories": [
+      "Modèle cognitif de l'anxiété aux évaluations (Zeidner, 1998)",
+      "Théorie du contrôle attentionnel et anxiété (Eysenck et al., 2007)",
+      "Modèle de l'intolérance à l'incertitude (Dugas et al., 1998)",
+      "Perfectionnisme multidimensionnel (Hewitt & Flett, 1991)",
+      "Théorie de l'évaluation cognitive du stress (Lazarus & Folkman, 1984)"
+    ],
+    "key_researchers": [
+      "Zeidner, M. (1998) — Anxiété aux évaluations : état de la recherche",
+      "Eysenck, M.W. et al. (2007) — Théorie du contrôle attentionnel",
+      "Dugas, M.J. et al. (1998) — Intolérance à l'incertitude et anxiété généralisée",
+      "Hewitt, P.L. & Flett, G.L. (1991) — Perfectionnisme et détresse psychologique",
+      "Cassady, J.C. & Johnson, R.E. (2002) — Anxiété cognitive aux évaluations"
+    ],
+    "prevalence": "Les enquêtes sur la santé psychologique des étudiants postsecondaires au Québec révèlent que 35 à 45 % des étudiants rapportent un niveau élevé d'anxiété liée aux études. L'anxiété de performance est le motif de consultation le plus fréquent dans les services psychologiques des cégeps et universités québécoises."
+  },
+  "cognitive_characteristics": {
+    "attention_span": "moyen",
+    "working_memory": "moyen",
+    "processing_speed": "moyen",
+    "executive_function": "moyen",
+    "metacognition": "fort"
+  },
+  "learning_challenges": [
+    "Paralysie décisionnelle face à des consignes vagues ou ouvertes",
+    "Surinterprétation des consignes et peur constante de mal comprendre les attentes",
+    "Temps excessif consacré à vérifier et revérifier son travail (perfectionnisme)",
+    "Anxiété anticipatoire qui interfère avec la concentration et la mémoire de travail",
+    "Évitement des tâches perçues comme ambiguës ou à haut risque d'échec",
+    "Difficulté à demander des clarifications par peur de paraître incompétent",
+    "Rumination cognitive après les évaluations qui affecte les apprentissages suivants",
+    "Sensibilité excessive aux rétroactions négatives ou perçues comme critiques"
+  ],
+  "pedagogical_recommendations": {
+    "content_structure": [
+      "Rédiger des consignes explicites, univoques et structurées en étapes numérotées",
+      "Fournir des exemples concrets de ce qui est attendu ET de ce qui ne l'est pas",
+      "Préciser les critères d'évaluation dès la présentation de chaque tâche",
+      "Inclure une section FAQ anticipant les questions fréquentes pour chaque travail",
+      "Communiquer clairement les objectifs d'apprentissage et leur lien avec l'évaluation"
+    ],
+    "visual_design": [
+      "Utiliser des encadrés « À retenir » et « Attention » pour les informations critiques",
+      "Employer des listes à puces plutôt que des paragraphes pour les consignes",
+      "Créer des tableaux comparatifs « Ce qui est demandé / Ce qui n'est pas demandé »",
+      "Utiliser des barèmes visuels et des grilles d'évaluation graphiques",
+      "Intégrer des indicateurs de progression pour réduire l'incertitude"
+    ],
+    "assessment": [
+      "Fournir des grilles d'évaluation détaillées avec des descripteurs de niveaux",
+      "Proposer des évaluations formatives sans note pour réduire la pression",
+      "Offrir la possibilité de soumettre un brouillon pour rétroaction avant la version finale",
+      "Communiquer les résultats avec des commentaires constructifs et orientés vers l'amélioration",
+      "Diversifier les modes d'évaluation pour réduire l'impact d'une seule performance"
+    ],
+    "interaction": [
+      "Créer des espaces sécurisants pour poser des questions (forums anonymes, heures de bureau)",
+      "Normaliser l'erreur comme partie intégrante du processus d'apprentissage",
+      "Offrir des séances de clarification des consignes avant les évaluations importantes",
+      "Proposer des exercices de gestion du stress et de préparation aux examens",
+      "Encourager l'entraide entre pairs pour la compréhension des consignes"
+    ]
+  },
+  "risk_indicators": [
+    "Consignes vagues du type « soyez créatifs » ou « faites de votre mieux » sans balises",
+    "Absence de grille d'évaluation ou de critères explicites",
+    "Évaluations à enjeu élevé sans possibilité de pratique préalable",
+    "Rétroaction uniquement négative ou formulée de manière critique",
+    "Changements de consignes ou d'attentes en cours de route sans communication claire",
+    "Manque d'exemples concrets de travaux réussis pour calibrer les attentes"
+  ],
+  "ai_analysis_criteria": {
+    "slide_max_words": 45,
+    "ideal_segment_duration_minutes": 15,
+    "visual_ratio_minimum": 0.25,
+    "interaction_frequency_per_hour": 4,
+    "readability_level": "moyen"
+  },
+  "system_prompt_template": "Tu analyses ce contenu pédagogique du point de vue d'un étudiant postsecondaire québécois anxieux, particulièrement sensible à l'ambiguïté des consignes et à la pression de performance. Évalue la clarté et la précision des consignes, la présence de critères d'évaluation explicites, la disponibilité d'exemples et de modèles, et les mécanismes de soutien pour réduire l'anxiété. Identifie les zones d'ambiguïté qui pourraient déclencher de l'anxiété : consignes vagues, attentes implicites, absence de grilles d'évaluation, ou manque d'exemples. Propose des reformulations et des ajouts concrets pour rendre les attentes transparentes et réduire l'incertitude, dans le contexte des cégeps et universités du Québec.",
+  "scoring_weights": {
+    "structure_clarity": 0.30,
+    "visual_engagement": 0.10,
+    "content_density": 0.10,
+    "interaction_opportunities": 0.15,
+    "language_accessibility": 0.15,
+    "assessment_adaptability": 0.20
+  },
+  "references": [
+    "Zeidner, M. (1998). Test Anxiety: The State of the Art. Plenum Press.",
+    "Eysenck, M.W., Derakshan, N., Santos, R. & Calvo, M.G. (2007). Anxiety and cognitive performance: Attentional control theory. Emotion, 7(2), 336-353.",
+    "Dugas, M.J., Gagnon, F., Ladouceur, R. & Freeston, M.H. (1998). Generalized anxiety disorder: A preliminary test of a conceptual model. Behaviour Research and Therapy, 36(2), 215-226.",
+    "Hewitt, P.L. & Flett, G.L. (1991). Perfectionism in the self and social contexts. Journal of Personality and Social Psychology, 60(3), 456-470.",
+    "Cassady, J.C. & Johnson, R.E. (2002). Cognitive test anxiety and academic performance. Contemporary Educational Psychology, 27(2), 270-295.",
+    "Lazarus, R.S. & Folkman, S. (1984). Stress, Appraisal, and Coping. Springer."
+  ]
+}
