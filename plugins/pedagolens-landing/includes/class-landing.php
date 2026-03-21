@@ -721,7 +721,16 @@ class PedagoLens_Landing {
                 // Get active profiles from core
                 $profiles = [];
                 if ( class_exists( 'PedagoLens_Profile_Manager' ) ) {
-                    $profiles = PedagoLens_Profile_Manager::get_active_profiles();
+                    $raw = PedagoLens_Profile_Manager::get_all( true );
+                    foreach ( $raw as $p ) {
+                        $profiles[] = [
+                            'slug'        => $p['slug'] ?? '',
+                            'label'       => $p['name'] ?? $p['slug'] ?? 'Profil',
+                            'description' => $p['description'] ?? '',
+                            'icon'        => 'person',
+                            'traits'      => [],
+                        ];
+                    }
                 }
                 if ( empty( $profiles ) ) {
                     $profiles = [

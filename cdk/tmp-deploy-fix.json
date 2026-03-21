@@ -3,9 +3,8 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1 && php -l /opt/pedagolens/plugins/pedagolens-landing/pedagolens-landing.php 2>&1",
-      "systemctl restart apache2 && echo 'Apache restarted OK'"
+      "echo '=== WP DEBUG ===' && tail -50 /var/www/html/wp-content/debug.log 2>/dev/null || echo 'NO_DEBUG_LOG'",
+      "echo '=== APACHE ERROR ===' && tail -20 /var/log/apache2/error.log 2>/dev/null || echo 'NO_APACHE_LOG'"
     ]
   }
 }
