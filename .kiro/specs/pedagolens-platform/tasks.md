@@ -677,13 +677,13 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 ### 45.1 Layout principal — structure 3 colonnes (viewport fixe, pas de scroll page)
 
-- [-] 45.1.1 Refactorer `render_front()` dans `class-workbench-admin.php` : remplacer le layout 2 colonnes scrollable par un layout 3 colonnes plein écran (100vh)
+- [x] 45.1.1 Refactorer `render_front()` dans `class-workbench-admin.php` : remplacer le layout 2 colonnes scrollable par un layout 3 colonnes plein écran (100vh)
   - Colonne gauche : panneau de miniatures des slides (filmstrip vertical, ~200px, collapsible)
   - Colonne centrale : zone d'édition de la diapositive active (1 seule slide visible à la fois)
   - Colonne droite : panneau IA (suggestions, scores, fichiers — le sidebar actuel)
   - Header compact en haut avec titre du projet, breadcrumb, boutons d'action (Importer, Sauvegarder, Télécharger)
   - `overflow: hidden` sur le body/container principal — AUCUN scroll de page
-- [-] 45.1.2 CSS du layout éditeur dans `workbench-admin.css`
+- [x] 45.1.2 CSS du layout éditeur dans `workbench-admin.css`
   - `.pl-editor-layout` : `display: grid; grid-template-rows: auto 1fr; height: 100vh;`
   - `.pl-editor-body` : `display: grid; grid-template-columns: auto 1fr auto; overflow: hidden;`
   - `.pl-editor-filmstrip` : largeur ~200px, `overflow-y: auto` (scroll interne uniquement), fond sombre
@@ -693,18 +693,18 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 ### 45.2 Filmstrip — panneau de miniatures à gauche (collapsible)
 
-- [-] 45.2.1 Générer le HTML du filmstrip dans `render_front()` : liste verticale de miniatures cliquables
+- [x] 45.2.1 Générer le HTML du filmstrip dans `render_front()` : liste verticale de miniatures cliquables
   - Chaque miniature = card avec numéro de slide + titre tronqué + preview du contenu (premiers 50 chars)
   - Si des images de slides existent (`_pl_slide_images`), afficher l'image en miniature
   - Slide active = bordure accent + fond highlight
   - Bouton collapse/expand en haut du filmstrip (icône chevron)
   - Quand collapsed : filmstrip réduit à ~48px, affiche seulement les numéros de slides
-- [-] 45.2.2 JS de navigation filmstrip : clic sur miniature → affiche la slide correspondante dans le canvas central
+- [x] 45.2.2 JS de navigation filmstrip : clic sur miniature → affiche la slide correspondante dans le canvas central
   - Mettre à jour la classe active sur la miniature
   - Transition fade/slide sur le contenu central
   - Raccourcis clavier : flèches haut/bas pour naviguer entre slides
   - Scroll automatique du filmstrip pour garder la slide active visible
-- [-] 45.2.3 CSS du filmstrip
+- [x] 45.2.3 CSS du filmstrip
   - Style sombre (fond `#1a1a2e` ou similaire) pour contraste avec le canvas
   - Miniatures avec `border-radius: 8px`, hover glow, active accent border
   - Animation collapse : `width` transition 300ms ease
@@ -712,18 +712,18 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 ### 45.3 Canvas central — édition d'une seule slide à la fois
 
-- [-] 45.3.1 Refactorer `render_front_section()` : au lieu de rendre toutes les sections en liste, rendre une seule section dans le canvas
+- [x] 45.3.1 Refactorer `render_front_section()` : au lieu de rendre toutes les sections en liste, rendre une seule section dans le canvas
   - Le canvas affiche : titre de la section (éditable inline), textarea du contenu, boutons d'action
   - Si une image de slide existe, l'afficher en fond ou en preview au-dessus du textarea
   - Boutons sous le textarea : Enregistrer, Suggestions IA, Historique
   - Indicateur de slide : "Diapositive 3 / 11" avec flèches prev/next
-- [-] 45.3.2 JS du canvas : gestion de la slide active
+- [x] 45.3.2 JS du canvas : gestion de la slide active
   - Variable globale `currentSlideIndex` — toutes les sections chargées en mémoire JS (pas de rechargement AJAX par slide)
   - Fonction `showSlide(index)` : met à jour le canvas avec le contenu de la section[index]
   - Auto-save quand on change de slide (sauvegarder la slide qu'on quitte)
   - Flèches prev/next + raccourcis clavier gauche/droite
   - Transition smooth entre slides (fade 200ms)
-- [-] 45.3.3 CSS du canvas
+- [x] 45.3.3 CSS du canvas
   - Fond gris clair `#f0f0f5` (comme l'arrière-plan d'un éditeur de slides)
   - La "slide" elle-même = card blanche centrée, `max-width: 900px`, `aspect-ratio: 16/9` optionnel, `border-radius: 12px`, shadow
   - Textarea stylisé pour ressembler à une zone d'édition de slide (pas un form input classique)
@@ -731,17 +731,17 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 ### 45.4 Panneau IA à droite — suggestions et scores
 
-- [-] 45.4.1 Réorganiser le sidebar droit pour le mode éditeur
+- [x] 45.4.1 Réorganiser le sidebar droit pour le mode éditeur
   - Les suggestions IA s'affichent dans le panneau droit (pas inline sous chaque section)
   - Quand on clique "Suggestions IA" sur le canvas, les suggestions apparaissent dans le panneau droit
   - Scores par profil toujours visibles en bas du panneau
   - Bouton "Demander de nouvelles suggestions" reste dans le panneau
   - Fichiers du projet en section collapsible en bas
-- [-] 45.4.2 Adapter le JS des suggestions pour le panneau droit
+- [x] 45.4.2 Adapter le JS des suggestions pour le panneau droit
   - `pl_get_suggestions` → injecter le HTML dans `#pl-editor-suggestions` (panneau droit) au lieu de `#pl-suggestions-{sectionId}`
   - Les boutons Appliquer/Prévisualiser/Rejeter fonctionnent toujours, mais ciblent la slide active dans le canvas
   - Quand on change de slide, vider les suggestions ou les recharger pour la nouvelle slide
-- [-] 45.4.3 CSS du panneau droit
+- [x] 45.4.3 CSS du panneau droit
   - Fond blanc/glass, `border-left: 1px solid rgba(0,0,0,0.08)`
   - Scroll interne uniquement
   - Cards de suggestions compactes pour tenir dans le panneau
@@ -762,21 +762,21 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 ### 45.6 Header compact du workbench
 
-- [-] 45.6.1 Refactorer le header du workbench pour être plus compact en mode éditeur
+- [x] 45.6.1 Refactorer le header du workbench pour être plus compact en mode éditeur
   - Une seule ligne : [← Retour] [Titre du projet] [Type badge] [Importer] [Ajouter section] [Sauvegarder] [Télécharger PPTX]
   - Hauteur max ~56px
   - Le titre est éditable inline (click to edit)
-- [-] 45.6.2 CSS du header compact
+- [x] 45.6.2 CSS du header compact
   - `height: 56px`, `display: flex`, `align-items: center`, `gap: 12px`
   - Fond blanc avec `border-bottom: 1px solid rgba(0,0,0,0.08)`
   - Boutons compacts (icône + texte court)
 
 ### 45.7 Version bump + déploiement + test
 
-- [ ] 45.7.1 Bump `PL_WORKBENCH_VERSION` de `2.0.0` → `3.0.0` (header PHP + constante define) — version majeure car refonte complète du layout
+- [x] 45.7.1 Bump `PL_WORKBENCH_VERSION` de `2.0.0` → `3.0.0` (header PHP + constante define) — version majeure car refonte complète du layout
 - [ ] 45.7.2 Bump `PL_LANDING_VERSION` si la sidebar est modifiée
-- [ ] 45.7.3 Commit + push + déploiement SSM
-- [ ] 45.7.4 Test end-to-end via Chrome MCP :
+- [x] 45.7.3 Commit + push + déploiement SSM
+- [x] 45.7.4 Test end-to-end via Chrome MCP :
   - Vérifier le layout 3 colonnes (filmstrip + canvas + panneau IA)
   - Cliquer sur une miniature → la slide s'affiche dans le canvas
   - Naviguer avec les flèches → slide change
@@ -806,7 +806,7 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 ## 47. Workbench CSS — Layout éditeur 3 colonnes plein écran
 
-- [ ] 47.1 Ajouter les styles CSS pour le layout éditeur dans `workbench-admin.css`
+- [x] 47.1 Ajouter les styles CSS pour le layout éditeur dans `workbench-admin.css`
   - `.pl-editor` : `height: 100vh; display: grid; grid-template-rows: 56px 1fr; overflow: hidden;`
   - `.pl-editor-header` : header compact flex, fond blanc, border-bottom, z-index
   - `.pl-editor-body` : `display: grid; grid-template-columns: 220px 1fr 360px; overflow: hidden;`
@@ -827,7 +827,7 @@ Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai
 
 Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible, sans scroll vertical sur PC. Adapter la taille de chaque élément selon pertinence, harmonie et ergonomie.
 
-- [ ] 48.1 Refonte de `shortcode_teacher_dashboard()` — page Dashboard
+- [x] 48.1 Refonte de `shortcode_teacher_dashboard()` — page Dashboard
   - KPI cards en grille adaptative (4 colonnes sur grand écran, 2 sur tablette)
   - Section "Cours récents" avec cards compactes (titre, dernier score, date, bouton Analyser)
   - Section "Ateliers récents" avec liens rapides vers les derniers workbench utilisés
@@ -876,7 +876,7 @@ Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible,
 
 ## 50. Dashboard étudiant — Refonte et test complet
 
-- [ ] 50.1 Se connecter avec etudiant1/etudiant1! via Chrome MCP et inspecter le dashboard étudiant
+- [ ] 50.1 Se connecter avec etudiant1/etudiant1! via Chrome MCP et inspecter le dashboard si étudiant Utiliser la page connexion pour login jamais wp-login
 - [ ] 50.2 Refonte du dashboard étudiant — thème plus simple et étudiant
   - Même palette de couleurs que le site mais design distinct du dashboard prof
   - Plus simple, plus accueillant, moins de KPI complexes
@@ -923,6 +923,8 @@ Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible,
   - Aller sur le workbench, cliquer Suggestions IA
   - Vérifier que les suggestions viennent de Bedrock (pas du mock)
   - Fine-tuner les prompts si les résultats ne sont pas satisfaisants
+  - Configurer et tester le mode IA Lea pour le prof et l'étudiant
+  - Tester le dashboard lea et faire le backend pour que sa fonctionne
 
 ---
 
@@ -931,3 +933,50 @@ Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible,
 - [ ] 52.1 Bump toutes les versions modifiées
 - [ ] 52.2 Commit + push + déploiement SSM
 - [ ] 52.3 Test end-to-end complet via Chrome MCP de toutes les pages
+
+
+---
+
+## 52. Éditeur PowerPoint Visuel — Rendu fidèle des slides avec positionnement réel
+
+Objectif : Transformer le canvas central du workbench en un vrai rendu visuel de diapositive PowerPoint. Au lieu d'un simple textarea, afficher les éléments (textes, images, formes) à leur position réelle sur un canvas 16:9 qui ressemble à une vraie slide PowerPoint. L'enseignant voit ses slides comme dans PowerPoint, peut cliquer sur un élément texte pour l'éditer inline.
+
+- [x] 52.1 Créer la méthode `extract_pptx_visual( string $filepath ): array` dans `class-workbench-admin.php`
+  - Parser chaque slide XML (`ppt/slides/slideN.xml`) pour extraire les éléments visuels avec positions
+  - Pour chaque shape (`<p:sp>`), extraire : position (x, y en EMU → px), taille (cx, cy), texte, couleur, taille police, alignement, gras/italique
+  - Pour chaque image (`<p:pic>`), extraire : position, taille, référence au fichier image (rId → `ppt/media/imageN.png`)
+  - Extraire les images du PPTX (ZipArchive) et les sauvegarder dans `wp-content/uploads/pedagolens/slides/{id}/media/`
+  - Extraire le fond de slide (couleur unie ou image de fond)
+  - Retourner un array structuré par slide avec tous les éléments positionnés
+  - Stocker dans meta `_pl_slide_visual_data` (JSON)
+
+- [x] 52.2 Modifier `ajax_upload_file()` pour appeler `extract_pptx_visual()` en plus de `extract_pptx()` quand le fichier est un .pptx
+  - Ajouter `visual_data` dans la réponse JSON
+  - Passer les données visuelles au JS pour le rendu
+
+- [x] 52.3 Modifier `render_front()` pour passer les données visuelles au JS via `wp_localize_script`
+  - Ajouter `visualData` dans le tableau `plWorkbench` (données visuelles par slide)
+  - Ajouter les URLs des images extraites
+
+- [x] 52.4 Réécrire le rendu canvas dans `workbench-admin.js` — fonction `renderVisualSlide(index)`
+  - Si des données visuelles existent pour la slide, afficher un canvas visuel 16:9 au lieu du textarea
+  - Chaque élément texte = `<div>` positionné en absolute avec les bonnes coordonnées, taille, couleur, police
+  - Chaque image = `<img>` positionné en absolute avec les bonnes coordonnées et taille
+  - Fond de slide = couleur ou image de fond sur le container
+  - Clic sur un élément texte → passe en mode édition inline (contenteditable)
+  - Fallback : si pas de données visuelles, afficher le textarea classique (comportement actuel)
+
+- [x] 52.5 Ajouter les styles CSS pour le rendu visuel des slides dans `workbench-admin.css`
+  - `.pl-visual-slide` : container 16:9, position relative, fond blanc, shadow, overflow hidden
+  - `.pl-visual-element` : position absolute, transition smooth
+  - `.pl-visual-text` : contenteditable au clic, outline au focus
+  - `.pl-visual-image` : object-fit contain
+  - `.pl-visual-slide-bg` : fond de slide (couleur ou image)
+  - Responsive : scale proportionnel pour s'adapter à la largeur du canvas
+
+- [x] 52.6 Ajouter la synchronisation édition visuelle → contenu texte
+  - Quand l'enseignant modifie un texte dans le rendu visuel, mettre à jour le contenu de la section correspondante
+  - Auto-save après modification (debounce 2s)
+  - Bouton toggle "Vue visuelle / Vue texte" pour basculer entre les deux modes
+
+- [-] 52.7 Version bump `PL_WORKBENCH_VERSION` 3.0.0 → 4.0.0 + commit + push + déploiement SSM

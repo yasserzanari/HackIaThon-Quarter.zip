@@ -17,6 +17,8 @@ var slideImages = plWorkbench.slideImages || [];
 
 var currentSlideIndex = 0;
 var autoSaveTimers = {};
+var visualData = plWorkbench.visualData || [];
+var viewMode = visualData.length > 0 ? 'visual' : 'text'; // 'visual' or 'text'
 
 // Add editor mode class to body — hides sidebar, header, WP admin bar
 $( 'body' ).addClass( 'pl-editor-mode' );
@@ -43,20 +45,29 @@ function showSlide( index ) {
 
     currentSlideIndex = index;
     var sec = sections[ index ];
+    var slideVisual = visualData[ index ] || null;
 
-    // Update canvas content
     var $slide = $( '#pl-canvas-slide' );
-    var imgHtml = '';
-    if ( sec.slide_image_url ) {
-        imgHtml = '<div class="pl-canvas-slide-image"><img src="' + sec.slide_image_url + '" alt="Diapositive ' + ( sec.slide_num || index + 1 ) + '" /></div>';
+
+    if ( viewMode === 'visual' && slideVisual && slideVisual.elements && slideVisual.elements.length > 0 ) {
+        // VISUAL MODE — render positioned elements like a real PowerPoint slide
+        $slide.html( renderVisualSlide( index, sec, slideVisual ) );
+        // Fit the visual slide to the available canvas space
+        fitVisualSlide();
+    } else {
+        // TEXT MODE — classic textarea editor
+        var imgHtml = '';
+        if ( sec.slide_image_url ) {
+            imgHtml = '<div class="pl-canvas-slide-image"><img src="' + sec.slide_image_url + '" alt="Diapositive ' + ( sec.slide_num || index + 1 ) + '" /></div>';
+        }
+        $slide.html(
+            '<div class="pl-canvas-slide-inner" data-section-id="' + sec.id + '" data-slide-num="' + ( sec.slide_num || 0 ) + '">' +
+            imgHtml +
+            '<h2 class="pl-canvas-slide-title">' + escHtml( sec.title ) + '</h2>' +
+            '<textarea class="pl-section-content pl-canvas-textarea" data-section-id="' + sec.id + '" rows="12">' + escHtml( sec.content ) + '</textarea>' +
+            '</div>'
+        );
     }
-    $slide.html(
-        '<div class="pl-canvas-slide-inner" data-section-id="' + sec.id + '" data-slide-num="' + ( sec.slide_num || 0 ) + '">' +
-        imgHtml +
-        '<h2 class="pl-canvas-slide-title">' + escHtml( sec.title ) + '</h2>' +
-        '<textarea class="pl-section-content pl-canvas-textarea" data-section-id="' + sec.id + '" rows="12">' + escHtml( sec.content ) + '</textarea>' +
-        '</div>'
-    );
 
     // Update counter
     $( '#pl-slide-counter' ).text( 'Diapositive ' + ( index + 1 ) + ' / ' + sections.length );
@@ -84,11 +95,186 @@ function showSlide( index ) {
 
     // Clear suggestions panel when switching slides
     $( '#pl-panel-suggestions' ).html( '<p class="pl-panel-empty">Cliquez sur « Suggestions IA » pour obtenir des recommandations.</p>' );
+
+    // Update view toggle button text
+    updateViewToggleBtn();
+}
+
+// =========================================================================
+// VISUAL SLIDE RENDERER — renders positioned elements like PowerPoint
+// =========================================================================
+function renderVisualSlide( index, sec, slideVisual ) {
+    var sw = slideVisual.width || 960;
+    var sh = slideVisual.height || 540;
+    var bgColor = slideVisual.bg_color || '#ffffff';
+
+    var html = '<div class="pl-visual-slide" data-section-id="' + sec.id + '" ' +
+        'data-slide-num="' + ( sec.slide_num || index + 1 ) + '" ' +
+        'style="width:' + sw + 'px;height:' + sh + 'px;background:' + bgColor + ';">';
+
+    // Render each element
+    var elements = slideVisual.elements || [];
+    for ( var i = 0; i < elements.length; i++ ) {
+        var el = elements[i];
+        if ( el.type === 'image' ) {
+            html += renderVisualImage( el );
+        } else if ( el.type === 'text' ) {
+            html += renderVisualText( el, i );
+        }
+    }
+
+    // Slide number watermark
+    html += '<div class="pl-visual-slide-num">' + ( index + 1 ) + '</div>';
+    html += '</div>';
+
+    return html;
+}
+
+function renderVisualImage( el ) {
+    return '<img class="pl-visual-element pl-visual-image" ' +
+        'src="' + el.src + '" ' +
+        'style="left:' + el.x + 'px;top:' + el.y + 'px;width:' + el.w + 'px;height:' + el.h + 'px;" ' +
+        'alt="Image" draggable="false" />';
+}
+
+function renderVisualText( el, elIndex ) {
+    var style = 'left:' + el.x + 'px;top:' + el.y + 'px;width:' + el.w + 'px;height:' + el.h + 'px;';
+    if ( el.fill ) {
+        style += 'background:' + el.fill + ';';
+    }
+
+    var html = '<div class="pl-visual-element pl-visual-text" data-el-index="' + elIndex + '" style="' + style + '">';
+
+    var paragraphs = el.paragraphs || [];
+    for ( var p = 0; p < paragraphs.length; p++ ) {
+        var para = paragraphs[p];
+        var align = para.align || 'left';
+        html += '<p class="pl-visual-para" style="text-align:' + align + ';">';
+
+        var runs = para.runs || [];
+        for ( var r = 0; r < runs.length; r++ ) {
+            var run = runs[r];
+            var spanStyle = 'font-size:' + ( run.size || 18 ) + 'pt;color:' + ( run.color || '#000000' ) + ';';
+            if ( run.bold ) spanStyle += 'font-weight:700;';
+            if ( run.italic ) spanStyle += 'font-style:italic;';
+            html += '<span class="pl-visual-run" style="' + spanStyle + '">' + escHtml( run.text ) + '</span>';
+        }
+
+        html += '</p>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// =========================================================================
+// FIT VISUAL SLIDE — scale to fit the canvas area
+// =========================================================================
+function fitVisualSlide() {
+    var $canvas = $( '#pl-editor-canvas' );
+    var $slide = $( '.pl-visual-slide' );
+    if ( ! $slide.length ) return;
+
+    var canvasW = $canvas.width() - 48; // padding
+    var canvasH = $canvas.height() - 120; // nav + toolbar
+    var slideW = parseInt( $slide.css( 'width' ) );
+    var slideH = parseInt( $slide.css( 'height' ) );
+
+    if ( slideW <= 0 || slideH <= 0 ) return;
+
+    var scaleX = canvasW / slideW;
+    var scaleY = canvasH / slideH;
+    var scale = Math.min( scaleX, scaleY, 1.2 ); // Don't scale up beyond 1.2x
+
+    $slide.css( 'transform', 'scale(' + scale + ')' );
+    $slide.css( 'transform-origin', 'top center' );
+}
+
+// Refit on window resize
+$( window ).on( 'resize', function() {
+    if ( viewMode === 'visual' ) fitVisualSlide();
+} );
+
+// =========================================================================
+// VIEW TOGGLE — switch between visual and text mode
+// =========================================================================
+$( '#pl-view-toggle' ).on( 'click', function() {
+    if ( viewMode === 'visual' ) {
+        viewMode = 'text';
+    } else {
+        viewMode = 'visual';
+    }
+    showSlide( currentSlideIndex );
+} );
+
+function updateViewToggleBtn() {
+    var $btn = $( '#pl-view-toggle' );
+    if ( viewMode === 'visual' ) {
+        $btn.html(
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> ' +
+            'Vue texte'
+        );
+    } else {
+        $btn.html(
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> ' +
+            'Vue visuelle'
+        );
+    }
+    // Hide toggle if no visual data
+    if ( ! visualData.length ) $btn.hide();
+}
+updateViewToggleBtn();
+
+// =========================================================================
+// INLINE EDITING on visual text elements
+// =========================================================================
+$( document ).on( 'dblclick', '.pl-visual-text', function() {
+    var $el = $( this );
+    if ( $el.attr( 'contenteditable' ) === 'true' ) return;
+    $el.attr( 'contenteditable', 'true' ).addClass( 'pl-visual-text--editing' ).focus();
+} );
+
+$( document ).on( 'blur', '.pl-visual-text[contenteditable="true"]', function() {
+    var $el = $( this );
+    $el.removeAttr( 'contenteditable' ).removeClass( 'pl-visual-text--editing' );
+
+    // Sync edited text back to sections array
+    syncVisualToText();
+} );
+
+function syncVisualToText() {
+    // Collect all text from visual elements and update the section content
+    var sec = sections[ currentSlideIndex ];
+    if ( ! sec ) return;
+
+    var texts = [];
+    $( '.pl-visual-text' ).each( function() {
+        var t = $( this ).text().trim();
+        if ( t ) texts.push( t );
+    } );
+
+    var newContent = texts.join( '\n\n' );
+    if ( newContent !== sec.content ) {
+        sec.content = newContent;
+        // Auto-save
+        ajax( 'pl_save_section', { section_id: sec.id, content: newContent } );
+        showCanvasStatus( '✓ Sauvegardé' );
+        // Update filmstrip preview
+        $( '.pl-filmstrip-item[data-slide-index="' + currentSlideIndex + '"] .pl-filmstrip-item-preview' )
+            .text( newContent.substring( 0, 40 ) );
+    }
 }
 
 function saveCurrentSlide() {
     var sec = sections[ currentSlideIndex ];
     if ( ! sec ) return;
+
+    if ( viewMode === 'visual' ) {
+        // In visual mode, sync text from visual elements
+        syncVisualToText();
+        return;
+    }
+
     var $textarea = $( '.pl-canvas-textarea[data-section-id="' + sec.id + '"]' );
     if ( ! $textarea.length ) return;
     var newContent = $textarea.val();
@@ -442,6 +628,12 @@ function uploadNext( queue, index ) {
         success: function( res ) {
             if ( res.success ) {
                 showUploadResult( '✓ ' + res.data.message, false );
+                // Update visual data if available
+                if ( res.data.visual_data && res.data.visual_data.length ) {
+                    visualData = res.data.visual_data;
+                    viewMode = 'visual';
+                    updateViewToggleBtn();
+                }
                 // Reload page to get new sections (simplest approach)
                 setTimeout( function() { location.reload(); }, 1000 );
             } else {

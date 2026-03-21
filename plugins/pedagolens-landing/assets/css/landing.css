@@ -7744,3 +7744,294 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
 .pl-course-card-toolbar .pl-course-card-delete-btn:hover .material-symbols-outlined {
     color: #ef4444;
 }
+
+
+/* ============================================================
+   TASK 48.1 — Dashboard Enseignant Full-Width (no scroll)
+   ============================================================ */
+
+/* ── Page container : 100vh minus header, no scroll ────────── */
+.pl-dash-page--fw {
+  height: calc(100vh - 56px);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 16px;
+  padding: 20px 24px;
+}
+
+/* ── Header compact ────────────────────────────────────────── */
+.pl-dash-header--fw {
+  margin-bottom: 0;
+}
+.pl-dash-title--fw {
+  font-size: 1.5rem;
+  margin: 0 0 .15rem;
+}
+
+/* ── CTA Card (Nouveau cours) ──────────────────────────────── */
+.pl-dash-cta-card {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .6rem 1.3rem;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-family: var(--pl-font-body);
+  font-size: .875rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(99,102,241,.35);
+  transition: all .3s cubic-bezier(.22,1,.36,1);
+}
+.pl-dash-cta-card:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 28px rgba(99,102,241,.45);
+}
+.pl-dash-cta-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: rgba(255,255,255,.2);
+  border-radius: 8px;
+  transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.pl-dash-cta-card:hover .pl-dash-cta-icon {
+  transform: rotate(90deg);
+}
+.pl-dash-cta-icon .material-symbols-outlined {
+  font-size: 1.15rem;
+  color: #fff;
+}
+.pl-dash-cta-text {
+  white-space: nowrap;
+}
+
+/* ── KPI Grid — 4 columns compact ─────────────────────────── */
+.pl-dash-kpi-grid--fw {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.pl-dash-kpi-card--fw {
+  padding: 1rem 1.2rem;
+}
+.pl-dash-kpi-value--fw {
+  font-size: 1.55rem;
+}
+.pl-dash-kpi-value--fw small {
+  font-size: .7em;
+  font-weight: 600;
+  opacity: .6;
+}
+.pl-dash-icon-amber {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* ── Bottom grid : 3 columns filling remaining space ───────── */
+.pl-dash-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Section cards (glass) ─────────────────────────────────── */
+.pl-dash-section-card {
+  background: rgba(255,255,255,.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.45);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 2px 16px rgba(0,35,111,.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.pl-dash-section-heading {
+  font-family: var(--pl-font-heading);
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--pl-primary, #00236f);
+  margin: 0 0 .75rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-shrink: 0;
+}
+.pl-dash-section-heading .material-symbols-outlined {
+  font-size: 1.15rem;
+  color: #6366f1;
+}
+
+/* ── Mini list (cours / ateliers) ──────────────────────────── */
+.pl-dash-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+.pl-dash-mini-list::-webkit-scrollbar { width: 4px; }
+.pl-dash-mini-list::-webkit-scrollbar-thumb { background: rgba(99,102,241,.2); border-radius: 4px; }
+
+.pl-dash-mini-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .6rem .75rem;
+  background: linear-gradient(135deg, #f8f9ff 0%, #faf8ff 100%);
+  border: 1px solid rgba(0,35,111,.05);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: all .25s cubic-bezier(.22,1,.36,1);
+  flex-shrink: 0;
+}
+.pl-dash-mini-item:hover {
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(99,102,241,.1);
+  border-color: rgba(99,102,241,.15);
+  transform: translateX(3px);
+}
+.pl-dash-mini-info {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  min-width: 0;
+  flex: 1;
+}
+.pl-dash-mini-title {
+  font-family: var(--pl-font-heading);
+  font-size: .82rem;
+  font-weight: 700;
+  color: #00236f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-dash-mini-date {
+  font-size: .72rem;
+  color: #94a3b8;
+}
+.pl-dash-mini-arrow {
+  font-size: 1rem;
+  color: #6366f1;
+  opacity: 0;
+  transition: opacity .25s;
+  flex-shrink: 0;
+}
+.pl-dash-mini-item:hover .pl-dash-mini-arrow {
+  opacity: 1;
+}
+
+/* ── Empty mini state ──────────────────────────────────────── */
+.pl-dash-empty-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 1rem .5rem;
+  color: #94a3b8;
+}
+.pl-dash-empty-mini .material-symbols-outlined {
+  font-size: 2rem;
+  margin-bottom: .4rem;
+  opacity: .5;
+}
+.pl-dash-empty-mini p {
+  font-size: .8rem;
+  margin: 0;
+}
+
+/* ── Actions rapides grid ──────────────────────────────────── */
+.pl-dash-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+  flex: 1;
+  align-content: start;
+}
+.pl-dash-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  padding: .75rem .5rem;
+  background: linear-gradient(135deg, #f8f9ff 0%, #faf8ff 100%);
+  border: 1px solid rgba(0,35,111,.06);
+  border-radius: 12px;
+  text-decoration: none;
+  color: #00236f;
+  font-size: .75rem;
+  font-weight: 600;
+  transition: all .25s cubic-bezier(.22,1,.36,1);
+  text-align: center;
+}
+.pl-dash-action-btn .material-symbols-outlined {
+  font-size: 1.35rem;
+  color: #6366f1;
+  transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.pl-dash-action-btn:hover {
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(99,102,241,.12);
+  border-color: rgba(99,102,241,.18);
+  transform: translateY(-2px);
+}
+.pl-dash-action-btn:hover .material-symbols-outlined {
+  transform: scale(1.15);
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .pl-dash-page--fw {
+    height: auto;
+    overflow: auto;
+    padding: 16px;
+  }
+  .pl-dash-kpi-grid--fw {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pl-dash-bottom-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pl-dash-section-card--actions {
+    grid-column: 1 / -1;
+  }
+  .pl-dash-actions-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pl-dash-page--fw {
+    padding: 12px;
+    gap: 12px;
+  }
+  .pl-dash-header--fw {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .75rem;
+  }
+  .pl-dash-kpi-grid--fw {
+    grid-template-columns: 1fr;
+  }
+  .pl-dash-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+  .pl-dash-actions-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

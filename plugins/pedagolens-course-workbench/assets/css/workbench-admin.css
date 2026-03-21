@@ -2653,3 +2653,127 @@ body.pl-editor-mode footer,
 body.pl-editor-mode .wp-site-blocks > footer {
     display: none !important;
 }
+
+
+/* ============================================================
+   VISUAL POWERPOINT SLIDE RENDERER (v4.0)
+   Renders PPTX elements at their real positions on a 16:9 canvas.
+   ============================================================ */
+
+/* --- Visual slide container: real PowerPoint dimensions --- */
+.pl-visual-slide {
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+    /* Will be scaled by JS to fit canvas */
+    transform-origin: top center;
+}
+.pl-visual-slide:hover {
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(99, 102, 241, 0.15);
+}
+
+/* --- Positioned elements (absolute within the slide) --- */
+.pl-visual-element {
+    position: absolute;
+    box-sizing: border-box;
+    transition: outline 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* --- Text elements --- */
+.pl-visual-text {
+    overflow: hidden;
+    word-wrap: break-word;
+    padding: 4px 6px;
+    border-radius: 2px;
+    cursor: text;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.pl-visual-text:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    background: rgba(99, 102, 241, 0.03);
+}
+.pl-visual-text--editing {
+    border-color: #6366f1 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+    z-index: 10;
+    outline: none;
+}
+
+/* --- Paragraphs inside text elements --- */
+.pl-visual-para {
+    margin: 0;
+    padding: 0;
+    line-height: 1.3;
+}
+.pl-visual-para + .pl-visual-para {
+    margin-top: 2px;
+}
+
+/* --- Text runs (spans) --- */
+.pl-visual-run {
+    font-family: 'Calibri', 'Arial', 'Helvetica Neue', sans-serif;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+/* --- Image elements --- */
+.pl-visual-image {
+    object-fit: contain;
+    border-radius: 0;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* --- Slide number watermark --- */
+.pl-visual-slide-num {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 10px;
+    color: rgba(0, 0, 0, 0.2);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* --- View toggle button active state --- */
+#pl-view-toggle.pl-view-active {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #6366f1;
+}
+
+/* --- Canvas adjustments for visual mode --- */
+.pl-editor-canvas:has(.pl-visual-slide) {
+    justify-content: flex-start;
+    padding-top: 16px;
+}
+
+/* --- Responsive scaling for visual slides --- */
+@media (max-width: 1400px) {
+    .pl-visual-slide {
+        /* JS handles scaling, but ensure it doesn't overflow */
+        max-width: 100%;
+    }
+}
+
+/* --- Print-friendly visual slide --- */
+@media print {
+    .pl-visual-slide {
+        transform: none !important;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

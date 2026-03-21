@@ -573,120 +573,192 @@ class PedagoLens_Landing {
     // [pedagolens_teacher_dashboard] — Dashboard enseignant front-end (Stitch)
     // -------------------------------------------------------------------------
 
-    public static function shortcode_teacher_dashboard( array $atts ): string {
-        if ( ! is_user_logged_in() ) {
-            return self::render_login_notice( 'Vous devez &ecirc;tre connect&eacute; pour acc&eacute;der au tableau de bord.' );
-        }
+    
+        public static function shortcode_teacher_dashboard( array $atts ): string {
+            if ( ! is_user_logged_in() ) {
+                return self::render_login_notice( 'Vous devez &ecirc;tre connect&eacute; pour acc&eacute;der au tableau de bord.' );
+            }
 
-        $user       = wp_get_current_user();
-        $first_name = esc_html( $user->first_name ?: $user->display_name );
-        $logout_url = esc_url( wp_logout_url( home_url( '/' ) ) );
+            $user       = wp_get_current_user();
+            $first_name = esc_html( $user->first_name ?: $user->display_name );
 
-        // URLs
-        $dash_url     = esc_url( self::page_url( 'dashboard-enseignant', 'pl-teacher-dashboard' ) );
-        $courses_url  = esc_url( self::page_url( 'cours-projets', 'pl-course-workbench' ) );
-        $workbench_url = esc_url( self::page_url( 'workbench', 'pl-course-workbench' ) );
-        $twin_url     = esc_url( self::page_url( 'dashboard-etudiant', '' ) );
-        $account_url  = esc_url( self::page_url( 'compte', '' ) );
+            // URLs
+            $courses_url   = esc_url( self::page_url( 'cours-projets', 'pl-course-workbench' ) );
+            $workbench_url = esc_url( self::page_url( 'workbench', 'pl-course-workbench' ) );
+            $history_url   = esc_url( self::page_url( 'historique', '' ) );
+            $settings_url  = esc_url( self::page_url( 'parametres', '' ) );
 
-        // Stats
-        $nb_courses  = (int) ( wp_count_posts( 'pl_course' )->publish ?? 0 );
-        $nb_analyses = (int) get_user_meta( $user->ID, '_pl_analysis_count', true );
-        $nb_projects = (int) ( wp_count_posts( 'pl_project' )->publish ?? 0 );
+            // Stats
+            $nb_courses  = (int) ( wp_count_posts( 'pl_course' )->publish ?? 0 );
+            $nb_analyses = (int) get_user_meta( $user->ID, '_pl_analysis_count', true );
+            $nb_projects = (int) ( wp_count_posts( 'pl_project' )->publish ?? 0 );
+            $avg_score   = 78; // mock
 
-        // Recent activity
-        $recent_analyses = get_posts( [
-            'post_type'      => 'pl_analysis',
-            'posts_per_page' => 5,
-            'orderby'        => 'date',
-            'order'          => 'DESC',
-            'post_status'    => 'publish',
-        ] );
+            // Recent courses
+            $recent_courses = get_posts( [
+                'post_type'      => 'pl_course',
+                'posts_per_page' => 4,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                'post_status'    => 'publish',
+            ] );
 
-        ob_start();
-        echo self::render_header('Dashboard > Enseignant');
-        echo '<div class="pl-app-layout">';
-        echo self::render_sidebar('dashboard');
-        echo '<main class="pl-app-main">';
-        ?>
-<div class="pl-dash-page">
+            // Recent projects (ateliers/séances)
+            $recent_projects = get_posts( [
+                'post_type'      => 'pl_project',
+                'posts_per_page' => 4,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                'post_status'    => 'publish',
+            ] );
 
-    <!-- ========== MAIN CONTENT ========== -->
-        <div class="pl-dash-header">
+            ob_start();
+            echo self::render_header('Dashboard > Enseignant');
+            echo '<div class="pl-app-layout">';
+            echo self::render_sidebar('dashboard');
+            echo '<main class="pl-app-main">';
+            ?>
+    <div class="pl-dash-page pl-dash-page--fw">
+
+        <!-- ── Header compact ──────────────────────────────────── -->
+        <div class="pl-dash-header pl-dash-header--fw">
             <div>
-                <h1 class="pl-dash-title">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
-                <p class="pl-dash-subtitle">Voici un aper&ccedil;u de votre activit&eacute; p&eacute;dagogique.</p>
+                <h1 class="pl-dash-title pl-dash-title--fw">Bonjour, <?php echo $first_name; ?> &#128075;</h1>
+                <p class="pl-dash-subtitle">Votre tableau de bord p&eacute;dagogique</p>
             </div>
-            <div class="pl-dash-header-actions">
-                <a href="<?php echo $courses_url; ?>" class="pl-dash-btn-primary">
-                    <span class="material-symbols-outlined">add</span> Nouveau cours
-                </a>
-            </div>
+            <a href="<?php echo $courses_url; ?>" class="pl-dash-cta-card">
+                <span class="pl-dash-cta-icon"><span class="material-symbols-outlined">add_circle</span></span>
+                <span class="pl-dash-cta-text">Nouveau cours</span>
+            </a>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="pl-dash-kpi-grid">
-            <div class="pl-dash-kpi-card">
+        <!-- ── KPI Grid (4 cards) ──────────────────────────────── -->
+        <div class="pl-dash-kpi-grid pl-dash-kpi-grid--fw">
+            <div class="pl-dash-kpi-card pl-dash-kpi-card--fw">
                 <div class="pl-dash-kpi-icon pl-dash-icon-blue"><span class="material-symbols-outlined">menu_book</span></div>
                 <div class="pl-dash-kpi-info">
-                    <span class="pl-dash-kpi-value"><?php echo $nb_courses; ?></span>
+                    <span class="pl-dash-kpi-value pl-dash-kpi-value--fw"><?php echo $nb_courses; ?></span>
                     <span class="pl-dash-kpi-label">Cours</span>
                 </div>
             </div>
-            <div class="pl-dash-kpi-card">
+            <div class="pl-dash-kpi-card pl-dash-kpi-card--fw">
                 <div class="pl-dash-kpi-icon pl-dash-icon-violet"><span class="material-symbols-outlined">analytics</span></div>
                 <div class="pl-dash-kpi-info">
-                    <span class="pl-dash-kpi-value"><?php echo $nb_analyses; ?></span>
+                    <span class="pl-dash-kpi-value pl-dash-kpi-value--fw"><?php echo $nb_analyses; ?></span>
                     <span class="pl-dash-kpi-label">Analyses</span>
                 </div>
             </div>
-            <div class="pl-dash-kpi-card">
+            <div class="pl-dash-kpi-card pl-dash-kpi-card--fw">
                 <div class="pl-dash-kpi-icon pl-dash-icon-green"><span class="material-symbols-outlined">folder_open</span></div>
                 <div class="pl-dash-kpi-info">
-                    <span class="pl-dash-kpi-value"><?php echo $nb_projects; ?></span>
-                    <span class="pl-dash-kpi-label">Séances en cours</span>
+                    <span class="pl-dash-kpi-value pl-dash-kpi-value--fw"><?php echo $nb_projects; ?></span>
+                    <span class="pl-dash-kpi-label">S&eacute;ances</span>
+                </div>
+            </div>
+            <div class="pl-dash-kpi-card pl-dash-kpi-card--fw">
+                <div class="pl-dash-kpi-icon pl-dash-icon-amber"><span class="material-symbols-outlined">speed</span></div>
+                <div class="pl-dash-kpi-info">
+                    <span class="pl-dash-kpi-value pl-dash-kpi-value--fw"><?php echo $avg_score; ?><small>/100</small></span>
+                    <span class="pl-dash-kpi-label">Score moyen</span>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Activity -->
-        <section class="pl-dash-activity">
-            <h2 class="pl-dash-activity-title">
-                <span class="material-symbols-outlined">history</span>
-                Activit&eacute; r&eacute;cente
-            </h2>
-            <?php if ( empty( $recent_analyses ) ) : ?>
-                <div class="pl-dash-empty-state">
-                    <span class="material-symbols-outlined">inbox</span>
-                    <p>Aucune activit&eacute; r&eacute;cente. Lancez votre premi&egrave;re analyse !</p>
-                </div>
-            <?php else : ?>
-                <div class="pl-dash-activity-list">
-                    <?php foreach ( $recent_analyses as $analysis ) :
-                        $course_id   = (int) get_post_meta( $analysis->ID, '_pl_course_id', true );
-                        $course_post = $course_id ? get_post( $course_id ) : null;
-                        $course_name = $course_post ? esc_html( $course_post->post_title ) : 'Cours inconnu';
-                        $date_str    = esc_html( wp_date( 'j M Y &agrave; H:i', strtotime( $analysis->post_date ) ) );
-                    ?>
-                        <div class="pl-dash-activity-item">
-                            <div class="pl-dash-activity-icon"><span class="material-symbols-outlined">search_insights</span></div>
-                            <div class="pl-dash-activity-info">
-                                <strong>Analyse : <?php echo $course_name; ?></strong>
-                                <span class="pl-dash-activity-date"><?php echo $date_str; ?></span>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </section>
+        <!-- ── Bottom zone : 3 columns ─────────────────────────── -->
+        <div class="pl-dash-bottom-grid">
 
-</div><!-- .pl-dash-page -->
-        <?php
-        echo '</main>';
-        echo '</div>';
-        echo self::render_footer();
-        return ob_get_clean();
-    }
+            <!-- Cours récents -->
+            <section class="pl-dash-section-card">
+                <h2 class="pl-dash-section-heading">
+                    <span class="material-symbols-outlined">menu_book</span> Cours r&eacute;cents
+                </h2>
+                <?php if ( empty( $recent_courses ) ) : ?>
+                    <div class="pl-dash-empty-mini">
+                        <span class="material-symbols-outlined">school</span>
+                        <p>Aucun cours pour l&rsquo;instant.</p>
+                    </div>
+                <?php else : ?>
+                    <div class="pl-dash-mini-list">
+                        <?php foreach ( $recent_courses as $course ) :
+                            $date_str   = esc_html( wp_date( 'j M Y', strtotime( $course->post_date ) ) );
+                            $course_url = esc_url( add_query_arg( 'course_id', $course->ID, $workbench_url ) );
+                        ?>
+                        <a href="<?php echo $course_url; ?>" class="pl-dash-mini-item">
+                            <div class="pl-dash-mini-info">
+                                <span class="pl-dash-mini-title"><?php echo esc_html( $course->post_title ); ?></span>
+                                <span class="pl-dash-mini-date"><?php echo $date_str; ?></span>
+                            </div>
+                            <span class="material-symbols-outlined pl-dash-mini-arrow">chevron_right</span>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+
+            <!-- Ateliers récents -->
+            <section class="pl-dash-section-card">
+                <h2 class="pl-dash-section-heading">
+                    <span class="material-symbols-outlined">science</span> Ateliers r&eacute;cents
+                </h2>
+                <?php if ( empty( $recent_projects ) ) : ?>
+                    <div class="pl-dash-empty-mini">
+                        <span class="material-symbols-outlined">biotech</span>
+                        <p>Aucun atelier pour l&rsquo;instant.</p>
+                    </div>
+                <?php else : ?>
+                    <div class="pl-dash-mini-list">
+                        <?php foreach ( $recent_projects as $project ) :
+                            $date_str    = esc_html( wp_date( 'j M Y', strtotime( $project->post_date ) ) );
+                            $project_url = esc_url( add_query_arg( 'project_id', $project->ID, $workbench_url ) );
+                        ?>
+                        <a href="<?php echo $project_url; ?>" class="pl-dash-mini-item">
+                            <div class="pl-dash-mini-info">
+                                <span class="pl-dash-mini-title"><?php echo esc_html( $project->post_title ); ?></span>
+                                <span class="pl-dash-mini-date"><?php echo $date_str; ?></span>
+                            </div>
+                            <span class="material-symbols-outlined pl-dash-mini-arrow">chevron_right</span>
+                        </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+
+            <!-- Actions rapides -->
+            <section class="pl-dash-section-card pl-dash-section-card--actions">
+                <h2 class="pl-dash-section-heading">
+                    <span class="material-symbols-outlined">bolt</span> Actions rapides
+                </h2>
+                <div class="pl-dash-actions-grid">
+                    <a href="<?php echo $courses_url; ?>" class="pl-dash-action-btn">
+                        <span class="material-symbols-outlined">add_circle</span>
+                        <span>Nouveau cours</span>
+                    </a>
+                    <a href="<?php echo $workbench_url; ?>" class="pl-dash-action-btn">
+                        <span class="material-symbols-outlined">upload_file</span>
+                        <span>Importer PPTX</span>
+                    </a>
+                    <a href="<?php echo $history_url; ?>" class="pl-dash-action-btn">
+                        <span class="material-symbols-outlined">history</span>
+                        <span>Historique</span>
+                    </a>
+                    <a href="<?php echo $settings_url; ?>" class="pl-dash-action-btn">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span>Param&egrave;tres</span>
+                    </a>
+                </div>
+            </section>
+
+        </div><!-- .pl-dash-bottom-grid -->
+
+    </div><!-- .pl-dash-page -->
+            <?php
+            echo '</main>';
+            echo '</div>';
+            echo self::render_footer();
+            return ob_get_clean();
+        }
+
+
 
     // -------------------------------------------------------------------------
     // [pedagolens_student_dashboard] — Dashboard étudiant (Stitch)

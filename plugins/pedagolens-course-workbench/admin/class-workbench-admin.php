@@ -658,6 +658,9 @@ class PedagoLens_Workbench_Admin {
         $raw_slide_images = get_post_meta( $project_id, '_pl_slide_images', true );
         $slide_images     = is_string( $raw_slide_images ) ? (array) json_decode( $raw_slide_images, true ) : [];
 
+        $raw_visual_data  = get_post_meta( $project_id, '_pl_slide_visual_data', true );
+        $visual_data      = is_string( $raw_visual_data ) ? (array) json_decode( $raw_visual_data, true ) : [];
+
         $courses_page = get_page_by_path( 'cours-projets' );
         $back_url     = $courses_page ? get_permalink( $courses_page ) : home_url( '/' );
 
@@ -712,6 +715,7 @@ class PedagoLens_Workbench_Admin {
             'slideImages' => $slide_images,
             'sections'    => $sections_for_js,
             'totalSlides' => $total_slides,
+            'visualData'  => $visual_data,
         ] );
 
         // First section data (for no-JS fallback)
@@ -736,6 +740,10 @@ class PedagoLens_Workbench_Admin {
                 <div class="pl-editor-header-spacer"></div>
                 <button type="button" id="pl-upload-trigger" class="pl-editor-btn pl-editor-btn-outline">Importer</button>
                 <button type="button" id="pl-add-section" class="pl-editor-btn pl-editor-btn-outline">+ Section</button>
+                <button type="button" id="pl-view-toggle" class="pl-editor-btn pl-editor-btn-outline" title="Basculer vue visuelle / texte">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                    Vue visuelle
+                </button>
                 <button type="button" id="pl-wb-save-version" class="pl-editor-btn pl-editor-btn-primary">Sauvegarder</button>
                 <button type="button" id="pl-download-pptx" class="pl-editor-btn pl-editor-btn-outline" style="display:none;">Télécharger PPTX</button>
             </header>
@@ -1342,11 +1350,16 @@ class PedagoLens_Workbench_Admin {
                 break;
         }
 
-        // Convert PPTX slides to images
+        // Convert PPTX slides to images + extract visual layout data
         $slide_images = [];
+        $visual_data  = [];
         if ( $ext === 'pptx' ) {
             $slide_images = self::convert_pptx_to_images( $filepath, $attachment_id );
             update_post_meta( $project_id, '_pl_slide_images', wp_json_encode( $slide_images ) );
+
+            // Extract visual layout data (positions, sizes, formatting, images)
+            $visual_data = self::extract_pptx_visual( $filepath, $project_id );
+            update_post_meta( $project_id, '_pl_slide_visual_data', wp_json_encode( $visual_data ) );
 
             // Link each section to its corresponding slide image
             foreach ( $extracted_sections as $idx => &$sec ) {
@@ -1398,6 +1411,7 @@ class PedagoLens_Workbench_Admin {
             'file_html'     => $file_html,
             'count'         => count( $extracted_sections ),
             'slide_images'  => $slide_images,
+            'visual_data'   => $visual_data,
         ] );
     }
 
@@ -1633,4 +1647,277 @@ class PedagoLens_Workbench_Admin {
 
         return $text;
     }
+
+    /**
+     * Extract visual layout data from a PPTX file.
+     * Parses each slide's XML to get element positions, sizes, text formatting, and images.
+     * Returns structured data that can be rendered as positioned HTML elements.
+     *
+     * @param string $filepath Path to the .pptx file.
+     * @param int    $project_id Project ID for storing extracted media.
+     * @return array Array of slides, each containing positioned elements.
+     */
+    private static function extract_pptx_visual( string $filepath, int $project_id ): array {
+        $slides = [];
+        $zip    = new \ZipArchive();
+
+        if ( $zip->open( $filepath ) !== true ) {
+            return $slides;
+        }
+
+        // EMU to px conversion: 1 inch = 914400 EMU, 1 inch = 96 px at 96 DPI
+        // PowerPoint default slide: 12192000 x 6858000 EMU = 960 x 540 px (at 96 DPI)
+        $emu_to_px = 96.0 / 914400.0;
+
+        // Slide dimensions (default 10" x 7.5" widescreen = 16:9)
+        $slide_w_px = 960;
+        $slide_h_px = 540;
+
+        // Try to get actual slide size from presentation.xml
+        $pres_xml = $zip->getFromName( 'ppt/presentation.xml' );
+        if ( $pres_xml ) {
+            if ( preg_match( '/<p:sldSz[^>]*cx="(\d+)"[^>]*cy="(\d+)"/', $pres_xml, $sz ) ) {
+                $slide_w_px = round( (int) $sz[1] * $emu_to_px );
+                $slide_h_px = round( (int) $sz[2] * $emu_to_px );
+            }
+        }
+
+        // Parse relationships for each slide to resolve image references
+        // Also extract media files
+        $media_dir = wp_upload_dir()['basedir'] . '/pedagolens/slides/' . $project_id . '/media/';
+        $media_url = wp_upload_dir()['baseurl'] . '/pedagolens/slides/' . $project_id . '/media/';
+        if ( ! is_dir( $media_dir ) ) {
+            wp_mkdir_p( $media_dir );
+        }
+
+        $slide_num = 1;
+        while ( true ) {
+            $slide_xml = $zip->getFromName( "ppt/slides/slide{$slide_num}.xml" );
+            if ( $slide_xml === false ) {
+                break;
+            }
+
+            // Parse slide relationships to map rId → media file
+            $rels_xml  = $zip->getFromName( "ppt/slides/_rels/slide{$slide_num}.xml.rels" );
+            $rels_map  = [];
+            if ( $rels_xml ) {
+                if ( preg_match_all( '/<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*Type="([^"]+)"/', $rels_xml, $rm, PREG_SET_ORDER ) ) {
+                    foreach ( $rm as $r ) {
+                        $rels_map[ $r[1] ] = [ 'target' => $r[2], 'type' => $r[3] ];
+                    }
+                }
+            }
+
+            // Extract slide background color
+            $bg_color = '#ffffff';
+            if ( preg_match( '/<p:bg>.*?<a:srgbClr val="([0-9a-fA-F]{6})"/', $slide_xml, $bgm ) ) {
+                $bg_color = '#' . $bgm[1];
+            } elseif ( preg_match( '/<p:bg>.*?<a:prstClr val="([^"]+)"/', $slide_xml, $bgm2 ) ) {
+                $bg_color = self::pptx_preset_color( $bgm2[1] );
+            }
+
+            $elements = [];
+
+            // Extract shapes (text boxes) — <p:sp> elements
+            // Use a regex-based approach since DOMDocument with namespaces is fragile
+            if ( preg_match_all( '/<p:sp\b[^>]*>.*?<\/p:sp>/s', $slide_xml, $sp_matches ) ) {
+                foreach ( $sp_matches[0] as $sp_xml ) {
+                    $el = self::parse_pptx_shape( $sp_xml, $emu_to_px );
+                    if ( $el ) {
+                        $elements[] = $el;
+                    }
+                }
+            }
+
+            // Extract images — <p:pic> elements
+            if ( preg_match_all( '/<p:pic\b[^>]*>.*?<\/p:pic>/s', $slide_xml, $pic_matches ) ) {
+                foreach ( $pic_matches[0] as $pic_xml ) {
+                    $el = self::parse_pptx_picture( $pic_xml, $emu_to_px, $rels_map, $zip, $media_dir, $media_url, $slide_num );
+                    if ( $el ) {
+                        $elements[] = $el;
+                    }
+                }
+            }
+
+            $slides[] = [
+                'slide_num'  => $slide_num,
+                'width'      => $slide_w_px,
+                'height'     => $slide_h_px,
+                'bg_color'   => $bg_color,
+                'elements'   => $elements,
+            ];
+
+            $slide_num++;
+        }
+
+        $zip->close();
+        return $slides;
+    }
+
+    /**
+     * Parse a <p:sp> (shape/text box) element from PPTX XML.
+     */
+    private static function parse_pptx_shape( string $sp_xml, float $emu_to_px ): ?array {
+        // Get position and size from <a:off> and <a:ext>
+        $x = $y = $w = $h = 0;
+        if ( preg_match( '/<a:off[^>]*x="(\d+)"[^>]*y="(\d+)"/', $sp_xml, $off ) ) {
+            $x = round( (int) $off[1] * $emu_to_px );
+            $y = round( (int) $off[2] * $emu_to_px );
+        }
+        if ( preg_match( '/<a:ext[^>]*cx="(\d+)"[^>]*cy="(\d+)"/', $sp_xml, $ext ) ) {
+            $w = round( (int) $ext[1] * $emu_to_px );
+            $h = round( (int) $ext[2] * $emu_to_px );
+        }
+
+        if ( $w < 5 || $h < 5 ) {
+            return null; // Skip tiny/invisible shapes
+        }
+
+        // Extract text runs with formatting
+        $paragraphs = [];
+        if ( preg_match_all( '/<a:p\b[^>]*>(.*?)<\/a:p>/s', $sp_xml, $p_matches ) ) {
+            foreach ( $p_matches[1] as $p_xml ) {
+                $para = [ 'runs' => [], 'align' => 'left' ];
+
+                // Paragraph alignment
+                if ( preg_match( '/<a:pPr[^>]*algn="([^"]+)"/', $p_xml, $algn ) ) {
+                    $para['align'] = match( $algn[1] ) {
+                        'ctr'  => 'center',
+                        'r'    => 'right',
+                        'just' => 'justify',
+                        default => 'left',
+                    };
+                }
+
+                // Text runs
+                if ( preg_match_all( '/<a:r>(.*?)<\/a:r>/s', $p_xml, $r_matches ) ) {
+                    foreach ( $r_matches[1] as $r_xml ) {
+                        $run = [ 'text' => '', 'bold' => false, 'italic' => false, 'size' => 18, 'color' => '#000000' ];
+
+                        // Text content
+                        if ( preg_match( '/<a:t>(.*?)<\/a:t>/s', $r_xml, $t ) ) {
+                            $run['text'] = html_entity_decode( $t[1], ENT_QUOTES | ENT_XML1, 'UTF-8' );
+                        }
+
+                        // Run properties
+                        if ( preg_match( '/<a:rPr([^>]*)/', $r_xml, $rpr ) ) {
+                            $rpr_attrs = $rpr[1];
+                            if ( preg_match( '/b="1"/', $rpr_attrs ) ) $run['bold'] = true;
+                            if ( preg_match( '/i="1"/', $rpr_attrs ) ) $run['italic'] = true;
+                            if ( preg_match( '/sz="(\d+)"/', $rpr_attrs, $sz ) ) {
+                                $run['size'] = round( (int) $sz[1] / 100 ); // hundredths of a point → pt
+                            }
+                        }
+
+                        // Run color
+                        if ( preg_match( '/<a:rPr[^>]*>.*?<a:solidFill>.*?<a:srgbClr val="([0-9a-fA-F]{6})".*?<\/a:solidFill>/s', $r_xml, $clr ) ) {
+                            $run['color'] = '#' . $clr[1];
+                        }
+
+                        if ( $run['text'] !== '' ) {
+                            $paragraphs[] = $para;
+                            $para['runs'][] = $run;
+                        }
+                    }
+                }
+
+                // Also check for <a:fld> (field) text
+                if ( preg_match_all( '/<a:fld[^>]*>.*?<a:t>(.*?)<\/a:t>.*?<\/a:fld>/s', $p_xml, $fld ) ) {
+                    foreach ( $fld[1] as $ft ) {
+                        $para['runs'][] = [ 'text' => html_entity_decode( $ft, ENT_QUOTES | ENT_XML1, 'UTF-8' ), 'bold' => false, 'italic' => false, 'size' => 14, 'color' => '#666666' ];
+                    }
+                }
+
+                if ( ! empty( $para['runs'] ) ) {
+                    $paragraphs[] = $para;
+                }
+            }
+        }
+
+        // Skip shapes with no text
+        if ( empty( $paragraphs ) ) {
+            // Check if it's a filled shape (rectangle, etc.) — still render it
+            $has_fill = preg_match( '/<a:solidFill>/', $sp_xml );
+            if ( ! $has_fill ) {
+                return null;
+            }
+        }
+
+        // Shape fill color
+        $fill_color = null;
+        if ( preg_match( '/<p:spPr>.*?<a:solidFill>.*?<a:srgbClr val="([0-9a-fA-F]{6})".*?<\/a:solidFill>/s', $sp_xml, $fc ) ) {
+            $fill_color = '#' . $fc[1];
+        }
+
+        return [
+            'type'       => 'text',
+            'x'          => $x,
+            'y'          => $y,
+            'w'          => $w,
+            'h'          => $h,
+            'paragraphs' => $paragraphs,
+            'fill'       => $fill_color,
+        ];
+    }
+
+    /**
+     * Parse a <p:pic> (picture) element from PPTX XML.
+     */
+    private static function parse_pptx_picture( string $pic_xml, float $emu_to_px, array $rels_map, \ZipArchive $zip, string $media_dir, string $media_url, int $slide_num ): ?array {
+        $x = $y = $w = $h = 0;
+        if ( preg_match( '/<a:off[^>]*x="(\d+)"[^>]*y="(\d+)"/', $pic_xml, $off ) ) {
+            $x = round( (int) $off[1] * $emu_to_px );
+            $y = round( (int) $off[2] * $emu_to_px );
+        }
+        if ( preg_match( '/<a:ext[^>]*cx="(\d+)"[^>]*cy="(\d+)"/', $pic_xml, $ext ) ) {
+            $w = round( (int) $ext[1] * $emu_to_px );
+            $h = round( (int) $ext[2] * $emu_to_px );
+        }
+
+        if ( $w < 5 || $h < 5 ) return null;
+
+        // Get image reference (rId)
+        $img_url = '';
+        if ( preg_match( '/<a:blip[^>]*r:embed="([^"]+)"/', $pic_xml, $blip ) ) {
+            $rid = $blip[1];
+            if ( isset( $rels_map[ $rid ] ) ) {
+                $target = $rels_map[ $rid ]['target'];
+                // Target is relative like "../media/image1.png"
+                $media_path = preg_replace( '/^\.\.\//', 'ppt/', $target );
+                $media_data = $zip->getFromName( $media_path );
+                if ( $media_data !== false ) {
+                    $filename = basename( $media_path );
+                    $dest     = $media_dir . 'slide' . $slide_num . '_' . $filename;
+                    if ( ! file_exists( $dest ) ) {
+                        file_put_contents( $dest, $media_data );
+                    }
+                    $img_url = $media_url . 'slide' . $slide_num . '_' . $filename;
+                }
+            }
+        }
+
+        if ( ! $img_url ) return null;
+
+        return [
+            'type' => 'image',
+            'x'    => $x,
+            'y'    => $y,
+            'w'    => $w,
+            'h'    => $h,
+            'src'  => $img_url,
+        ];
+    }
+
+    /**
+     * Convert PowerPoint preset color name to hex.
+     */
+    private static function pptx_preset_color( string $name ): string {
+        $colors = [
+            'black'   => '#000000', 'white'  => '#ffffff', 'red'    => '#ff0000',
+            'green'   => '#00ff00', 'blue'   => '#0000ff', 'yellow' => '#ffff00',
+            'dkBlue'  => '#00008b', 'ltGray' => '#d3d3d3', 'dkGray' => '#a9a9a9',
+        ];
+        return $colors[ $name ] ?? '#ffffff';
+    }
+
 }
