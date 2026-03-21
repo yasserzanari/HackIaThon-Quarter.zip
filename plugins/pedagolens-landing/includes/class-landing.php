@@ -195,8 +195,9 @@ class PedagoLens_Landing {
     <header class="plx-header">
         <nav class="plx-nav">
             <div class="plx-nav-logo">
-                <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--landing" />
-                <span class="plx-logo-text">PédagoLens</span>
+                <a href="<?php echo esc_url( home_url('/') ); ?>">
+                    <img src="http://pedagolens.34.199.149.247.nip.io/wp-content/uploads/2026/03/logo.png" alt="PédagoLens" class="pl-logo-img pl-logo-img--landing-nav" />
+                </a>
             </div>
             <div class="plx-nav-links">
                 <a href="#plx-features" class="plx-nav-link plx-nav-link--active">Fonctionnalités</a>
@@ -227,10 +228,6 @@ class PedagoLens_Landing {
         <div class="plx-hero-mesh"></div>
         <div class="plx-hero-inner">
             <div class="plx-hero-content">
-                <div class="plx-hero-badge">
-                    <span class="plx-badge-dot"></span>
-                    Conçu pour l'enseignement supérieur québécois
-                </div>
                 <h1 class="plx-hero-title">
                     L'IA qui transforme chaque cours en expérience d'apprentissage <span class="plx-gradient-text">personnalisée</span>
                 </h1>
@@ -240,15 +237,6 @@ class PedagoLens_Landing {
                         Démarrer gratuitement
                         <span class="material-symbols-outlined">bolt</span>
                     </a>
-                    <a href="#plx-how" class="plx-btn-outline-lg">
-                        Voir une démo
-                        <span class="material-symbols-outlined">play_circle</span>
-                    </a>
-                </div>
-                <div class="plx-hero-trust">
-                    <span>Reconnu par</span>
-                    <span class="plx-trust-sep"></span>
-                    <span>MEES</span><span>Cégeps du Québec</span><span>Universités canadiennes</span>
                 </div>
             </div>
 
@@ -422,19 +410,6 @@ class PedagoLens_Landing {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== SOCIAL PROOF ========== -->
-    <section class="plx-section plx-social-proof">
-        <div class="plx-section-inner">
-            <p class="plx-social-label">Ils transforment l'éducation avec PédagoLens</p>
-            <div class="plx-social-logos">
-                <span>CÉGEP DE <strong>MONTRÉAL</strong></span>
-                <span><strong>UQAM</strong></span>
-                <span>UNIVERSITÉ <strong>LAVAL</strong></span>
-                <span>POLYTECHNIQUE <strong>MONTRÉAL</strong></span>
             </div>
         </div>
     </section>
