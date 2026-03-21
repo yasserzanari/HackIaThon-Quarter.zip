@@ -1834,6 +1834,19 @@
         if (form) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
+
+                // Validate file size before upload (max 64 MB)
+                var maxSize = 64 * 1024 * 1024;
+                var fileInput = form.querySelector('input[type="file"]');
+                if (fileInput && fileInput.files) {
+                    for (var fi = 0; fi < fileInput.files.length; fi++) {
+                        if (fileInput.files[fi].size > maxSize) {
+                            if (window.PlToast) PlToast.error('Le fichier « ' + fileInput.files[fi].name + ' » dépasse 64 Mo. Veuillez réduire sa taille.');
+                            return;
+                        }
+                    }
+                }
+
                 var btn = form.querySelector('.pl-btn-submit');
                 var btnText = btn.querySelector('.pl-btn-text');
                 var btnLoader = btn.querySelector('.pl-btn-loader');
@@ -1848,7 +1861,10 @@
                 fetch((window.plFront && plFront.ajaxurl) || '/wp-admin/admin-ajax.php', {
                     method: 'POST', body: fd
                 })
-                .then(function(r) { return r.json(); })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
                 .then(function(res) {
                     btn.disabled = false;
                     if (btnText) btnText.style.display = '';
@@ -1880,11 +1896,15 @@
                         if (window.PlToast) PlToast.error(res.data.message || 'Erreur lors de la création');
                     }
                 })
-                .catch(function() {
+                .catch(function(err) {
                     btn.disabled = false;
                     if (btnText) btnText.style.display = '';
                     if (btnLoader) btnLoader.style.display = 'none';
-                    if (window.PlToast) PlToast.error('Erreur réseau');
+                    var msg = 'Erreur réseau';
+                    if (err && err.message && err.message.indexOf('HTTP 400') !== -1) {
+                        msg = 'Le fichier est trop volumineux ou la session a expiré. Rechargez la page et réessayez.';
+                    }
+                    if (window.PlToast) PlToast.error(msg);
                 });
             });
         }

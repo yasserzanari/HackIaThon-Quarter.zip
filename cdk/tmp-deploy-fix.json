@@ -3,10 +3,11 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-core/includes/class-core.php 2>&1",
-      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); \\$r = get_role('pedagolens_teacher'); if(\\$r){ foreach(['edit_posts','publish_posts','delete_posts','upload_files','edit_pl_courses','publish_pl_courses','read_pl_analyses','manage_pl_workbench'] as \\$c){ \\$r->add_cap(\\$c); } echo 'Teacher caps updated: ' . implode(', ', array_keys(array_filter(\\$r->capabilities))); } else { echo 'Role not found'; }\" 2>&1",
-      "systemctl restart apache2 && echo 'Apache restarted OK'"
+      "export HOME=/root && PHP_INI=$(php -r \"echo php_ini_loaded_file();\") && echo \"PHP INI: $PHP_INI\" && grep -n 'upload_max_filesize\\|post_max_size' $PHP_INI 2>&1",
+      "export HOME=/root && PHP_INI=$(php -r \"echo php_ini_loaded_file();\") && sed -i 's/^upload_max_filesize.*/upload_max_filesize = 64M/' $PHP_INI && sed -i 's/^post_max_size.*/post_max_size = 64M/' $PHP_INI && echo 'PHP INI updated'",
+      "export HOME=/root && APACHE_PHP_INI=$(ls /etc/php/*/apache2/php.ini 2>/dev/null | head -1) && echo \"Apache PHP INI: $APACHE_PHP_INI\" && sed -i 's/^upload_max_filesize.*/upload_max_filesize = 64M/' $APACHE_PHP_INI && sed -i 's/^post_max_size.*/post_max_size = 64M/' $APACHE_PHP_INI && echo 'Apache PHP INI updated'",
+      "systemctl restart apache2 && echo 'Apache restarted OK'",
+      "php -i 2>/dev/null | grep -E 'upload_max_filesize|post_max_size' | head -5"
     ]
   }
 }
