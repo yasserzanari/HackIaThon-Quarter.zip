@@ -153,8 +153,10 @@ class PedagoLens_Landing {
         $has_workbench = class_exists( 'PedagoLens_Workbench_Admin' );
 
         wp_localize_script( 'pl-landing-front', 'plFront', [
-            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-            'nonces'  => [
+            'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+            'ajaxurl'  => admin_url( 'admin-ajax.php' ),
+            'nonce'    => wp_create_nonce( 'pl_nonce' ),
+            'nonces'   => [
                 'dashboard' => $has_dashboard ? wp_create_nonce( 'pl_dashboard_ajax' ) : '',
                 'twin'      => $has_twin      ? wp_create_nonce( 'pl_twin_ajax' )      : '',
                 'workbench' => $has_workbench ? wp_create_nonce( 'pl_workbench_ajax' ) : '',
