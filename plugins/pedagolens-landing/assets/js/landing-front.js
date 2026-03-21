@@ -2127,8 +2127,8 @@
             messagesEl.scrollTop = messagesEl.scrollHeight;
 
             // Course select: twin view or dashboard
-            var courseSelect = document.getElementById('pl-twin-course-select');
-            var courseId = courseSelect ? courseSelect.value : 0;
+            var chatArea = document.getElementById('pl-twin-chat-area');
+            var courseId = chatArea ? chatArea.getAttribute('data-course-id') : 0;
 
             // Call backend API Bridge (Bedrock or mock PHP)
             if (window.plFront && plFront.ajaxUrl) {
@@ -2238,7 +2238,7 @@
         var toggleBtn   = document.getElementById('pl-twin-course-panel-toggle');
         var expandBtn   = document.getElementById('pl-twin-course-panel-expand');
         var courseList   = document.getElementById('pl-twin-course-list');
-        var courseSelect = document.getElementById('pl-twin-course-select');
+        var chatArea    = document.getElementById('pl-twin-chat-area');
         var mobileBtn   = document.getElementById('pl-twin-mobile-courses-btn');
 
         if (!panel || !courseList) return;
@@ -2289,7 +2289,7 @@
             });
         }
 
-        // --- Course card click → sync dropdown + highlight ---
+        // --- Course card click → update chat area data-course-id + highlight ---
         courseList.addEventListener('click', function(e) {
             var card = e.target.closest('.pl-twin-course-card');
             if (!card) return;
@@ -2302,12 +2302,9 @@
             });
             card.classList.add('pl-twin-course-card--active');
 
-            // Sync the header dropdown
-            if (courseSelect) {
-                courseSelect.value = courseId;
-                // Trigger change event for any listeners
-                var evt = new Event('change', { bubbles: true });
-                courseSelect.dispatchEvent(evt);
+            // Update the chat area data attribute
+            if (chatArea) {
+                chatArea.setAttribute('data-course-id', courseId);
             }
 
             // Close mobile panel after selection
@@ -2315,16 +2312,6 @@
                 closeMobilePanel();
             }
         });
-
-        // --- Dropdown change → sync course cards ---
-        if (courseSelect) {
-            courseSelect.addEventListener('change', function() {
-                var val = this.value;
-                courseList.querySelectorAll('.pl-twin-course-card').forEach(function(c) {
-                    c.classList.toggle('pl-twin-course-card--active', c.getAttribute('data-course-id') === val);
-                });
-            });
-        }
 
         // --- Handle resize ---
         window.addEventListener('resize', function() {

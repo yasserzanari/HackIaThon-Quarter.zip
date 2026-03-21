@@ -16,9 +16,28 @@ class PedagoLens_Core {
     public static function init(): void {
         add_action( 'init', [ self::class, 'register_cpts' ] );
         add_action( 'init', [ self::class, 'register_roles' ] );
+        add_action( 'admin_init', [ self::class, 'maybe_import_json_profiles' ] );
 
         PedagoLens_Admin_Profiles::register();
         PedagoLens_Core_Settings::register();
+    }
+
+    /**
+     * Import JSON profiles if they haven't been imported yet.
+     * Runs once on admin_init, sets a flag to avoid re-checking every page load.
+     */
+    public static function maybe_import_json_profiles(): void {
+        $flag = 'pl_json_profiles_imported';
+        if ( get_option( $flag ) ) {
+            return;
+        }
+
+        $imported = PedagoLens_Profile_Manager::import_from_json_files();
+        if ( $imported > 0 ) {
+            self::log( 'info', "Core::maybe_import_json_profiles — {$imported} profils importés depuis JSON." );
+        }
+
+        update_option( $flag, true );
     }
 
     public static function activate(): void {

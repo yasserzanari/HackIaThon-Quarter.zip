@@ -1040,14 +1040,7 @@ class PedagoLens_Landing {
             <div class="pl-twin-header-sep"></div>
             <h1 class="pl-twin-header-title">Jumeau IA &mdash; L&eacute;a</h1>
         </div>
-        <div class="pl-twin-header-center">
-            <select class="pl-twin-course-select" id="pl-twin-course-select" aria-label="Choisir un cours">
-                <option value="0">G&eacute;n&eacute;ral (tous les cours)</option>
-                <?php foreach ( $courses as $c ) : ?>
-                <option value="<?php echo esc_attr( $c->ID ); ?>"><?php echo esc_html( $c->post_title ); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+        <!-- Course selector moved to side panel -->
         <div class="pl-twin-header-right">
             <button class="pl-twin-mobile-courses-btn" id="pl-twin-mobile-courses-btn" title="Mes cours" aria-label="Afficher les cours">
                 <span class="material-symbols-outlined">menu_book</span>
@@ -1061,17 +1054,22 @@ class PedagoLens_Landing {
         <!-- Mini sidebar (icon bar) -->
         <nav class="pl-twin-mini-sidebar" aria-label="Navigation rapide">
             <div class="pl-twin-mini-sidebar-top">
-                <a href="<?php echo $dash_url; ?>" class="pl-twin-mini-icon" data-tooltip="Dashboard">
+                <a href="<?php echo $dash_url; ?>" class="pl-twin-mini-link" data-tooltip="Dashboard">
                     <span class="material-symbols-outlined">dashboard</span>
                 </a>
-                <a href="<?php echo $twin_url; ?>" class="pl-twin-mini-icon pl-twin-mini-icon--active" data-tooltip="Jumeau IA">
+                <a href="<?php echo $twin_url; ?>" class="pl-twin-mini-link pl-twin-mini-link--active" data-tooltip="Jumeau IA">
                     <span class="material-symbols-outlined">psychology</span>
                 </a>
-                <a href="<?php echo $history_url; ?>" class="pl-twin-mini-icon" data-tooltip="Historique">
+                <a href="<?php echo $history_url; ?>" class="pl-twin-mini-link" data-tooltip="Historique">
                     <span class="material-symbols-outlined">history</span>
                 </a>
-                <a href="<?php echo $account_url; ?>" class="pl-twin-mini-icon" data-tooltip="Mon compte">
+                <a href="<?php echo $account_url; ?>" class="pl-twin-mini-link" data-tooltip="Mon compte">
                     <span class="material-symbols-outlined">person</span>
+                </a>
+            </div>
+            <div class="pl-twin-mini-sidebar-bottom">
+                <a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="pl-twin-mini-link" data-tooltip="D&eacute;connexion">
+                    <span class="material-symbols-outlined">logout</span>
                 </a>
             </div>
         </nav>
@@ -1115,7 +1113,7 @@ class PedagoLens_Landing {
         </button>
 
         <!-- Chat area -->
-        <div class="pl-twin-chat-area">
+        <div class="pl-twin-chat-area" id="pl-twin-chat-area" data-course-id="0">
             <div class="pl-twin-messages" id="pl-lea-messages">
                 <div class="pl-lea-msg pl-lea-msg--bot">
                     Bonjour <?php echo $first_name; ?> ! &#128075; Je suis L&eacute;a, ta tutrice IA. Je suis l&agrave; pour t'aider &agrave; comprendre tes cours &mdash; pas pour te donner les r&eacute;ponses, mais pour t'accompagner dans ta r&eacute;flexion. Choisis un cours &agrave; gauche ou pose-moi une question g&eacute;n&eacute;rale !
@@ -1886,194 +1884,215 @@ class PedagoLens_Landing {
         ?>
         <div class="pl-account-page">
 
-            <!-- ============ PROFIL CARD ============ -->
-            <div class="pl-account-profile-card pl-glass-card pl-animate-in">
-                <div class="pl-account-avatar-wrap">
-                    <img src="<?php echo $avatar_url; ?>" alt="Avatar" class="pl-account-avatar-img" />
-                </div>
-                <h2 class="pl-account-name"><?php echo esc_html( $user->display_name ); ?></h2>
-                <span class="pl-account-role-badge <?php echo $role_class; ?>"><?php echo $role_icon . ' ' . $role_label; ?></span>
-                <p class="pl-account-email-display"><?php echo esc_html( $user->user_email ); ?></p>
-                <a href="<?php echo $logout_url; ?>" class="pl-btn pl-btn-outline pl-btn-sm">D&eacute;connexion</a>
-            </div>
+            <!-- ============ COLONNE GAUCHE ============ -->
+            <div class="pl-account-left">
 
-            <!-- ============ MODIFIER MON PROFIL ============ -->
-            <div class="pl-account-section pl-glass-card pl-animate-in">
-                <h3>&#9998; Modifier mon profil</h3>
-                <div id="pl-profile-msg" class="pl-account-msg" style="display:none;"></div>
-                <form id="pl-profile-form" class="pl-account-form" autocomplete="off">
-                    <input type="hidden" name="_wpnonce" value="<?php echo $profile_nonce; ?>" />
-                    <div class="pl-form-group">
-                        <label for="pl-display-name">Nom d'affichage</label>
-                        <input type="text" id="pl-display-name" name="display_name"
-                               value="<?php echo esc_attr( $user->display_name ); ?>" required />
+                <!-- Profil Card -->
+                <div class="pl-account-profile-card pl-glass-card pl-animate-in">
+                    <div class="pl-account-profile-top">
+                        <img src="<?php echo $avatar_url; ?>" alt="Avatar" class="pl-account-avatar-img" />
+                        <h2 class="pl-account-name"><?php echo esc_html( $user->display_name ); ?></h2>
+                        <span class="pl-account-role-badge <?php echo $role_class; ?>"><?php echo $role_icon . ' ' . $role_label; ?></span>
+                        <p class="pl-account-email-display"><?php echo esc_html( $user->user_email ); ?></p>
+                        <a href="<?php echo $logout_url; ?>" class="pl-account-logout-btn">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">logout</span>
+                            D&eacute;connexion
+                        </a>
                     </div>
-                    <div class="pl-form-group">
-                        <label for="pl-email">Courriel</label>
-                        <input type="email" id="pl-email" name="email"
-                               value="<?php echo esc_attr( $user->user_email ); ?>" required />
-                    </div>
-                    <div class="pl-form-group">
-                        <label for="pl-password">Nouveau mot de passe <small>(laisser vide pour ne pas changer)</small></label>
-                        <input type="password" id="pl-password" name="password" autocomplete="new-password" />
-                    </div>
-                    <button type="submit" class="pl-btn pl-btn-primary">Enregistrer</button>
-                </form>
-            </div>
 
-            <?php
-            // =================================================================
-            // ENSEIGNANT / ADMIN — Préférences + Stats + Liens rapides
-            // =================================================================
-            if ( $is_admin || $is_teacher ) :
-                // Stats rapides
-                $nb_courses  = wp_count_posts( 'pl_course' )->publish ?? 0;
-                $nb_projects = wp_count_posts( 'pl_project' )->publish ?? 0;
-                $nb_analyses = (int) get_user_meta( $user->ID, '_pl_analysis_count', true );
-
-                // Liens
-                $teacher_page  = get_page_by_path( 'dashboard-enseignant' );
-                $courses_page  = get_page_by_path( 'cours-projets' );
-                $workbench_page = get_page_by_path( 'workbench' );
-                $teacher_url   = $teacher_page  ? get_permalink( $teacher_page )  : admin_url( 'admin.php?page=pl-teacher-dashboard' );
-                $courses_url   = $courses_page  ? get_permalink( $courses_page )  : admin_url( 'admin.php?page=pl-course-workbench' );
-                $workbench_url = $workbench_page ? get_permalink( $workbench_page ) : admin_url( 'admin.php?page=pl-course-workbench' );
-            ?>
-
-                <!-- Stats rapides -->
-                <div class="pl-account-section pl-glass-card pl-animate-in">
-                    <h3>&#128202; Statistiques rapides</h3>
-                    <div class="pl-account-stats-grid">
-                        <div class="pl-stat-card">
-                            <span class="pl-stat-number"><?php echo (int) $nb_courses; ?></span>
-                            <span class="pl-stat-label">Cours</span>
-                        </div>
-                        <div class="pl-stat-card">
-                            <span class="pl-stat-number"><?php echo (int) $nb_analyses; ?></span>
-                            <span class="pl-stat-label">Analyses</span>
-                        </div>
-                        <div class="pl-stat-card">
-                            <span class="pl-stat-number"><?php echo (int) $nb_projects; ?></span>
-                            <span class="pl-stat-label">Projets</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Préférences -->
-                <div class="pl-account-section pl-glass-card pl-animate-in">
-                    <h3>&#9881; Mes pr&eacute;f&eacute;rences</h3>
-                    <?php
-                    $prefs = (array) get_user_meta( $user->ID, 'pl_teacher_prefs', true );
-                    $dark  = ! empty( $prefs['dark_mode'] );
-                    $notif = ! empty( $prefs['notifications'] );
+                    <?php if ( $is_admin || $is_teacher ) :
+                        $nb_courses  = wp_count_posts( 'pl_course' )->publish ?? 0;
+                        $nb_projects = wp_count_posts( 'pl_project' )->publish ?? 0;
+                        $nb_analyses = (int) get_user_meta( $user->ID, '_pl_analysis_count', true );
                     ?>
-                    <div class="pl-prefs-grid">
-                        <label class="pl-toggle-row">
-                            <span>&#127769; Th&egrave;me sombre</span>
-                            <input type="checkbox" class="pl-toggle-input" data-pref="dark_mode" <?php checked( $dark ); ?> />
-                            <span class="pl-toggle-slider"></span>
-                        </label>
-                        <label class="pl-toggle-row">
-                            <span>&#128276; Notifications</span>
-                            <input type="checkbox" class="pl-toggle-input" data-pref="notifications" <?php checked( $notif ); ?> />
-                            <span class="pl-toggle-slider"></span>
-                        </label>
+                    <div class="pl-account-mini-stats">
+                        <div class="pl-account-mini-stat">
+                            <div class="pl-account-mini-stat-icon pl-account-mini-stat-icon--courses">&#128218;</div>
+                            <div class="pl-account-mini-stat-info">
+                                <span class="pl-account-mini-stat-value"><?php echo (int) $nb_courses; ?></span>
+                                <span class="pl-account-mini-stat-label">Cours</span>
+                            </div>
+                        </div>
+                        <div class="pl-account-mini-stat">
+                            <div class="pl-account-mini-stat-icon pl-account-mini-stat-icon--analyses">&#128202;</div>
+                            <div class="pl-account-mini-stat-info">
+                                <span class="pl-account-mini-stat-value"><?php echo (int) $nb_analyses; ?></span>
+                                <span class="pl-account-mini-stat-label">Analyses</span>
+                            </div>
+                        </div>
+                        <div class="pl-account-mini-stat">
+                            <div class="pl-account-mini-stat-icon pl-account-mini-stat-icon--projects">&#128196;</div>
+                            <div class="pl-account-mini-stat-info">
+                                <span class="pl-account-mini-stat-value"><?php echo (int) $nb_projects; ?></span>
+                                <span class="pl-account-mini-stat-label">Projets</span>
+                            </div>
+                        </div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
-                <!-- Liens rapides -->
+            </div><!-- .pl-account-left -->
+
+            <!-- ============ COLONNE DROITE ============ -->
+            <div class="pl-account-right">
+
+                <!-- Modifier mon profil -->
                 <div class="pl-account-section pl-glass-card pl-animate-in">
-                    <h3>&#128279; Liens rapides</h3>
-                    <div class="pl-quick-links">
-                        <a href="<?php echo esc_url( $teacher_url ); ?>" class="pl-quick-link-card">
-                            <span class="pl-ql-icon">&#128202;</span>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="<?php echo esc_url( $courses_url ); ?>" class="pl-quick-link-card">
-                            <span class="pl-ql-icon">&#128218;</span>
-                            <span>Cours</span>
-                        </a>
-                        <a href="<?php echo esc_url( $workbench_url ); ?>" class="pl-quick-link-card">
-                            <span class="pl-ql-icon">&#9999;</span>
-                            <span>Workbench</span>
-                        </a>
-                    </div>
-                </div>
-
-            <?php
-            // =================================================================
-            // ÉTUDIANT — Difficultés / troubles + Liens rapides
-            // =================================================================
-            elseif ( $is_student ) :
-                $raw_diff     = get_user_meta( $user->ID, 'pl_student_difficulties', true );
-                $difficulties = is_array( $raw_diff ) ? $raw_diff : ( is_string( $raw_diff ) && $raw_diff ? json_decode( $raw_diff, true ) : [] );
-                if ( ! is_array( $difficulties ) ) $difficulties = [];
-
-                $difficulty_options = [
-                    'tdah'              => 'TDAH / Difficult&eacute;s de concentration',
-                    'surcharge'         => 'Surcharge cognitive',
-                    'allophone'         => 'Langue seconde / Allophone',
-                    'faible_autonomie'  => 'Faible autonomie',
-                    'anxiete'           => 'Anxi&eacute;t&eacute; face aux consignes',
-                    'trouble_apprentissage' => "Trouble d'apprentissage",
-                    'autre'             => 'Autre',
-                ];
-
-                $other_text = '';
-                foreach ( $difficulties as $d ) {
-                    if ( is_array( $d ) && ( $d['key'] ?? '' ) === 'autre' ) {
-                        $other_text = $d['text'] ?? '';
-                    }
-                }
-                $checked_keys = array_map( fn( $d ) => is_array( $d ) ? ( $d['key'] ?? '' ) : $d, $difficulties );
-
-                $student_page = get_page_by_path( 'dashboard-etudiant' );
-                $courses_page = get_page_by_path( 'cours-projets' );
-                $student_url  = $student_page ? get_permalink( $student_page ) : '#';
-                $courses_url  = $courses_page ? get_permalink( $courses_page ) : '#';
-            ?>
-
-                <!-- Mes difficultés / troubles -->
-                <div class="pl-account-section pl-glass-card pl-animate-in">
-                    <h3>&#128203; Mes difficult&eacute;s / troubles</h3>
-                    <p class="pl-text-muted">Ces informations aident vos enseignants &agrave; adapter leur p&eacute;dagogie.</p>
-                    <div id="pl-diff-msg" class="pl-account-msg" style="display:none;"></div>
-                    <form id="pl-difficulties-form" class="pl-difficulties-list">
-                        <input type="hidden" name="_wpnonce" value="<?php echo $diff_nonce; ?>" />
-                        <?php foreach ( $difficulty_options as $key => $label ) : ?>
-                            <label class="pl-difficulty-checkbox">
-                                <input type="checkbox" name="difficulties[]" value="<?php echo esc_attr( $key ); ?>"
-                                    <?php checked( in_array( $key, $checked_keys, true ) ); ?> />
-                                <span class="pl-checkbox-custom"></span>
-                                <span><?php echo $label; ?></span>
-                            </label>
-                            <?php if ( $key === 'autre' ) : ?>
-                                <div class="pl-autre-field" style="<?php echo in_array( 'autre', $checked_keys, true ) ? '' : 'display:none;'; ?>">
-                                    <input type="text" name="autre_text" placeholder="Pr&eacute;cisez…"
-                                           value="<?php echo esc_attr( $other_text ); ?>" />
-                                </div>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                        <button type="submit" class="pl-btn pl-btn-primary">Sauvegarder</button>
+                    <h3>&#9998; Modifier mon profil</h3>
+                    <div id="pl-profile-msg" class="pl-account-msg" style="display:none;"></div>
+                    <form id="pl-profile-form" class="pl-account-form" autocomplete="off">
+                        <input type="hidden" name="_wpnonce" value="<?php echo $profile_nonce; ?>" />
+                        <div class="pl-account-form-row">
+                            <div class="pl-form-group">
+                                <label for="pl-display-name">Nom d'affichage</label>
+                                <input type="text" id="pl-display-name" name="display_name"
+                                       value="<?php echo esc_attr( $user->display_name ); ?>" required />
+                            </div>
+                            <div class="pl-form-group">
+                                <label for="pl-email">Courriel</label>
+                                <input type="email" id="pl-email" name="email"
+                                       value="<?php echo esc_attr( $user->user_email ); ?>" required />
+                            </div>
+                        </div>
+                        <div class="pl-form-group">
+                            <label for="pl-password">Nouveau mot de passe <small>(laisser vide pour ne pas changer)</small></label>
+                            <input type="password" id="pl-password" name="password" autocomplete="new-password" />
+                        </div>
+                        <button type="submit" class="pl-btn pl-btn-primary pl-btn-sm">Enregistrer</button>
                     </form>
                 </div>
 
-                <!-- Liens rapides étudiant -->
-                <div class="pl-account-section pl-glass-card pl-animate-in">
-                    <h3>&#128279; Liens rapides</h3>
-                    <div class="pl-quick-links">
-                        <a href="<?php echo esc_url( $student_url ); ?>" class="pl-quick-link-card">
-                            <span class="pl-ql-icon">&#129302;</span>
-                            <span>Jumeau num&eacute;rique</span>
-                        </a>
-                        <a href="<?php echo esc_url( $courses_url ); ?>" class="pl-quick-link-card">
-                            <span class="pl-ql-icon">&#128218;</span>
-                            <span>Cours</span>
-                        </a>
-                    </div>
-                </div>
+                <?php
+                // =================================================================
+                // ENSEIGNANT / ADMIN — Préférences + Liens rapides
+                // =================================================================
+                if ( $is_admin || $is_teacher ) :
+                    $teacher_page   = get_page_by_path( 'dashboard-enseignant' );
+                    $courses_page   = get_page_by_path( 'cours-projets' );
+                    $workbench_page = get_page_by_path( 'workbench' );
+                    $teacher_url    = $teacher_page  ? get_permalink( $teacher_page )  : admin_url( 'admin.php?page=pl-teacher-dashboard' );
+                    $courses_url    = $courses_page  ? get_permalink( $courses_page )  : admin_url( 'admin.php?page=pl-course-workbench' );
+                    $workbench_url  = $workbench_page ? get_permalink( $workbench_page ) : admin_url( 'admin.php?page=pl-course-workbench' );
 
-            <?php endif; ?>
+                    $prefs = (array) get_user_meta( $user->ID, 'pl_teacher_prefs', true );
+                    $dark  = ! empty( $prefs['dark_mode'] );
+                    $notif = ! empty( $prefs['notifications'] );
+                ?>
+
+                    <!-- Préférences -->
+                    <div class="pl-account-section pl-glass-card pl-animate-in">
+                        <h3>&#9881; Mes pr&eacute;f&eacute;rences</h3>
+                        <div class="pl-prefs-grid">
+                            <label class="pl-toggle-row">
+                                <span>&#127769; Th&egrave;me sombre</span>
+                                <input type="checkbox" class="pl-toggle-input" data-pref="dark_mode" <?php checked( $dark ); ?> />
+                                <span class="pl-toggle-slider"></span>
+                            </label>
+                            <label class="pl-toggle-row">
+                                <span>&#128276; Notifications</span>
+                                <input type="checkbox" class="pl-toggle-input" data-pref="notifications" <?php checked( $notif ); ?> />
+                                <span class="pl-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Liens rapides -->
+                    <div class="pl-account-section pl-glass-card pl-animate-in">
+                        <h3>&#128279; Liens rapides</h3>
+                        <div class="pl-quick-links">
+                            <a href="<?php echo esc_url( $teacher_url ); ?>" class="pl-quick-link-card">
+                                <span class="pl-ql-icon">&#128202;</span>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="<?php echo esc_url( $courses_url ); ?>" class="pl-quick-link-card">
+                                <span class="pl-ql-icon">&#128218;</span>
+                                <span>Cours</span>
+                            </a>
+                            <a href="<?php echo esc_url( $workbench_url ); ?>" class="pl-quick-link-card">
+                                <span class="pl-ql-icon">&#9999;</span>
+                                <span>Workbench</span>
+                            </a>
+                        </div>
+                    </div>
+
+                <?php
+                // =================================================================
+                // ÉTUDIANT — Difficultés + Liens rapides
+                // =================================================================
+                elseif ( $is_student ) :
+                    $raw_diff     = get_user_meta( $user->ID, 'pl_student_difficulties', true );
+                    $difficulties = is_array( $raw_diff ) ? $raw_diff : ( is_string( $raw_diff ) && $raw_diff ? json_decode( $raw_diff, true ) : [] );
+                    if ( ! is_array( $difficulties ) ) $difficulties = [];
+
+                    $difficulty_options = [
+                        'tdah'              => 'TDAH / Difficult&eacute;s de concentration',
+                        'surcharge'         => 'Surcharge cognitive',
+                        'allophone'         => 'Langue seconde / Allophone',
+                        'faible_autonomie'  => 'Faible autonomie',
+                        'anxiete'           => 'Anxi&eacute;t&eacute; face aux consignes',
+                        'trouble_apprentissage' => "Trouble d'apprentissage",
+                        'autre'             => 'Autre',
+                    ];
+
+                    $other_text = '';
+                    foreach ( $difficulties as $d ) {
+                        if ( is_array( $d ) && ( $d['key'] ?? '' ) === 'autre' ) {
+                            $other_text = $d['text'] ?? '';
+                        }
+                    }
+                    $checked_keys = array_map( fn( $d ) => is_array( $d ) ? ( $d['key'] ?? '' ) : $d, $difficulties );
+
+                    $student_page = get_page_by_path( 'dashboard-etudiant' );
+                    $courses_page = get_page_by_path( 'cours-projets' );
+                    $student_url  = $student_page ? get_permalink( $student_page ) : '#';
+                    $courses_url  = $courses_page ? get_permalink( $courses_page ) : '#';
+                ?>
+
+                    <!-- Mes difficultés -->
+                    <div class="pl-account-section pl-glass-card pl-animate-in">
+                        <h3>&#128203; Mes difficult&eacute;s / troubles</h3>
+                        <p class="pl-text-muted" style="font-size:.8rem;margin-bottom:.75rem;">Ces informations aident vos enseignants &agrave; adapter leur p&eacute;dagogie.</p>
+                        <div id="pl-diff-msg" class="pl-account-msg" style="display:none;"></div>
+                        <form id="pl-difficulties-form">
+                            <input type="hidden" name="_wpnonce" value="<?php echo $diff_nonce; ?>" />
+                            <div class="pl-difficulties-grid">
+                                <?php foreach ( $difficulty_options as $key => $label ) : ?>
+                                    <label class="pl-difficulty-checkbox">
+                                        <input type="checkbox" name="difficulties[]" value="<?php echo esc_attr( $key ); ?>"
+                                            <?php checked( in_array( $key, $checked_keys, true ) ); ?> />
+                                        <span class="pl-checkbox-custom"></span>
+                                        <span><?php echo $label; ?></span>
+                                    </label>
+                                    <?php if ( $key === 'autre' ) : ?>
+                                        <div class="pl-autre-field" style="<?php echo in_array( 'autre', $checked_keys, true ) ? '' : 'display:none;'; ?>">
+                                            <input type="text" name="autre_text" placeholder="Pr&eacute;cisez…"
+                                                   value="<?php echo esc_attr( $other_text ); ?>" />
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="submit" class="pl-btn pl-btn-primary pl-btn-sm" style="margin-top:.75rem;">Sauvegarder</button>
+                        </form>
+                    </div>
+
+                    <!-- Liens rapides étudiant -->
+                    <div class="pl-account-section pl-glass-card pl-animate-in">
+                        <h3>&#128279; Liens rapides</h3>
+                        <div class="pl-quick-links">
+                            <a href="<?php echo esc_url( $student_url ); ?>" class="pl-quick-link-card">
+                                <span class="pl-ql-icon">&#129302;</span>
+                                <span>Jumeau num&eacute;rique</span>
+                            </a>
+                            <a href="<?php echo esc_url( $courses_url ); ?>" class="pl-quick-link-card">
+                                <span class="pl-ql-icon">&#128218;</span>
+                                <span>Cours</span>
+                            </a>
+                        </div>
+                    </div>
+
+                <?php endif; ?>
+
+            </div><!-- .pl-account-right -->
 
         </div><!-- .pl-account-page -->
 
@@ -3359,7 +3378,7 @@ class PedagoLens_Landing {
             wp_send_json_error( [ 'message' => 'Vous devez être connecté.' ] );
         }
 
-        $message   = sanitize_text_field( wp_unslash( $_POST['message'] ?? '' ) );
+        $message   = sanitize_textarea_field( wp_unslash( $_POST['message'] ?? '' ) );
         $course_id = (int) ( $_POST['course_id'] ?? 0 );
 
         if ( empty( $message ) ) {

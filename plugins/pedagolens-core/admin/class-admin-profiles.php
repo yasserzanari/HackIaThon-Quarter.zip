@@ -282,8 +282,8 @@ class PedagoLens_Admin_Profiles {
             <tr>
                 <th><label for="pl_slug"><?php esc_html_e( 'Slug', 'pedagolens-core' ); ?></label></th>
                 <td>
-                    <input type="text" id="pl_slug" name="pl_slug" value="<?php echo esc_attr( $p['slug'] ); ?>" class="regular-text" pattern="[a-z][a-z0-9\-]*" required>
-                    <p class="description"><?php esc_html_e( 'Minuscules et tirets uniquement. Auto-généré depuis le nom.', 'pedagolens-core' ); ?></p>
+                    <input type="text" id="pl_slug" name="pl_slug" value="<?php echo esc_attr( $p['slug'] ); ?>" class="regular-text" pattern="[a-z][a-z0-9_\-]*" required>
+                    <p class="description"><?php esc_html_e( 'Minuscules, tirets et underscores uniquement. Auto-généré depuis le nom.', 'pedagolens-core' ); ?></p>
                 </td>
             </tr>
             <tr>
