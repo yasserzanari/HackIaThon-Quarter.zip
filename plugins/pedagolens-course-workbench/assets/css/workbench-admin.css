@@ -3956,3 +3956,105 @@ details[open] > .pl-canvas-text-toggle::before {
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
+
+
+/* ── Scores Strip (above canvas) ── */
+.pl-scores-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    min-height: 48px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 960px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+.pl-scores-strip-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+.pl-scores-strip-empty {
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    margin: 0;
+    font-style: italic;
+}
+/* Override score bars for horizontal strip layout */
+.pl-scores-strip .pl-score-global {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+}
+.pl-scores-strip .pl-score-global svg {
+    width: 48px;
+    height: 48px;
+}
+.pl-scores-strip .pl-score-circle {
+    width: 48px;
+    height: 48px;
+}
+.pl-scores-strip .pl-score-global-num {
+    font-size: 18px;
+    color: #f1f5f9;
+}
+.pl-scores-strip .pl-score-global-label {
+    font-size: 10px;
+    color: #64748b;
+}
+.pl-scores-strip .pl-score-profiles {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+}
+.pl-scores-strip .pl-score-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 140px;
+}
+.pl-scores-strip .pl-score-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+.pl-scores-strip .pl-score-profile-name {
+    font-size: 11px;
+    white-space: nowrap;
+    color: rgba(255,255,255,0.7);
+}
+.pl-scores-strip .pl-score-profile-bar-track {
+    width: 60px;
+    height: 6px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.06);
+}
+.pl-scores-strip .pl-score-profile-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    min-width: 24px;
+    text-align: right;
+}
+.pl-scores-strip .pl-score-profile-icon {
+    font-size: 0.8rem;
+}
+.pl-scores-strip .pl-score-circle-bg {
+    stroke: rgba(255,255,255,0.08);
+}

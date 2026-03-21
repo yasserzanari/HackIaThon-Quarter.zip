@@ -358,6 +358,40 @@ class PedagoLens_Workbench_Admin {
         $project_id = (int) ( $_POST['project_id'] ?? 0 );
         $section_id = sanitize_text_field( $_POST['section_id'] ?? '' );
 
+        // Mock mode — return realistic pre-generated suggestions
+        $ai_mode = get_option( 'pl_ai_mode', 'mock' );
+        if ( $ai_mode === 'mock' ) {
+            $mock_result = self::get_mock_suggestions( $section_id, $project_id );
+
+            ob_start();
+            $context = sanitize_text_field( $_POST['context'] ?? '' );
+            if ( 'front' === $context ) {
+                self::render_front_score_bars( $mock_result['profile_scores'] );
+            } else {
+                self::render_score_bars( $mock_result['profile_scores'] );
+            }
+            $scores_html = ob_get_clean();
+            update_post_meta( $project_id, '_pl_profile_scores', wp_json_encode( $mock_result['profile_scores'] ) );
+
+            // Cache suggestions
+            $raw   = get_post_meta( $project_id, '_pl_last_suggestions', true );
+            $cache = is_string( $raw ) ? (array) json_decode( $raw, true ) : [];
+            $cache[ $section_id ] = $mock_result['suggestions'];
+            update_post_meta( $project_id, '_pl_last_suggestions', wp_json_encode( $cache ) );
+
+            ob_start();
+            self::render_suggestions_html( $mock_result['suggestions'], $section_id );
+            $html = ob_get_clean();
+
+            wp_send_json_success( [
+                'html'           => $html,
+                'scores_html'    => $scores_html,
+                'profile_scores' => $mock_result['profile_scores'],
+                'count'          => count( $mock_result['suggestions'] ),
+            ] );
+            return;
+        }
+
         $result = PedagoLens_Course_Workbench::get_suggestions( $project_id, $section_id );
 
         if ( empty( $result['success'] ) ) {
@@ -542,12 +576,28 @@ class PedagoLens_Workbench_Admin {
         $project_id    = (int) ( $_POST['project_id']   ?? 0 );
         $section_id    = sanitize_text_field( $_POST['section_id']   ?? '' );
         $suggestion_id = sanitize_text_field( (string) ( $_POST['suggestion_id'] ?? '' ) );
+        $proposed      = wp_unslash( $_POST['proposed_content'] ?? '' );
 
         if ( ! $project_id || ! $section_id || ! $suggestion_id ) {
             wp_send_json_error( [ 'message' => 'Paramètres manquants.' ] );
         }
 
         $ok = PedagoLens_Course_Workbench::apply_suggestion( $project_id, $section_id, $suggestion_id );
+
+        // Fallback: apply proposed content directly if cache lookup failed
+        if ( ! $ok && ! empty( $proposed ) ) {
+            $sections = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+            foreach ( $sections as &$s ) {
+                if ( ( $s['id'] ?? '' ) === $section_id ) {
+                    PedagoLens_Course_Workbench::save_version( $project_id, $section_id, $s['content'] ?? '' );
+                    $s['content'] = $proposed;
+                    break;
+                }
+            }
+            unset( $s );
+            PedagoLens_Course_Workbench::save_content_sections( $project_id, $sections );
+            $ok = true;
+        }
 
         if ( $ok ) {
             $sections = PedagoLens_Course_Workbench::get_content_sections( $project_id );
@@ -789,14 +839,30 @@ class PedagoLens_Workbench_Admin {
             PL_WORKBENCH_VERSION,
             true
         );
+        // Load cached suggestions for persistence between visits
+        $raw_suggestions    = get_post_meta( $project_id, '_pl_last_suggestions', true );
+        $cached_suggestions = is_string( $raw_suggestions ) ? (array) json_decode( $raw_suggestions, true ) : [];
+
+        // Pre-render cached suggestions HTML per section for JS hydration
+        $cached_suggestions_html = [];
+        foreach ( $cached_suggestions as $sec_id => $sec_suggestions ) {
+            if ( ! is_array( $sec_suggestions ) || empty( $sec_suggestions ) ) {
+                continue;
+            }
+            ob_start();
+            self::render_suggestions_html( $sec_suggestions, $sec_id );
+            $cached_suggestions_html[ $sec_id ] = ob_get_clean();
+        }
+
         wp_localize_script( 'pl-workbench-front', 'plWorkbench', [
-            'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-            'nonce'       => wp_create_nonce( self::NONCE_AJAX ),
-            'projectId'   => $project_id,
-            'slideImages' => $slide_images,
-            'sections'    => $sections_for_js,
-            'totalSlides' => $total_slides,
-            'visualData'  => $visual_data,
+            'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
+            'nonce'                 => wp_create_nonce( self::NONCE_AJAX ),
+            'projectId'             => $project_id,
+            'slideImages'           => $slide_images,
+            'sections'              => $sections_for_js,
+            'totalSlides'           => $total_slides,
+            'visualData'            => $visual_data,
+            'cachedSuggestionsHtml' => $cached_suggestions_html,
         ] );
 
         // First section data (for no-JS fallback)
@@ -832,22 +898,8 @@ class PedagoLens_Workbench_Admin {
             <!-- BODY: 3 columns -->
             <div class="pl-editor-body">
 
-                <!-- LEFT COLUMN: Score panel + Filmstrip -->
+                <!-- LEFT COLUMN: Filmstrip -->
                 <div class="pl-editor-left-col">
-
-                    <!-- Score panel (top-left, above filmstrip) -->
-                    <div class="pl-editor-score-panel" id="pl-editor-score-panel">
-                        <div class="pl-score-panel-header">
-                            <h3>Scores par profil</h3>
-                        </div>
-                        <div id="pl-topleft-scores">
-                            <?php if ( ! empty( $scores ) ) : ?>
-                                <?php self::render_front_score_bars( $scores ); ?>
-                            <?php else : ?>
-                                <p class="pl-panel-empty pl-score-panel-empty">Analysez pour voir les scores.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
 
                     <!-- Filmstrip (slide thumbnails) -->
                     <aside class="pl-editor-filmstrip" id="pl-filmstrip">
@@ -891,6 +943,15 @@ class PedagoLens_Workbench_Admin {
                         <button type="button" class="pl-canvas-nav-btn" id="pl-slide-next" title="Diapositive suivante">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                         </button>
+                    </div>
+                    <div class="pl-scores-strip" id="pl-scores-strip">
+                        <div id="pl-sidebar-scores" class="pl-scores-strip-inner">
+                            <?php if ( ! empty( $scores ) ) : ?>
+                                <?php self::render_front_score_bars( $scores ); ?>
+                            <?php else : ?>
+                                <p class="pl-scores-strip-empty">Analysez pour voir les scores</p>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <div class="pl-canvas-slide" id="pl-canvas-slide">
                         <?php if ( $first ) : ?>
@@ -941,41 +1002,6 @@ class PedagoLens_Workbench_Admin {
                         <button type="button" id="pl-analyze-all" class="pl-editor-btn pl-editor-btn-glow pl-editor-btn-full" style="margin-top:12px;">
                             Analyser toutes les diapositives
                         </button>
-                    </div>
-
-                    <?php if ( $summary ) : ?>
-                    <!-- Résumé -->
-                    <div class="pl-panel-section">
-                        <div class="pl-panel-section-header"><h3>Résumé</h3></div>
-                        <p class="pl-panel-summary"><?php echo esc_html( $summary ); ?></p>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Fichiers -->
-                    <div class="pl-panel-section pl-panel-section-collapsible">
-                        <div class="pl-panel-section-header">
-                            <h3>Fichiers</h3>
-                        </div>
-                        <div id="pl-files-list">
-                            <?php if ( empty( $files ) ) : ?>
-                                <p class="pl-panel-empty">Aucun fichier importé.</p>
-                            <?php else : ?>
-                                <?php foreach ( $files as $f ) :
-                                    $ext  = strtolower( pathinfo( $f['name'] ?? '', PATHINFO_EXTENSION ) );
-                                    $icon = match( $ext ) {
-                                        'pptx' => '📊',
-                                        'docx' => '📝',
-                                        'pdf'  => '📕',
-                                        default => '📄',
-                                    };
-                                ?>
-                                    <div class="pl-file-row">
-                                        <span class="pl-file-icon"><?php echo $icon; ?></span>
-                                        <span class="pl-file-name"><?php echo esc_html( $f['name'] ?? '' ); ?></span>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
                     </div>
 
                 </aside>
@@ -1130,13 +1156,21 @@ class PedagoLens_Workbench_Admin {
      */
     private static function get_profile_labels(): array {
         return [
-            'concentration_tdah' => [ 'label' => 'Concentration TDAH',   'icon' => '🧠' ],
-            'anxieux_consignes'  => [ 'label' => 'Anxieux (consignes)',  'icon' => '😰' ],
-            'avance_rapide'      => [ 'label' => 'Avancé rapide',        'icon' => '🚀' ],
-            'faible_autonomie'   => [ 'label' => 'Faible autonomie',     'icon' => '🤝' ],
-            'langue_seconde'     => [ 'label' => 'Langue seconde',       'icon' => '🌍' ],
-            'surcharge_cognitive'=> [ 'label' => 'Surcharge cognitive',   'icon' => '🧩' ],
-            'usage_passif_ia'    => [ 'label' => 'Usage passif IA',      'icon' => '🤖' ],
+            'concentration_tdah'   => [ 'label' => 'TDAH / Concentration', 'icon' => '🧠' ],
+            'surcharge_cognitive'  => [ 'label' => 'Surcharge cognitive',  'icon' => '⚡' ],
+            'langue_seconde'       => [ 'label' => 'Langue seconde',       'icon' => '🌍' ],
+            'faible_autonomie'     => [ 'label' => 'Faible autonomie',     'icon' => '🤝' ],
+            'anxieux_consignes'    => [ 'label' => 'Anxiété / Consignes',  'icon' => '😰' ],
+            'avance_rapide'        => [ 'label' => 'Avancé rapide',        'icon' => '🚀' ],
+            'usage_passif_ia'      => [ 'label' => 'Usage passif IA',      'icon' => '🤖' ],
+            // Legacy/fallback keys
+            'tdah'                 => [ 'label' => 'TDAH / Concentration', 'icon' => '🧠' ],
+            'cognitive_overload'   => [ 'label' => 'Surcharge cognitive',  'icon' => '⚡' ],
+            'second_language'      => [ 'label' => 'Langue seconde',       'icon' => '🌍' ],
+            'low_autonomy'         => [ 'label' => 'Faible autonomie',     'icon' => '🤝' ],
+            'anxiety'              => [ 'label' => 'Anxiété / Consignes',  'icon' => '😰' ],
+            'advanced'             => [ 'label' => 'Avancé rapide',        'icon' => '🚀' ],
+            'passive_ai'           => [ 'label' => 'Usage passif IA',      'icon' => '🤖' ],
         ];
     }
 
@@ -1369,6 +1403,8 @@ class PedagoLens_Workbench_Admin {
             wp_send_json_error( [ 'message' => 'Aucune section à analyser.' ] );
         }
 
+        $ai_mode = get_option( 'pl_ai_mode', 'mock' );
+
         $all_suggestions = [];
         $all_html        = '';
         $latest_scores   = [];
@@ -1379,7 +1415,17 @@ class PedagoLens_Workbench_Admin {
                 continue;
             }
 
-            $result = PedagoLens_Course_Workbench::get_suggestions( $project_id, $section_id );
+            // Mock mode — use pre-generated suggestions instead of calling Bedrock
+            if ( $ai_mode === 'mock' ) {
+                $mock_result = self::get_mock_suggestions( $section_id, $project_id );
+                $result = [
+                    'success'        => true,
+                    'suggestions'    => $mock_result['suggestions'],
+                    'profile_scores' => $mock_result['profile_scores'],
+                ];
+            } else {
+                $result = PedagoLens_Course_Workbench::get_suggestions( $project_id, $section_id );
+            }
 
             if ( ! empty( $result['success'] ) && ! empty( $result['suggestions'] ) ) {
                 // Cache suggestions
@@ -2038,6 +2084,103 @@ class PedagoLens_Workbench_Admin {
             'w'    => $w,
             'h'    => $h,
             'src'  => $img_url,
+        ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Mock — Pre-generated suggestions for demo mode
+    // -------------------------------------------------------------------------
+
+    private static function get_mock_suggestions( string $section_id, int $project_id ): array {
+        $sections = PedagoLens_Course_Workbench::get_content_sections( $project_id );
+        $content  = '';
+        $title    = '';
+        $slide_num = 0;
+        foreach ( $sections as $idx => $s ) {
+            if ( ( $s['id'] ?? '' ) === $section_id ) {
+                $content   = $s['content'] ?? '';
+                $title     = $s['title'] ?? '';
+                $slide_num = $idx + 1;
+                break;
+            }
+        }
+
+        // Generate 3 realistic suggestions per section
+        $suggestions = [];
+        $base_id     = substr( md5( $section_id ), 0, 8 );
+
+        // Get first 120 chars of content as "original"
+        $original_snippet = mb_substr( trim( $content ), 0, 120 );
+
+        $suggestions[] = [
+            'id'                => 'mock_' . $base_id . '_1',
+            'section'           => $section_id,
+            'modification_type' => 'reformulation',
+            'rationale'         => 'Cette section contient des phrases longues et complexes qui peuvent surcharger les étudiants avec un profil TDAH ou en surcharge cognitive. Découper en étapes numérotées améliore la lisibilité.',
+            'original'          => $original_snippet,
+            'proposed'          => '📋 Étapes à suivre :' . "\n" . '1. Lisez attentivement la consigne ci-dessous.' . "\n" . '2. Identifiez les mots-clés importants.' . "\n" . '3. ' . mb_substr( $original_snippet, 0, 60 ) . "\n" . '4. Vérifiez votre compréhension avec un pair.',
+            'impact_score'      => 78,
+            'slide_num'         => $slide_num,
+            'profile_target'    => 'concentration_tdah',
+            'impact_delta'      => [
+                'concentration_tdah'  => 12,
+                'surcharge_cognitive' => 8,
+                'langue_seconde'      => 5,
+                'faible_autonomie'    => 10,
+            ],
+        ];
+
+        $suggestions[] = [
+            'id'                => 'mock_' . $base_id . '_2',
+            'section'           => $section_id,
+            'modification_type' => 'ajout',
+            'rationale'         => 'Ajouter un exemple concret aide les étudiants en langue seconde et ceux avec une faible autonomie à mieux comprendre les attentes.',
+            'original'          => '',
+            'proposed'          => '💡 Exemple attendu : « Dans ce texte, l\'auteur utilise la métaphore du voyage pour illustrer le passage du temps. Cette figure de style crée un effet de nostalgie chez le lecteur. »',
+            'impact_score'      => 85,
+            'slide_num'         => $slide_num,
+            'profile_target'    => 'langue_seconde',
+            'impact_delta'      => [
+                'concentration_tdah'  => 3,
+                'surcharge_cognitive' => 6,
+                'langue_seconde'      => 15,
+                'faible_autonomie'    => 11,
+            ],
+        ];
+
+        $suggestions[] = [
+            'id'                => 'mock_' . $base_id . '_3',
+            'section'           => $section_id,
+            'modification_type' => 'restructuration',
+            'rationale'         => 'Les critères d\'évaluation sont implicites. Les rendre explicites réduit l\'anxiété et aide les étudiants à faible autonomie à s\'auto-évaluer.',
+            'original'          => 'Rédigez une analyse en mobilisant les concepts vus au cours.',
+            'proposed'          => 'Rédigez une analyse en suivant ces critères :' . "\n" . '✅ Identifier 2 procédés stylistiques (4 pts)' . "\n" . '✅ Expliquer l\'effet sur le lecteur (4 pts)' . "\n" . '✅ Relier au thème principal (2 pts)',
+            'impact_score'      => 92,
+            'slide_num'         => $slide_num,
+            'profile_target'    => 'anxieux_consignes',
+            'impact_delta'      => [
+                'concentration_tdah'  => 7,
+                'surcharge_cognitive' => 10,
+                'langue_seconde'      => 4,
+                'faible_autonomie'    => 14,
+                'anxieux_consignes'   => 18,
+            ],
+        ];
+
+        // Mock profile scores
+        $profile_scores = [
+            'concentration_tdah'  => 58 + rand( 0, 5 ),
+            'surcharge_cognitive' => 54 + rand( 0, 5 ),
+            'langue_seconde'      => 61 + rand( 0, 5 ),
+            'faible_autonomie'    => 49 + rand( 0, 5 ),
+            'anxieux_consignes'   => 52 + rand( 0, 5 ),
+            'avance_rapide'       => 82 + rand( 0, 5 ),
+            'usage_passif_ia'     => 65 + rand( 0, 5 ),
+        ];
+
+        return [
+            'suggestions'    => $suggestions,
+            'profile_scores' => $profile_scores,
         ];
     }
 

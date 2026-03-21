@@ -20,6 +20,9 @@ var autoSaveTimers = {};
 var visualData = plWorkbench.visualData || [];
 var viewMode = visualData.length > 0 ? 'visual' : 'text'; // 'visual' or 'text'
 
+// Cache of suggestion HTML per section id — persists across slide switches
+var suggestionsHtmlCache = {};
+
 // Add editor mode class to body — hides sidebar, header, WP admin bar
 $( 'body' ).addClass( 'pl-editor-mode' );
 // Also hide WP admin bar immediately
@@ -148,8 +151,13 @@ function showSlide( index ) {
         }
     }
 
-    // Clear suggestions panel when switching slides
-    $( '#pl-panel-suggestions' ).html( '<p class="pl-panel-empty">Cliquez sur « Suggestions IA » pour obtenir des recommandations.</p>' );
+    // Restore cached suggestions for this slide, or show default message
+    var cachedHtml = suggestionsHtmlCache[ sec.id ] || '';
+    if ( cachedHtml ) {
+        $( '#pl-panel-suggestions' ).html( cachedHtml );
+    } else {
+        $( '#pl-panel-suggestions' ).html( '<p class="pl-panel-empty">Cliquez sur « Suggestions IA » pour obtenir des recommandations.</p>' );
+    }
 
     // Update view toggle button text
     updateViewToggleBtn();
@@ -548,8 +556,9 @@ $( document ).on( 'click', '.pl-btn-suggestions, #pl-canvas-suggestions-btn', fu
         .done( function( res ) {
             if ( res.success ) {
                 $panel.html( res.data.html );
+                suggestionsHtmlCache[ sectionId ] = res.data.html;
                 if ( res.data.scores_html ) {
-                    $( '#pl-topleft-scores' ).html( res.data.scores_html );
+                    $( '#pl-sidebar-scores' ).html( res.data.scores_html );
                 }
             } else {
                 $panel.html( '<p class="pl-panel-error">✗ ' + ( res.data?.message || 'Erreur.' ) + '</p>' );
@@ -574,9 +583,12 @@ $( document ).on( 'click', '.pl-btn-apply', function() {
         if ( sections[i].id === sectionId ) { prevContent = sections[i].content; break; }
     }
 
+    // Extract proposed text from the suggestion card DOM as fallback for cache misses
+    var proposedContent = $btn.closest( '.pl-suggestion-card' ).find( '.pl-sug-diff-new .pl-sug-diff-text' ).text() || '';
+
     $btn.prop( 'disabled', true ).text( 'Application…' );
 
-    ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId } )
+    ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId, proposed_content: proposedContent } )
         .done( function( res ) {
             if ( res.success ) {
                 // Update sections array
@@ -1000,7 +1012,7 @@ $( '#pl-analyze-all' ).on( 'click', function() {
                 }
             }
             if ( latestScoresHtml ) {
-                $( '#pl-topleft-scores' ).html( latestScoresHtml );
+                $( '#pl-sidebar-scores' ).html( latestScoresHtml );
             }
 
             showAnalyzeSummary( totalSuggestions, total, Date.now() - startAll );
@@ -1018,6 +1030,7 @@ $( '#pl-analyze-all' ).on( 'click', function() {
             .done( function( res ) {
                 if ( res.success ) {
                     allResults[ sec.id ] = res.data.html || '';
+                    suggestionsHtmlCache[ sec.id ] = res.data.html || '';
                     // Count suggestions from the HTML (each .pl-suggestion-card)
                     var tempDiv = document.createElement( 'div' );
                     tempDiv.innerHTML = res.data.html || '';
@@ -1026,7 +1039,7 @@ $( '#pl-analyze-all' ).on( 'click', function() {
                     if ( res.data.scores_html ) {
                         latestScoresHtml = res.data.scores_html;
                         // Update scores in real-time during analysis
-                        $( '#pl-topleft-scores' ).html( latestScoresHtml );
+                        $( '#pl-sidebar-scores' ).html( latestScoresHtml );
                     }
                 }
             } )
@@ -1119,9 +1132,10 @@ $( '#pl-preview-apply' ).on( 'click', function() {
     var $btn = $( this );
     var sectionId = $btn.data( 'section-id' );
     var suggestionId = $btn.data( 'suggestion-id' );
+    var proposedContent = $( '#pl-preview-proposed' ).text() || '';
     $btn.prop( 'disabled', true ).text( 'Application…' );
 
-    ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId } )
+    ajax( 'pl_apply_suggestion', { section_id: sectionId, suggestion_id: suggestionId, proposed_content: proposedContent } )
         .done( function( res ) {
             if ( res.success ) {
                 // Update sections array
@@ -1219,6 +1233,18 @@ $( document ).on( 'mouseenter', '.pl-suggestion-card[data-section-id]', function
 $( document ).on( 'mouseleave', '.pl-suggestion-card[data-section-id]', function() {
     $( '.pl-filmstrip-item' ).removeClass( 'pl-filmstrip-item--highlight' );
 } );
+
+// =========================================================================
+// INIT — seed suggestions cache from server-side persisted HTML
+// =========================================================================
+if ( plWorkbench.cachedSuggestionsHtml ) {
+    var cachedHtml = plWorkbench.cachedSuggestionsHtml;
+    for ( var secId in cachedHtml ) {
+        if ( cachedHtml.hasOwnProperty( secId ) && cachedHtml[ secId ] ) {
+            suggestionsHtmlCache[ secId ] = cachedHtml[ secId ];
+        }
+    }
+}
 
 // =========================================================================
 // INIT — show first slide with the new visual renderer
