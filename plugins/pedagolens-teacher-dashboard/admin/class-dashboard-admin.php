@@ -440,37 +440,69 @@ class PedagoLens_Dashboard_Admin {
         </div>
 
         <!-- ============================================================= -->
-        <!-- ROW 3 : Recommandations IA                                    -->
+        <!-- ROW 3 : Risques + Recommandations (2 colonnes Stitch)         -->
         <!-- ============================================================= -->
+        <?php
+        $risks       = array_filter( $recs, fn( $r ) => ( (int) ( $r['priority'] ?? 99 ) ) <= 2 );
+        $suggestions = array_filter( $recs, fn( $r ) => ( (int) ( $r['priority'] ?? 99 ) ) > 2 );
+        $wb_page     = get_page_by_path( 'workbench' );
+        $wb_url      = $wb_page ? get_permalink( $wb_page ) : admin_url( 'admin.php?page=pl-course-workbench' );
+        ?>
         <?php if ( ! empty( $recs ) ) : ?>
-        <div class="pla-card" style="padding:2rem;margin-bottom:1.5rem;border:1px solid rgba(113,42,226,.08);">
-            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
-                <span style="display:flex;align-items:center;justify-content:center;width:2.25rem;height:2.25rem;background:rgba(234,221,255,.5);color:#712ae2;border-radius:.5rem;font-size:1.1rem;">💡</span>
-                <h4 class="pla-headline" style="font-size:1.25rem;font-weight:700;color:#00236f;margin:0;">Recommandations IA</h4>
-                <span class="pla-tag" style="background:rgba(113,42,226,.08);color:#712ae2;margin-left:auto;"><?php echo count( $recs ); ?> suggestion(s)</span>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:.625rem;">
-                <?php $idx = 1; foreach ( $recs as $rec ) :
-                    $priority = (int) ( $rec['priority'] ?? 99 );
-                    $border_l = $priority <= 2
-                        ? '3px solid #ba1a1a'
-                        : ( $priority <= 4 ? '3px solid #ff9100' : '3px solid #2979ff' );
-                    $bg = $priority <= 2 ? 'rgba(186,26,26,.04)' : 'transparent';
-                ?>
-                <div class="pla-rec-item" style="display:flex;gap:1rem;align-items:flex-start;padding:1rem;border-radius:.75rem;border-left:<?php echo $border_l; ?>;background:<?php echo $bg; ?>;transition:background .2s ease;">
-                    <span style="flex-shrink:0;font-size:1.25rem;font-weight:900;color:#712ae2;font-family:'Manrope',sans-serif;"><?php echo str_pad( $idx, 2, '0', STR_PAD_LEFT ); ?></span>
-                    <div style="flex:1;min-width:0;">
-                        <h5 style="font-size:.875rem;font-weight:700;color:#00236f;margin:0 0 .25rem;"><?php echo esc_html( $rec['section'] ?? '' ); ?></h5>
-                        <p style="font-size:.8125rem;color:#444651;margin:0;line-height:1.6;"><?php echo esc_html( $rec['text'] ?? '' ); ?></p>
-                        <?php if ( ! empty( $rec['profile_target'] ) ) : ?>
-                        <span class="pla-tag" style="background:rgba(234,221,255,.3);color:#712ae2;margin-top:.375rem;"><?php echo esc_html( $resolve_label( $rec['profile_target'] ) ); ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <?php if ( $priority <= 2 ) : ?>
-                    <span class="pla-tag" style="background:rgba(186,26,26,.08);color:#ba1a1a;flex-shrink:0;align-self:center;">Prioritaire</span>
-                    <?php endif; ?>
+        <div class="pla-grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+
+            <!-- Risques identifiés -->
+            <div class="pla-card" style="padding:2rem;border:1px solid rgba(186,26,26,.08);">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
+                    <span style="display:flex;align-items:center;justify-content:center;width:2.25rem;height:2.25rem;background:rgba(255,218,214,.5);color:#93000a;border-radius:.5rem;font-size:1.1rem;">⚠️</span>
+                    <h4 class="pla-headline" style="font-size:1.25rem;font-weight:700;color:#00236f;margin:0;">Risques Identifiés</h4>
                 </div>
-                <?php $idx++; endforeach; ?>
+                <?php if ( ! empty( $risks ) ) : ?>
+                <div style="display:flex;flex-direction:column;gap:.75rem;">
+                    <?php foreach ( $risks as $risk ) : ?>
+                    <div style="padding:1rem;background:rgba(186,26,26,.04);border-left:2px solid #ba1a1a;border-radius:0 .5rem .5rem 0;">
+                        <h5 style="font-size:.875rem;font-weight:700;color:#93000a;margin:0 0 .25rem;"><?php echo esc_html( $risk['section'] ?? 'Risque' ); ?></h5>
+                        <p style="font-size:.8125rem;color:#444651;margin:0;line-height:1.6;"><?php echo esc_html( $risk['text'] ?? '' ); ?></p>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php else : ?>
+                <p style="font-size:.875rem;color:#757682;margin:0;">Aucun risque critique détecté. 🎉</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Recommandations IA -->
+            <div class="pla-card" style="padding:2rem;border:1px solid rgba(113,42,226,.08);">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;">
+                    <span style="display:flex;align-items:center;justify-content:center;width:2.25rem;height:2.25rem;background:rgba(234,221,255,.5);color:#712ae2;border-radius:.5rem;font-size:1.1rem;">💡</span>
+                    <h4 class="pla-headline" style="font-size:1.25rem;font-weight:700;color:#00236f;margin:0;">Recommandations IA</h4>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:.5rem;">
+                    <?php $idx = 1; foreach ( $recs as $rec ) :
+                        $priority = (int) ( $rec['priority'] ?? 99 );
+                    ?>
+                    <div class="pla-rec-item" style="display:flex;gap:1rem;align-items:flex-start;padding:1rem;border-radius:.75rem;transition:background .2s ease;">
+                        <span style="flex-shrink:0;font-size:1.25rem;font-weight:900;color:#712ae2;font-family:'Manrope',sans-serif;"><?php echo str_pad( $idx, 2, '0', STR_PAD_LEFT ); ?></span>
+                        <div style="flex:1;min-width:0;">
+                            <h5 style="font-size:.875rem;font-weight:700;color:#00236f;margin:0 0 .25rem;"><?php echo esc_html( $rec['section'] ?? '' ); ?></h5>
+                            <p style="font-size:.8125rem;color:#444651;margin:0;line-height:1.6;"><?php echo esc_html( $rec['text'] ?? '' ); ?></p>
+                            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.375rem;">
+                                <?php if ( ! empty( $rec['profile_target'] ) ) : ?>
+                                <span class="pla-tag" style="background:rgba(234,221,255,.3);color:#712ae2;"><?php echo esc_html( $resolve_label( $rec['profile_target'] ) ); ?></span>
+                                <?php endif; ?>
+                                <?php if ( $priority <= 2 ) : ?>
+                                <span class="pla-tag" style="background:rgba(186,26,26,.08);color:#ba1a1a;">Prioritaire</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <a href="<?php echo esc_url( add_query_arg( 'rec_section', urlencode( $rec['section'] ?? '' ), $wb_url ) ); ?>"
+                           style="flex-shrink:0;display:inline-flex;align-items:center;gap:.25rem;padding:.375rem .75rem;border:1px solid rgba(117,118,130,.2);background:#fff;color:#00236f;font-weight:600;font-size:.6875rem;border-radius:.5rem;text-decoration:none;transition:background .2s;"
+                           onmouseover="this.style.background='#f2f4f6'" onmouseout="this.style.background='#fff'">
+                            📝 Atelier
+                        </a>
+                    </div>
+                    <?php $idx++; endforeach; ?>
+                </div>
             </div>
         </div>
         <?php endif; ?>

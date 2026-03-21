@@ -105,7 +105,7 @@ Appliquer le design system des templates Stitch (Manrope/Inter, couleurs Materia
 - [x] 9.3 Accueil (post-login) : refaire shortcode_teacher_dashboard() / shortcode_student_dashboard() avec template `p_dagolens_accueil`
 - [x] 9.4 Dashboard enseignant : refaire render_front() avec template `tableau_de_bord_p_dagolens`
 - [-] 9.5 Détails du cours : ajouter vue détaillée avec template `d_tails_du_cours_p_dagolens`
-- [-] 9.6 Analyse de contenu : refaire render_analysis_result() avec template `analyse_de_contenu_p_dagolens`
+- [x] 9.6 Analyse de contenu : refaire render_analysis_result() avec template `analyse_de_contenu_p_dagolens`
 - [x] 9.7 Atelier pédagogique : refaire render_front() workbench avec template `atelier_p_dagogique_p_dagolens`
 - [x] 9.8 Assistant étudiant : refaire render_shortcode() twin avec template `assistant_tudiant_p_dagolens`
 - [-] 9.9 Historique : ajouter page historique avec template `historique_p_dagolens`

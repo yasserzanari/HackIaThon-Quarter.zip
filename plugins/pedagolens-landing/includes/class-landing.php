@@ -3010,34 +3010,4 @@ class PedagoLens_Landing {
     public static function shortcode_institutionnel( array $atts = [] ): string {
         return self::shortcode_institutional( $atts );
     }
-
-    // -------------------------------------------------------------------------
-    // [pedagolens_history] / [pedagolens_historique] — Stub
-    // -------------------------------------------------------------------------
-
-    public static function shortcode_history( array $atts = [] ): string {
-        return self::shortcode_historique( $atts );
-    }
-
-    public static function shortcode_historique( array $atts = [] ): string {
-        if ( ! is_user_logged_in() ) {
-            return self::render_login_notice( 'Vous devez &ecirc;tre connect&eacute; pour voir l\'historique.' );
-        }
-        return '<div class="pl-notice pl-notice-info"><p>Page Historique &mdash; bient&ocirc;t disponible.</p></div>';
-    }
-
-    // -------------------------------------------------------------------------
-    // [pedagolens_settings] / [pedagolens_parametres] — Stub
-    // -------------------------------------------------------------------------
-
-    public static function shortcode_settings( array $atts = [] ): string {
-        return self::shortcode_parametres( $atts );
-    }
-
-    public static function shortcode_parametres( array $atts = [] ): string {
-        if ( ! is_user_logged_in() ) {
-            return self::render_login_notice( 'Vous devez &ecirc;tre connect&eacute; pour acc&eacute;der aux param&egrave;tres.' );
-        }
-        return '<div class="pl-notice pl-notice-info"><p>Page Param&egrave;tres &mdash; bient&ocirc;t disponible.</p></div>';
-    }
 }

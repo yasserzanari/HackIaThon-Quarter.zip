@@ -4,8 +4,7 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe landing PHP ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/pedagolens-landing.php 2>&1",
-      "echo '=== JS file size ===' && wc -l /opt/pedagolens/plugins/pedagolens-landing/assets/js/landing-front.js 2>&1",
+      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }
