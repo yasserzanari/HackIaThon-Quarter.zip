@@ -80,12 +80,24 @@ class PedagoLens_Core {
     public static function register_roles(): void {
         if ( ! get_role( 'pedagolens_teacher' ) ) {
             add_role( 'pedagolens_teacher', __( 'Enseignant PédagoLens', 'pedagolens-core' ), [
-                'read'               => true,
-                'edit_pl_courses'    => true,
-                'publish_pl_courses' => true,
-                'read_pl_analyses'   => true,
+                'read'                => true,
+                'edit_posts'          => true,
+                'publish_posts'       => true,
+                'delete_posts'        => true,
+                'upload_files'        => true,
+                'edit_pl_courses'     => true,
+                'publish_pl_courses'  => true,
+                'read_pl_analyses'    => true,
                 'manage_pl_workbench' => true,
             ] );
+        } else {
+            // Ensure existing role has all required capabilities
+            $teacher = get_role( 'pedagolens_teacher' );
+            foreach ( [ 'edit_posts', 'publish_posts', 'delete_posts', 'upload_files', 'edit_pl_courses', 'publish_pl_courses', 'read_pl_analyses', 'manage_pl_workbench' ] as $cap ) {
+                if ( ! $teacher->has_cap( $cap ) ) {
+                    $teacher->add_cap( $cap );
+                }
+            }
         }
 
         if ( ! get_role( 'pedagolens_student' ) ) {

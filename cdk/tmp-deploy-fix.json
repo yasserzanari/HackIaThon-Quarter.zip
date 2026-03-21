@@ -4,10 +4,8 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe Bridge ===' && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge.php 2>&1",
-      "echo '=== Syntaxe Landing ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
-      "echo '=== Syntaxe Workbench ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1",
-      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); update_option('pl_bedrock_model_id','us.anthropic.claude-opus-4-20250514-v1:0'); update_option('pl_bedrock_max_tokens','128000'); echo 'WP options updated: model=opus-4, max_tokens=128000';\" 2>&1",
+      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge.php 2>&1 && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge-settings.php 2>&1",
+      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); update_option('pl_bedrock_model_id','us.anthropic.claude-opus-4-6-v1'); update_option('pl_bedrock_max_tokens','128000'); update_option('pl_bedrock_timeout','120'); echo 'OK model=opus-4-6-v1 tokens=128000 timeout=120';\" 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }
