@@ -464,6 +464,12 @@ class PedagoLens_Workbench_Admin {
             </div>
             <div class="pl-suggestions-scroll">
             <?php foreach ( $suggestions as $idx => $sug ) :
+                // Decode any broken Unicode escape sequences in text fields
+                foreach ( [ 'rationale', 'original', 'proposed' ] as $_f ) {
+                    if ( ! empty( $sug[ $_f ] ) ) {
+                        $sug[ $_f ] = self::decode_unicode( $sug[ $_f ] );
+                    }
+                }
                 $sug_id    = esc_attr( $sug['id'] ?? '' );
                 $mod_type  = $sug['modification_type'] ?? 'reformulation';
                 $impact    = max( 0, min( 100, (int) ( $sug['impact_score'] ?? 50 ) ) );
