@@ -4,8 +4,10 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe workbench ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1 && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/pedagolens-course-workbench.php 2>&1",
-      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); update_option('pl_ai_mode','mock'); echo 'pl_ai_mode set to mock: ' . get_option('pl_ai_mode');\" 2>&1",
+      "echo '=== Syntaxe Bridge ===' && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge.php 2>&1",
+      "echo '=== Syntaxe Landing ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
+      "echo '=== Syntaxe Workbench ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1",
+      "php -r \"define('ABSPATH','/var/www/html/'); require_once('/var/www/html/wp-load.php'); update_option('pl_bedrock_model_id','us.anthropic.claude-opus-4-20250514-v1:0'); update_option('pl_bedrock_max_tokens','128000'); echo 'WP options updated: model=opus-4, max_tokens=128000';\" 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }

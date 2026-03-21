@@ -125,6 +125,7 @@ class PedagoLens_API_Bridge {
      */
     public static function get_available_models(): array {
         return [
+            'anthropic.claude-opus-4-20250514-v1:0',
             'anthropic.claude-sonnet-4-20250514-v2:0',
             'anthropic.claude-3-5-sonnet-20241022-v2:0',
             'anthropic.claude-3-haiku-20240307-v1:0',
@@ -141,10 +142,10 @@ class PedagoLens_API_Bridge {
     public static function get_bedrock_config(): array {
         return [
             'region'      => get_option( 'pl_bedrock_region',      'us-east-1' ),
-            'model_id'    => get_option( 'pl_bedrock_model_id',    'us.anthropic.claude-sonnet-4-20250514-v1:0' ),
-            'max_tokens'  => (int) get_option( 'pl_bedrock_max_tokens',  4096 ),
+            'model_id'    => get_option( 'pl_bedrock_model_id',    'us.anthropic.claude-opus-4-6-v1' ),
+            'max_tokens'  => (int) get_option( 'pl_bedrock_max_tokens',  128000 ),
             'temperature' => (float) get_option( 'pl_bedrock_temperature', 0.3 ),
-            'timeout'     => (int) get_option( 'pl_bedrock_timeout',     30 ),
+            'timeout'     => (int) get_option( 'pl_bedrock_timeout',     120 ),
         ];
     }
 

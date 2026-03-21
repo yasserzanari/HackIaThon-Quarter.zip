@@ -746,14 +746,8 @@ class PedagoLens_Workbench_Admin {
     // -------------------------------------------------------------------------
 
     private static function verify_nonce(): void {
-        // Allow teachers and admins (front-end + admin)
-        $user  = wp_get_current_user();
-        $roles = (array) $user->roles;
-        $allowed = in_array( 'administrator', $roles, true )
-                || in_array( 'pedagolens_teacher', $roles, true )
-                || current_user_can( 'manage_options' );
-
-        if ( ! $allowed ) {
+        // Allow any logged-in user (front-end workbench is accessible to all authenticated users)
+        if ( ! is_user_logged_in() ) {
             wp_send_json_error( [ 'message' => 'Accès refusé.' ], 403 );
         }
         check_ajax_referer( self::NONCE_AJAX, 'nonce' );

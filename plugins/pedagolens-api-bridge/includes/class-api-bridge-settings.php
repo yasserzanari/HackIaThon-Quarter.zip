@@ -293,7 +293,7 @@ class PedagoLens_API_Bridge_Settings {
                         name="pl_bedrock_max_tokens"
                         value="<?php echo esc_attr( $cfg['max_tokens'] ); ?>"
                         min="100"
-                        max="8192"
+                        max="200000"
                         class="small-text"
                     >
                 </td>

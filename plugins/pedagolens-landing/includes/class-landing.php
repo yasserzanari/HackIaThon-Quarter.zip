@@ -3210,7 +3210,7 @@ class PedagoLens_Landing {
     public static function ajax_create_course_front(): void {
         check_ajax_referer( 'pl_nonce', 'nonce' );
 
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pl_courses' ) ) {
             wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
         }
 
@@ -3250,7 +3250,7 @@ class PedagoLens_Landing {
     public static function ajax_update_course_front(): void {
         check_ajax_referer( 'pl_nonce', 'nonce' );
 
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pl_courses' ) ) {
             wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
         }
 
@@ -3314,7 +3314,7 @@ class PedagoLens_Landing {
     public static function ajax_create_project_front(): void {
         check_ajax_referer( 'pl_nonce', 'nonce' );
 
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pl_courses' ) ) {
             wp_send_json_error( [ 'message' => 'Permission refusée.' ] );
         }
 
