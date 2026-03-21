@@ -3,7 +3,7 @@
  * Plugin Name: PédagoLens API Bridge
  * Plugin URI:  https://pedagolens.local
  * Description: Couche IA Bedrock pour PédagoLens — gestion des appels AWS Bedrock (Claude), prompt templates, validation JSON, mode mock.
- * Version:     1.3.1
+ * Version:     1.3.2
  * Author:      PédagoLens Team
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PL_BRIDGE_VERSION',    '1.3.1' );
+define( 'PL_BRIDGE_VERSION',    '1.3.2' );
 define( 'PL_BRIDGE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PL_BRIDGE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

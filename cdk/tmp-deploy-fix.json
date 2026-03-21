@@ -3,7 +3,7 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "echo '=== WP DEBUG LOG ===' && tail -100 /var/www/html/wp-content/debug.log 2>/dev/null || echo 'NO_DEBUG_LOG'"
+      "echo '=== WP DEBUG LOG ===' && tail -50 /var/www/html/wp-content/debug.log 2>/dev/null || echo 'NO_DEBUG_LOG'"
     ]
   }
 }

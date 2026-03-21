@@ -132,7 +132,7 @@ class PedagoLens_API_Bridge {
     public static function get_bedrock_config(): array {
         return [
             'region'      => get_option( 'pl_bedrock_region',      'us-east-1' ),
-            'model_id'    => get_option( 'pl_bedrock_model_id',    'anthropic.claude-sonnet-4-20250514-v2:0' ),
+            'model_id'    => get_option( 'pl_bedrock_model_id',    'anthropic.claude-sonnet-4-20250514-v1:0' ),
             'max_tokens'  => (int) get_option( 'pl_bedrock_max_tokens',  1500 ),
             'temperature' => (float) get_option( 'pl_bedrock_temperature', 0.3 ),
             'timeout'     => (int) get_option( 'pl_bedrock_timeout',     30 ),
