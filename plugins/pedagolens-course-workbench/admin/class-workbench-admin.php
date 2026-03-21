@@ -637,7 +637,7 @@ class PedagoLens_Workbench_Admin {
     }
 
     // -------------------------------------------------------------------------
-    // Rendu front-end Stitch (shortcode délégué depuis pedagolens-landing)
+    // Rendu front-end — Éditeur PowerPoint (3 colonnes, 100vh, pas de scroll)
     // -------------------------------------------------------------------------
 
     public static function render_front( int $project_id ): string {
@@ -646,27 +646,7 @@ class PedagoLens_Workbench_Admin {
             return '<div class="pl-notice pl-notice-error"><p>Projet introuvable.</p></div>';
         }
 
-        // Enqueue workbench assets on front-end
-        wp_enqueue_style(
-            'pl-workbench-front',
-            PL_WORKBENCH_PLUGIN_URL . 'assets/css/workbench-admin.css',
-            [],
-            PL_WORKBENCH_VERSION
-        );
-        wp_enqueue_script(
-            'pl-workbench-front',
-            PL_WORKBENCH_PLUGIN_URL . 'assets/js/workbench-admin.js',
-            [ 'jquery' ],
-            PL_WORKBENCH_VERSION,
-            true
-        );
-        wp_localize_script( 'pl-workbench-front', 'plWorkbench', [
-            'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-            'nonce'       => wp_create_nonce( self::NONCE_AJAX ),
-            'projectId'   => $project_id,
-            'slideImages' => $slide_images,
-        ] );
-
+        // --- Data loading ---
         $project_type = get_post_meta( $project_id, '_pl_project_type', true ) ?: 'magistral';
         $sections     = PedagoLens_Course_Workbench::get_content_sections( $project_id );
         $raw_scores   = get_post_meta( $project_id, '_pl_profile_scores', true );
@@ -675,7 +655,6 @@ class PedagoLens_Workbench_Admin {
         $files        = is_string( $raw_files ) ? (array) json_decode( $raw_files, true ) : [];
         $summary      = get_post_meta( $project_id, '_pl_summary', true ) ?: '';
 
-        // Slide images for viewer
         $raw_slide_images = get_post_meta( $project_id, '_pl_slide_images', true );
         $slide_images     = is_string( $raw_slide_images ) ? (array) json_decode( $raw_slide_images, true ) : [];
 
@@ -699,131 +678,193 @@ class PedagoLens_Workbench_Admin {
             ? PedagoLens_Profile_Manager::get_all( active_only: true )
             : [];
 
+        $total_slides = count( $sections );
+
+        // Build sections JSON for JS slide navigation
+        $sections_for_js = array_values( array_map( function( $s ) {
+            return [
+                'id'              => $s['id'] ?? '',
+                'title'           => $s['title'] ?? 'Section',
+                'content'         => $s['content'] ?? '',
+                'slide_image_url' => $s['slide_image_url'] ?? '',
+                'slide_num'       => (int) ( $s['slide_num'] ?? 0 ),
+            ];
+        }, $sections ) );
+
+        // Enqueue assets + localize BEFORE ob_start
+        wp_enqueue_style(
+            'pl-workbench-front',
+            PL_WORKBENCH_PLUGIN_URL . 'assets/css/workbench-admin.css',
+            [],
+            PL_WORKBENCH_VERSION
+        );
+        wp_enqueue_script(
+            'pl-workbench-front',
+            PL_WORKBENCH_PLUGIN_URL . 'assets/js/workbench-admin.js',
+            [ 'jquery' ],
+            PL_WORKBENCH_VERSION,
+            true
+        );
+        wp_localize_script( 'pl-workbench-front', 'plWorkbench', [
+            'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+            'nonce'       => wp_create_nonce( self::NONCE_AJAX ),
+            'projectId'   => $project_id,
+            'slideImages' => $slide_images,
+            'sections'    => $sections_for_js,
+            'totalSlides' => $total_slides,
+        ] );
+
+        // First section data (for no-JS fallback)
+        $first         = ! empty( $sections ) ? $sections[0] : null;
+        $first_id      = $first ? esc_attr( $first['id'] ?? '' ) : '';
+        $first_title   = $first ? ( $first['title'] ?? 'Section' ) : '';
+        $first_content = $first ? ( $first['content'] ?? '' ) : '';
+        $first_img     = $first ? ( $first['slide_image_url'] ?? '' ) : '';
+        $first_num     = $first ? (int) ( $first['slide_num'] ?? 1 ) : 0;
+
         ob_start();
         ?>
-        <div class="pl-stitch-workbench" data-project-id="<?php echo esc_attr( $project_id ); ?>">
+        <div class="pl-editor" data-project-id="<?php echo esc_attr( $project_id ); ?>">
 
-            <!-- ===== HEADER ===== -->
-            <header class="pl-stitch-wb-header">
-                <div class="pl-stitch-wb-header-left">
-                    <a href="<?php echo esc_url( $back_url ); ?>" class="pl-stitch-wb-back" aria-label="Retour aux cours">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                        Retour aux cours
-                    </a>
-                    <h1 class="pl-stitch-wb-title"><?php echo esc_html( $project->post_title ); ?></h1>
-                    <div class="pl-stitch-wb-meta">
-                        <span class="pl-stitch-wb-type-badge pl-stitch-type-<?php echo esc_attr( $project_type ); ?>">
-                            <?php echo esc_html( ( $type_icons[ $project_type ] ?? '📄' ) . ' ' . ( $type_labels[ $project_type ] ?? $project_type ) ); ?>
-                        </span>
-                        <span class="pl-stitch-wb-ai-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                            PédagoLens AI
-                        </span>
-                    </div>
-                </div>
-                <div class="pl-stitch-wb-header-right">
-                    <button type="button" id="pl-upload-trigger" class="pl-stitch-btn pl-stitch-btn-outline">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        Importer
-                    </button>
-                    <button type="button" id="pl-add-section" class="pl-stitch-btn pl-stitch-btn-outline">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Ajouter une section
-                    </button>
-                    <button type="button" id="pl-wb-save-version" class="pl-stitch-btn pl-stitch-btn-primary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        Sauvegarder la version
-                    </button>
-                    <button type="button" id="pl-download-pptx" class="pl-stitch-btn pl-stitch-btn-outline" style="display:none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Télécharger le PPTX modifié
-                    </button>
-                </div>
+            <!-- HEADER BAR (compact, 56px) -->
+            <header class="pl-editor-header">
+                <a href="<?php echo esc_url( $back_url ); ?>" class="pl-editor-back">← Retour</a>
+                <h1 class="pl-editor-title"><?php echo esc_html( $project->post_title ); ?></h1>
+                <span class="pl-editor-type-badge pl-stitch-type-<?php echo esc_attr( $project_type ); ?>">
+                    <?php echo esc_html( ( $type_icons[ $project_type ] ?? '📄' ) . ' ' . ( $type_labels[ $project_type ] ?? $project_type ) ); ?>
+                </span>
+                <div class="pl-editor-header-spacer"></div>
+                <button type="button" id="pl-upload-trigger" class="pl-editor-btn pl-editor-btn-outline">Importer</button>
+                <button type="button" id="pl-add-section" class="pl-editor-btn pl-editor-btn-outline">+ Section</button>
+                <button type="button" id="pl-wb-save-version" class="pl-editor-btn pl-editor-btn-primary">Sauvegarder</button>
+                <button type="button" id="pl-download-pptx" class="pl-editor-btn pl-editor-btn-outline" style="display:none;">Télécharger PPTX</button>
             </header>
 
-            <!-- Upload zone moved into import modal below -->
+            <!-- BODY: 3 columns -->
+            <div class="pl-editor-body">
 
-            <!-- ===== MAIN 2-COLUMN LAYOUT ===== -->
-            <div class="pl-stitch-wb-layout">
-
-                <!-- LEFT COLUMN: Course sections (editable) -->
-                <div class="pl-stitch-wb-main pl-workbench-main pl-wb-main">
-                    <?php if ( empty( $sections ) ) : ?>
-                        <div class="pl-stitch-wb-empty">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4;margin-bottom:12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            <p>Aucune section. Importez un fichier ou ajoutez du contenu pour commencer.</p>
+                <!-- LEFT: Filmstrip (slide thumbnails) -->
+                <aside class="pl-editor-filmstrip" id="pl-filmstrip">
+                    <div class="pl-filmstrip-header">
+                        <span class="pl-filmstrip-title">Diapositives</span>
+                        <button type="button" class="pl-filmstrip-toggle" id="pl-filmstrip-toggle" title="Réduire">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="pl-filmstrip-list" id="pl-filmstrip-list">
+                        <?php foreach ( $sections as $i => $sec ) :
+                            $sec_id    = esc_attr( $sec['id'] ?? '' );
+                            $sec_title = $sec['title'] ?? 'Section';
+                            $sec_text  = $sec['content'] ?? '';
+                            $sec_img   = $sec['slide_image_url'] ?? '';
+                            $active_cl = $i === 0 ? ' pl-filmstrip-item--active' : '';
+                        ?>
+                        <div class="pl-filmstrip-item<?php echo $active_cl; ?>" data-slide-index="<?php echo esc_attr( $i ); ?>" data-section-id="<?php echo $sec_id; ?>">
+                            <span class="pl-filmstrip-num"><?php echo esc_html( $i + 1 ); ?></span>
+                            <div class="pl-filmstrip-info">
+                                <span class="pl-filmstrip-item-title"><?php echo esc_html( mb_substr( $sec_title, 0, 30 ) ); ?></span>
+                                <span class="pl-filmstrip-item-preview"><?php echo esc_html( mb_substr( $sec_text, 0, 40 ) ); ?></span>
+                            </div>
+                            <?php if ( $sec_img ) : ?>
+                            <img class="pl-filmstrip-thumb-img" src="<?php echo esc_url( $sec_img ); ?>" alt="<?php echo esc_attr( 'Slide ' . ( $i + 1 ) ); ?>" loading="lazy" />
+                            <?php endif; ?>
                         </div>
-                    <?php else : ?>
-                        <?php $section_num = 1; ?>
-                        <?php foreach ( $sections as $section ) : ?>
-                            <?php self::render_front_section( $section, $project_id, $section_num ); ?>
-                            <?php $section_num++; ?>
                         <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+                    </div>
+                </aside>
 
-                <!-- RIGHT COLUMN: AI Suggestions + Scores -->
-                <div class="pl-stitch-wb-sidebar">
+                <!-- CENTER: Canvas (single slide editor) -->
+                <main class="pl-editor-canvas" id="pl-editor-canvas">
+                    <div class="pl-canvas-nav">
+                        <button type="button" class="pl-canvas-nav-btn" id="pl-slide-prev" title="Diapositive précédente">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <span class="pl-canvas-counter" id="pl-slide-counter">Diapositive 1 / <?php echo esc_html( $total_slides ); ?></span>
+                        <button type="button" class="pl-canvas-nav-btn" id="pl-slide-next" title="Diapositive suivante">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="pl-canvas-slide" id="pl-canvas-slide">
+                        <?php if ( $first ) : ?>
+                        <div class="pl-canvas-slide-inner" data-section-id="<?php echo $first_id; ?>" data-slide-num="<?php echo esc_attr( $first_num ); ?>">
+                            <?php if ( $first_img ) : ?>
+                            <div class="pl-canvas-slide-image">
+                                <img src="<?php echo esc_url( $first_img ); ?>" alt="<?php echo esc_attr( 'Diapositive ' . $first_num ); ?>" />
+                            </div>
+                            <?php endif; ?>
+                            <h2 class="pl-canvas-slide-title" contenteditable="false"><?php echo esc_html( $first_title ); ?></h2>
+                            <textarea class="pl-section-content pl-canvas-textarea" data-section-id="<?php echo $first_id; ?>" rows="12"><?php echo esc_textarea( $first_content ); ?></textarea>
+                        </div>
+                        <?php else : ?>
+                        <div class="pl-canvas-empty">
+                            <p>Aucune section. Importez un fichier ou ajoutez du contenu.</p>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="pl-canvas-toolbar" id="pl-canvas-toolbar">
+                        <button type="button" class="pl-editor-btn pl-editor-btn-accent pl-btn-suggestions" id="pl-canvas-suggestions-btn" data-section-id="<?php echo $first_id; ?>">
+                            Suggestions IA
+                        </button>
+                        <button type="button" class="pl-editor-btn pl-editor-btn-ghost pl-btn-history" id="pl-canvas-history-btn" data-section-id="<?php echo $first_id; ?>">
+                            Historique
+                        </button>
+                        <button type="button" class="pl-editor-btn pl-editor-btn-sm pl-editor-btn-primary pl-btn-save-section" id="pl-canvas-save-btn" data-section-id="<?php echo $first_id; ?>">
+                            Enregistrer
+                        </button>
+                        <button type="button" class="pl-editor-btn pl-editor-btn-sm pl-editor-btn-ghost pl-btn-undo" id="pl-canvas-undo-btn" data-section-id="<?php echo $first_id; ?>" style="display:none;">
+                            Annuler
+                        </button>
+                        <span class="pl-save-status" id="pl-canvas-save-status"></span>
+                    </div>
+                </main>
 
-                    <!-- Suggestions IA panel -->
-                    <div class="pl-stitch-wb-card pl-stitch-wb-suggestions-panel">
-                        <div class="pl-stitch-wb-card-header">
-                            <h3>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                                Suggestions IA
-                            </h3>
-                            <span class="pl-stitch-wb-ai-active-badge">Analyse IA Active</span>
+                <!-- RIGHT: AI Panel -->
+                <aside class="pl-editor-panel" id="pl-editor-panel">
+
+                    <!-- Suggestions IA -->
+                    <div class="pl-panel-section">
+                        <div class="pl-panel-section-header">
+                            <h3>Suggestions IA</h3>
+                            <span class="pl-panel-ai-badge">Active</span>
                         </div>
-                        <div id="pl-stitch-suggestions-list" class="pl-stitch-wb-suggestions-list">
-                            <p class="pl-stitch-wb-sidebar-empty">Cliquez sur « Suggestions IA » sur une section pour obtenir des recommandations.</p>
+                        <div id="pl-panel-suggestions" class="pl-panel-suggestions">
+                            <p class="pl-panel-empty">Cliquez sur « Suggestions IA » pour obtenir des recommandations.</p>
                         </div>
-                        <button type="button" id="pl-analyze-all" class="pl-stitch-btn pl-stitch-btn-glow pl-stitch-btn-full" style="margin-top:16px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                            Demander de nouvelles suggestions
+                        <button type="button" id="pl-analyze-all" class="pl-editor-btn pl-editor-btn-glow pl-editor-btn-full" style="margin-top:12px;">
+                            Analyser toutes les diapositives
                         </button>
                     </div>
 
                     <!-- Scores par profil -->
-                    <div class="pl-stitch-wb-card">
-                        <div class="pl-stitch-wb-card-header">
-                            <h3>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-                                Scores par profil
-                            </h3>
+                    <div class="pl-panel-section">
+                        <div class="pl-panel-section-header">
+                            <h3>Scores par profil</h3>
                         </div>
                         <div id="pl-sidebar-scores">
-                            <?php if ( empty( $scores ) ) : ?>
-                                <p class="pl-stitch-wb-sidebar-empty">Analysez une section pour voir les scores.</p>
-                            <?php else : ?>
+                            <?php if ( ! empty( $scores ) ) : ?>
                                 <?php self::render_front_score_bars( $scores ); ?>
+                            <?php else : ?>
+                                <p class="pl-panel-empty">Analysez pour voir les scores.</p>
                             <?php endif; ?>
                         </div>
                     </div>
 
                     <?php if ( $summary ) : ?>
                     <!-- Résumé -->
-                    <div class="pl-stitch-wb-card">
-                        <div class="pl-stitch-wb-card-header">
-                            <h3>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                Résumé
-                            </h3>
-                        </div>
-                        <p class="pl-stitch-wb-summary-text"><?php echo esc_html( $summary ); ?></p>
+                    <div class="pl-panel-section">
+                        <div class="pl-panel-section-header"><h3>Résumé</h3></div>
+                        <p class="pl-panel-summary"><?php echo esc_html( $summary ); ?></p>
                     </div>
                     <?php endif; ?>
 
-                    <!-- Fichiers uploadés -->
-                    <div class="pl-stitch-wb-card">
-                        <div class="pl-stitch-wb-card-header">
-                            <h3>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                                Fichiers du projet
-                            </h3>
+                    <!-- Fichiers -->
+                    <div class="pl-panel-section pl-panel-section-collapsible">
+                        <div class="pl-panel-section-header">
+                            <h3>Fichiers</h3>
                         </div>
                         <div id="pl-files-list">
                             <?php if ( empty( $files ) ) : ?>
-                                <p class="pl-stitch-wb-sidebar-empty">Aucun fichier importé.</p>
+                                <p class="pl-panel-empty">Aucun fichier importé.</p>
                             <?php else : ?>
                                 <?php foreach ( $files as $f ) :
                                     $ext  = strtolower( pathinfo( $f['name'] ?? '', PATHINFO_EXTENSION ) );
@@ -843,180 +884,149 @@ class PedagoLens_Workbench_Admin {
                         </div>
                     </div>
 
+                </aside>
+
+            </div><!-- .pl-editor-body -->
+
+        </div><!-- .pl-editor -->
+
+        <!-- Modale historique des versions -->
+        <div id="pl-versions-modal" style="display:none;">
+            <div class="pl-modal-overlay pl-stitch-modal-overlay">
+                <div class="pl-modal-box pl-stitch-modal-box">
+                    <h2>Historique des versions</h2>
+                    <div id="pl-versions-content"></div>
+                    <button type="button" id="pl-versions-close" class="pl-stitch-btn pl-stitch-btn-outline">Fermer</button>
                 </div>
             </div>
-
-            <!-- Modale historique des versions -->
-            <div id="pl-versions-modal" style="display:none;">
-                <div class="pl-modal-overlay pl-stitch-modal-overlay">
-                    <div class="pl-modal-box pl-stitch-modal-box">
-                        <h2>Historique des versions</h2>
-                        <div id="pl-versions-content"></div>
-                        <button type="button" id="pl-versions-close" class="pl-stitch-btn pl-stitch-btn-outline">Fermer</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modale Ajouter une section -->
-            <div id="pl-modal-add-section" class="pl-stitch-modal" style="display:none;">
-                <div class="pl-stitch-modal-overlay"></div>
-                <div class="pl-stitch-modal-content">
-                    <div class="pl-stitch-modal-header">
-                        <h2>Ajouter une section</h2>
-                        <button type="button" class="pl-stitch-modal-close">&times;</button>
-                    </div>
-                    <div class="pl-stitch-modal-body">
-                        <label class="pl-stitch-label">Titre de la section</label>
-                        <input type="text" id="pl-new-section-title" class="pl-stitch-input" placeholder="Ex: Introduction, Chapitre 1..." autofocus />
-                        <label class="pl-stitch-label" style="margin-top:16px;">Contenu (optionnel)</label>
-                        <textarea id="pl-new-section-content" class="pl-stitch-textarea" rows="4" placeholder="Ajoutez du contenu initial..."></textarea>
-                    </div>
-                    <div class="pl-stitch-modal-footer">
-                        <button type="button" class="pl-stitch-btn pl-stitch-btn-outline pl-stitch-modal-cancel">Annuler</button>
-                        <button type="button" id="pl-confirm-add-section" class="pl-stitch-btn pl-stitch-btn-primary">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Ajouter la section
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modale Importer un fichier -->
-            <div id="pl-modal-import" class="pl-stitch-modal" style="display:none;">
-                <div class="pl-stitch-modal-overlay"></div>
-                <div class="pl-stitch-modal-content pl-stitch-modal-lg">
-                    <div class="pl-stitch-modal-header">
-                        <h2>Importer un fichier</h2>
-                        <button type="button" class="pl-stitch-modal-close">&times;</button>
-                    </div>
-                    <div class="pl-stitch-modal-body">
-                        <div id="pl-upload-zone" class="pl-stitch-upload-zone">
-                            <div class="pl-stitch-upload-dropzone" id="pl-dropzone">
-                                <div class="pl-stitch-upload-icon">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                </div>
-                                <p class="pl-stitch-upload-text">Glissez vos fichiers ici ou <label for="pl-file-input" class="pl-stitch-upload-browse">parcourez</label></p>
-                                <p class="pl-stitch-upload-hint">PowerPoint (.pptx), Word (.docx), PDF (.pdf) — Limite : 25 Mo</p>
-                                <input type="file" id="pl-file-input" accept=".pptx,.docx,.pdf" multiple style="display:none;" />
-                            </div>
-                            <div id="pl-upload-progress" class="pl-upload-progress" style="display:none;">
-                                <div class="pl-progress-bar-wrap">
-                                    <div class="pl-progress-bar" id="pl-progress-bar"></div>
-                                </div>
-                                <span class="pl-progress-text" id="pl-progress-text">Téléversement…</span>
-                            </div>
-                            <div id="pl-upload-result" class="pl-upload-result" style="display:none;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide Viewer Modal -->
-            <div id="pl-slide-viewer" class="pl-slide-viewer-modal" style="display:none;">
-                <div class="pl-slide-viewer-overlay" onclick="closeSlideViewer()"></div>
-                <button type="button" class="pl-slide-viewer-close" onclick="closeSlideViewer()" aria-label="Fermer">&times;</button>
-                <button type="button" class="pl-slide-viewer-prev" onclick="slideViewerPrev()" aria-label="Diapositive précédente">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <img id="pl-slide-viewer-img" class="pl-slide-viewer-image" src="" alt="Diapositive" />
-                <button type="button" class="pl-slide-viewer-next" onclick="slideViewerNext()" aria-label="Diapositive suivante">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-                <div id="pl-slide-viewer-counter" class="pl-slide-viewer-counter">Diapositive 1 / 1</div>
-            </div>
-
-            <!-- Preview Suggestion Modal (avant/après) -->
-            <div id="pl-preview-modal" class="pl-stitch-modal" style="display:none;">
-                <div class="pl-stitch-modal-overlay pl-preview-modal-overlay"></div>
-                <div class="pl-stitch-modal-content pl-stitch-modal-lg pl-preview-modal-content">
-                    <div class="pl-stitch-modal-header">
-                        <h2>Prévisualisation de la suggestion</h2>
-                        <button type="button" class="pl-stitch-modal-close">&times;</button>
-                    </div>
-                    <div class="pl-stitch-modal-body">
-                        <div class="pl-preview-slide-img" id="pl-preview-slide-img" style="display:none;">
-                            <img src="" alt="Diapositive" />
-                        </div>
-                        <div class="pl-preview-split">
-                            <div class="pl-preview-before">
-                                <h4>Avant</h4>
-                                <div id="pl-preview-original" class="pl-preview-text"></div>
-                            </div>
-                            <div class="pl-preview-after">
-                                <h4>Après</h4>
-                                <div id="pl-preview-proposed" class="pl-preview-text"></div>
-                            </div>
-                        </div>
-                        <div id="pl-preview-rationale" class="pl-preview-rationale" style="display:none;"></div>
-                    </div>
-                    <div class="pl-stitch-modal-footer">
-                        <button type="button" class="pl-stitch-btn pl-stitch-btn-outline pl-stitch-modal-cancel">Fermer</button>
-                        <button type="button" id="pl-preview-apply" class="pl-stitch-btn pl-stitch-btn-apply">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                            Appliquer cette suggestion
-                        </button>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
+        <!-- Modale Ajouter une section -->
+        <div id="pl-modal-add-section" class="pl-stitch-modal" style="display:none;">
+            <div class="pl-stitch-modal-overlay"></div>
+            <div class="pl-stitch-modal-content">
+                <div class="pl-stitch-modal-header">
+                    <h2>Ajouter une section</h2>
+                    <button type="button" class="pl-stitch-modal-close">&times;</button>
+                </div>
+                <div class="pl-stitch-modal-body">
+                    <label class="pl-stitch-label">Titre de la section</label>
+                    <input type="text" id="pl-new-section-title" class="pl-stitch-input" placeholder="Ex: Introduction, Chapitre 1..." autofocus />
+                    <label class="pl-stitch-label" style="margin-top:16px;">Contenu (optionnel)</label>
+                    <textarea id="pl-new-section-content" class="pl-stitch-textarea" rows="4" placeholder="Ajoutez du contenu initial..."></textarea>
+                </div>
+                <div class="pl-stitch-modal-footer">
+                    <button type="button" class="pl-stitch-btn pl-stitch-btn-outline pl-stitch-modal-cancel">Annuler</button>
+                    <button type="button" id="pl-confirm-add-section" class="pl-stitch-btn pl-stitch-btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Ajouter la section
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale Importer un fichier -->
+        <div id="pl-modal-import" class="pl-stitch-modal" style="display:none;">
+            <div class="pl-stitch-modal-overlay"></div>
+            <div class="pl-stitch-modal-content pl-stitch-modal-lg">
+                <div class="pl-stitch-modal-header">
+                    <h2>Importer un fichier</h2>
+                    <button type="button" class="pl-stitch-modal-close">&times;</button>
+                </div>
+                <div class="pl-stitch-modal-body">
+                    <div id="pl-upload-zone" class="pl-stitch-upload-zone">
+                        <div class="pl-stitch-upload-dropzone" id="pl-dropzone">
+                            <div class="pl-stitch-upload-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </div>
+                            <p class="pl-stitch-upload-text">Glissez vos fichiers ici ou <label for="pl-file-input" class="pl-stitch-upload-browse">parcourez</label></p>
+                            <p class="pl-stitch-upload-hint">PowerPoint (.pptx), Word (.docx), PDF (.pdf) — Limite : 25 Mo</p>
+                            <input type="file" id="pl-file-input" accept=".pptx,.docx,.pdf" multiple style="display:none;" />
+                        </div>
+                        <div id="pl-upload-progress" class="pl-upload-progress" style="display:none;">
+                            <div class="pl-progress-bar-wrap">
+                                <div class="pl-progress-bar" id="pl-progress-bar"></div>
+                            </div>
+                            <span class="pl-progress-text" id="pl-progress-text">Téléversement…</span>
+                        </div>
+                        <div id="pl-upload-result" class="pl-upload-result" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide Viewer Modal -->
+        <div id="pl-slide-viewer" class="pl-slide-viewer-modal" style="display:none;">
+            <div class="pl-slide-viewer-overlay" onclick="closeSlideViewer()"></div>
+            <button type="button" class="pl-slide-viewer-close" onclick="closeSlideViewer()" aria-label="Fermer">&times;</button>
+            <button type="button" class="pl-slide-viewer-prev" onclick="slideViewerPrev()" aria-label="Diapositive précédente">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <img id="pl-slide-viewer-img" class="pl-slide-viewer-image" src="" alt="Diapositive" />
+            <button type="button" class="pl-slide-viewer-next" onclick="slideViewerNext()" aria-label="Diapositive suivante">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <div id="pl-slide-viewer-counter" class="pl-slide-viewer-counter">Diapositive 1 / 1</div>
+        </div>
+
+        <!-- Preview Suggestion Modal (avant/après) -->
+        <div id="pl-preview-modal" class="pl-stitch-modal" style="display:none;">
+            <div class="pl-stitch-modal-overlay pl-preview-modal-overlay"></div>
+            <div class="pl-stitch-modal-content pl-stitch-modal-lg pl-preview-modal-content">
+                <div class="pl-stitch-modal-header">
+                    <h2>Prévisualisation de la suggestion</h2>
+                    <button type="button" class="pl-stitch-modal-close">&times;</button>
+                </div>
+                <div class="pl-stitch-modal-body">
+                    <div class="pl-preview-slide-img" id="pl-preview-slide-img" style="display:none;">
+                        <img src="" alt="Diapositive" />
+                    </div>
+                    <div class="pl-preview-split">
+                        <div class="pl-preview-before">
+                            <h4>Avant</h4>
+                            <div id="pl-preview-original" class="pl-preview-text"></div>
+                        </div>
+                        <div class="pl-preview-after">
+                            <h4>Après</h4>
+                            <div id="pl-preview-proposed" class="pl-preview-text"></div>
+                        </div>
+                    </div>
+                    <div id="pl-preview-rationale" class="pl-preview-rationale" style="display:none;"></div>
+                </div>
+                <div class="pl-stitch-modal-footer">
+                    <button type="button" class="pl-stitch-btn pl-stitch-btn-outline pl-stitch-modal-cancel">Fermer</button>
+                    <button type="button" id="pl-preview-apply" class="pl-stitch-btn pl-stitch-btn-apply">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        Appliquer cette suggestion
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <?php
         return ob_get_clean();
     }
 
     /**
-     * Render a single section block for front-end Stitch workbench.
+     * Render a single section card for AJAX responses (add_section, upload).
+     * Returns a simple section data block — JS handles slide navigation.
      */
     private static function render_front_section( array $section, int $project_id, int $section_num = 0 ): void {
         $section_id = esc_attr( $section['id'] ?? '' );
-        $title      = esc_html( $section['title'] ?? 'Section' );
-        $content    = esc_textarea( $section['content'] ?? '' );
+        $title      = $section['title'] ?? 'Section';
+        $content    = $section['content'] ?? '';
         $slide_img  = $section['slide_image_url'] ?? '';
-        $slide_num  = (int) ( $section['slide_num'] ?? 0 );
+        $slide_num  = (int) ( $section['slide_num'] ?? $section_num );
         ?>
-        <div class="pl-section-block pl-stitch-wb-section" id="pl-section-<?php echo $section_id; ?>" data-section-id="<?php echo $section_id; ?>" data-slide-num="<?php echo $slide_num; ?>">
-            <div class="pl-section-header pl-stitch-wb-section-header">
-                <div class="pl-stitch-wb-section-title-row">
-                    <?php if ( $section_num > 0 ) : ?>
-                        <span class="pl-stitch-wb-section-num"><?php echo esc_html( $section_num ); ?></span>
-                    <?php endif; ?>
-                    <h2 class="pl-section-title pl-stitch-wb-section-title"><?php echo $title; ?></h2>
-                </div>
-                <div class="pl-section-actions pl-stitch-wb-section-actions">
-                    <button type="button" class="pl-stitch-btn pl-stitch-btn-sm pl-stitch-btn-accent pl-btn-suggestions" data-section-id="<?php echo $section_id; ?>">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                        Suggestions IA
-                    </button>
-                    <button type="button" class="pl-stitch-btn pl-stitch-btn-sm pl-stitch-btn-ghost pl-btn-history" data-section-id="<?php echo $section_id; ?>">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Historique
-                    </button>
-                </div>
+        <div class="pl-filmstrip-item" data-slide-index="<?php echo esc_attr( $section_num - 1 ); ?>" data-section-id="<?php echo $section_id; ?>">
+            <span class="pl-filmstrip-num"><?php echo esc_html( $section_num ); ?></span>
+            <div class="pl-filmstrip-info">
+                <span class="pl-filmstrip-item-title"><?php echo esc_html( mb_substr( $title, 0, 30 ) ); ?></span>
+                <span class="pl-filmstrip-item-preview"><?php echo esc_html( mb_substr( $content, 0, 40 ) ); ?></span>
             </div>
             <?php if ( $slide_img ) : ?>
-            <div class="pl-stitch-wb-slide-thumb" data-slide-index="<?php echo max( 0, $slide_num - 1 ); ?>">
-                <img src="<?php echo esc_url( $slide_img ); ?>" alt="Diapositive <?php echo $slide_num; ?>" loading="lazy" />
-                <div class="pl-stitch-wb-slide-thumb-overlay">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    Voir la diapositive
-                </div>
-            </div>
+            <img class="pl-filmstrip-thumb-img" src="<?php echo esc_url( $slide_img ); ?>" alt="<?php echo esc_attr( 'Slide ' . $section_num ); ?>" loading="lazy" />
             <?php endif; ?>
-            <div class="pl-section-editor pl-stitch-wb-section-editor">
-                <textarea class="pl-section-content pl-stitch-wb-textarea" data-section-id="<?php echo $section_id; ?>" rows="6"><?php echo $content; ?></textarea>
-                <div class="pl-section-save-row pl-stitch-wb-save-row">
-                    <button type="button" class="pl-stitch-btn pl-stitch-btn-sm pl-stitch-btn-primary pl-btn-save-section" data-section-id="<?php echo $section_id; ?>">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        Enregistrer
-                    </button>
-                    <button type="button" class="pl-stitch-btn pl-stitch-btn-sm pl-stitch-btn-ghost pl-btn-undo" data-section-id="<?php echo $section_id; ?>" style="display:none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                        Annuler
-                    </button>
-                    <span class="pl-save-status"></span>
-                </div>
-            </div>
-            <div class="pl-suggestions-zone" id="pl-suggestions-<?php echo $section_id; ?>" style="display:none;"></div>
         </div>
         <?php
     }

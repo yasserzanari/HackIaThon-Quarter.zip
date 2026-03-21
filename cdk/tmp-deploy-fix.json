@@ -4,9 +4,7 @@
   "Parameters": {
     "commands": [
       "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Syntaxe Workbench ===' && php -l /opt/pedagolens/plugins/pedagolens-course-workbench/admin/class-workbench-admin.php 2>&1",
-      "echo '=== Syntaxe Bridge ===' && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge.php 2>&1",
-      "echo '=== Syntaxe Mock ===' && php -l /opt/pedagolens/plugins/pedagolens-api-bridge/includes/class-api-bridge-mock.php 2>&1",
+      "php -l /opt/pedagolens/plugins/pedagolens-course-workbench/includes/class-course-workbench.php 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }

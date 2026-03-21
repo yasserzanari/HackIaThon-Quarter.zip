@@ -668,3 +668,266 @@ Le bouton "Demander de nouvelles suggestions" dans la sidebar doit lancer une an
   - Cliquer "Appliquer" → vérifier que le texte est mis à jour
   - Cliquer "Télécharger le PowerPoint modifié" → vérifier le téléchargement
   - Cliquer "Demander de nouvelles suggestions" → vérifier l'analyse globale
+
+---
+
+## 45. Refonte Workbench — Mode Éditeur PowerPoint
+
+Objectif : transformer le workbench d'un scroll vertical de textareas en un vrai éditeur de slides type PowerPoint. Une seule diapositive visible à la fois, navigation par miniatures à gauche, panneau IA à droite, aucun scroll vertical de la page principale.
+
+### 45.1 Layout principal — structure 3 colonnes (viewport fixe, pas de scroll page)
+
+- [-] 45.1.1 Refactorer `render_front()` dans `class-workbench-admin.php` : remplacer le layout 2 colonnes scrollable par un layout 3 colonnes plein écran (100vh)
+  - Colonne gauche : panneau de miniatures des slides (filmstrip vertical, ~200px, collapsible)
+  - Colonne centrale : zone d'édition de la diapositive active (1 seule slide visible à la fois)
+  - Colonne droite : panneau IA (suggestions, scores, fichiers — le sidebar actuel)
+  - Header compact en haut avec titre du projet, breadcrumb, boutons d'action (Importer, Sauvegarder, Télécharger)
+  - `overflow: hidden` sur le body/container principal — AUCUN scroll de page
+- [-] 45.1.2 CSS du layout éditeur dans `workbench-admin.css`
+  - `.pl-editor-layout` : `display: grid; grid-template-rows: auto 1fr; height: 100vh;`
+  - `.pl-editor-body` : `display: grid; grid-template-columns: auto 1fr auto; overflow: hidden;`
+  - `.pl-editor-filmstrip` : largeur ~200px, `overflow-y: auto` (scroll interne uniquement), fond sombre
+  - `.pl-editor-canvas` : zone centrale, flex centré, fond gris clair (comme un éditeur de slides)
+  - `.pl-editor-panel` : panneau droit ~360px, `overflow-y: auto` (scroll interne)
+  - Transitions smooth pour collapse/expand du filmstrip
+
+### 45.2 Filmstrip — panneau de miniatures à gauche (collapsible)
+
+- [-] 45.2.1 Générer le HTML du filmstrip dans `render_front()` : liste verticale de miniatures cliquables
+  - Chaque miniature = card avec numéro de slide + titre tronqué + preview du contenu (premiers 50 chars)
+  - Si des images de slides existent (`_pl_slide_images`), afficher l'image en miniature
+  - Slide active = bordure accent + fond highlight
+  - Bouton collapse/expand en haut du filmstrip (icône chevron)
+  - Quand collapsed : filmstrip réduit à ~48px, affiche seulement les numéros de slides
+- [-] 45.2.2 JS de navigation filmstrip : clic sur miniature → affiche la slide correspondante dans le canvas central
+  - Mettre à jour la classe active sur la miniature
+  - Transition fade/slide sur le contenu central
+  - Raccourcis clavier : flèches haut/bas pour naviguer entre slides
+  - Scroll automatique du filmstrip pour garder la slide active visible
+- [-] 45.2.3 CSS du filmstrip
+  - Style sombre (fond `#1a1a2e` ou similaire) pour contraste avec le canvas
+  - Miniatures avec `border-radius: 8px`, hover glow, active accent border
+  - Animation collapse : `width` transition 300ms ease
+  - Scrollbar custom fine et discrète
+
+### 45.3 Canvas central — édition d'une seule slide à la fois
+
+- [-] 45.3.1 Refactorer `render_front_section()` : au lieu de rendre toutes les sections en liste, rendre une seule section dans le canvas
+  - Le canvas affiche : titre de la section (éditable inline), textarea du contenu, boutons d'action
+  - Si une image de slide existe, l'afficher en fond ou en preview au-dessus du textarea
+  - Boutons sous le textarea : Enregistrer, Suggestions IA, Historique
+  - Indicateur de slide : "Diapositive 3 / 11" avec flèches prev/next
+- [-] 45.3.2 JS du canvas : gestion de la slide active
+  - Variable globale `currentSlideIndex` — toutes les sections chargées en mémoire JS (pas de rechargement AJAX par slide)
+  - Fonction `showSlide(index)` : met à jour le canvas avec le contenu de la section[index]
+  - Auto-save quand on change de slide (sauvegarder la slide qu'on quitte)
+  - Flèches prev/next + raccourcis clavier gauche/droite
+  - Transition smooth entre slides (fade 200ms)
+- [-] 45.3.3 CSS du canvas
+  - Fond gris clair `#f0f0f5` (comme l'arrière-plan d'un éditeur de slides)
+  - La "slide" elle-même = card blanche centrée, `max-width: 900px`, `aspect-ratio: 16/9` optionnel, `border-radius: 12px`, shadow
+  - Textarea stylisé pour ressembler à une zone d'édition de slide (pas un form input classique)
+  - Barre d'outils compacte sous la slide
+
+### 45.4 Panneau IA à droite — suggestions et scores
+
+- [-] 45.4.1 Réorganiser le sidebar droit pour le mode éditeur
+  - Les suggestions IA s'affichent dans le panneau droit (pas inline sous chaque section)
+  - Quand on clique "Suggestions IA" sur le canvas, les suggestions apparaissent dans le panneau droit
+  - Scores par profil toujours visibles en bas du panneau
+  - Bouton "Demander de nouvelles suggestions" reste dans le panneau
+  - Fichiers du projet en section collapsible en bas
+- [-] 45.4.2 Adapter le JS des suggestions pour le panneau droit
+  - `pl_get_suggestions` → injecter le HTML dans `#pl-editor-suggestions` (panneau droit) au lieu de `#pl-suggestions-{sectionId}`
+  - Les boutons Appliquer/Prévisualiser/Rejeter fonctionnent toujours, mais ciblent la slide active dans le canvas
+  - Quand on change de slide, vider les suggestions ou les recharger pour la nouvelle slide
+- [-] 45.4.3 CSS du panneau droit
+  - Fond blanc/glass, `border-left: 1px solid rgba(0,0,0,0.08)`
+  - Scroll interne uniquement
+  - Cards de suggestions compactes pour tenir dans le panneau
+  - Transition smooth quand les suggestions apparaissent
+
+### 45.5 Collapse de la sidebar navigation gauche (menu PédagoLens)
+
+- [-] 45.5.1 Ajouter un bouton toggle sur la sidebar de navigation principale (le menu PédagoLens à gauche avec Dashboard, Analyses IA, etc.)
+  - Quand collapsed : sidebar réduite à ~60px, affiche seulement les icônes (pas de texte)
+  - Quand expanded : sidebar normale ~260px avec icônes + texte
+  - Sauvegarder l'état dans `localStorage` pour persistance
+  - Le bouton toggle = icône hamburger/chevron en haut de la sidebar
+- [-] 45.5.2 Adapter le CSS de la sidebar dans `landing.css`
+  - `.pl-sidebar-collapsed` : `width: 60px`, texte masqué, icônes centrées
+  - Transition `width` 300ms ease
+  - `.pl-app-main` ajuste sa marge gauche en conséquence
+  - Tooltip au hover sur les icônes quand collapsed (affiche le nom du lien)
+
+### 45.6 Header compact du workbench
+
+- [-] 45.6.1 Refactorer le header du workbench pour être plus compact en mode éditeur
+  - Une seule ligne : [← Retour] [Titre du projet] [Type badge] [Importer] [Ajouter section] [Sauvegarder] [Télécharger PPTX]
+  - Hauteur max ~56px
+  - Le titre est éditable inline (click to edit)
+- [-] 45.6.2 CSS du header compact
+  - `height: 56px`, `display: flex`, `align-items: center`, `gap: 12px`
+  - Fond blanc avec `border-bottom: 1px solid rgba(0,0,0,0.08)`
+  - Boutons compacts (icône + texte court)
+
+### 45.7 Version bump + déploiement + test
+
+- [ ] 45.7.1 Bump `PL_WORKBENCH_VERSION` de `2.0.0` → `3.0.0` (header PHP + constante define) — version majeure car refonte complète du layout
+- [ ] 45.7.2 Bump `PL_LANDING_VERSION` si la sidebar est modifiée
+- [ ] 45.7.3 Commit + push + déploiement SSM
+- [ ] 45.7.4 Test end-to-end via Chrome MCP :
+  - Vérifier le layout 3 colonnes (filmstrip + canvas + panneau IA)
+  - Cliquer sur une miniature → la slide s'affiche dans le canvas
+  - Naviguer avec les flèches → slide change
+  - Collapse le filmstrip → il se réduit à 48px
+  - Collapse la sidebar navigation → elle se réduit à 60px
+  - Cliquer "Suggestions IA" → suggestions dans le panneau droit
+  - Appliquer une suggestion → le texte change dans le canvas
+  - Vérifier qu'il n'y a AUCUN scroll vertical de la page
+
+
+---
+
+## 46. Workbench JS — Système de navigation slides (éditeur PowerPoint)
+
+- [x] 46.1 Réécrire complètement `workbench-admin.js` pour le mode éditeur PowerPoint
+  - Variable `currentSlideIndex` pour tracker la slide active
+  - Fonction `showSlide(index)` : met à jour le canvas, le filmstrip, le counter, les boutons toolbar
+  - Navigation filmstrip : clic sur miniature → `showSlide(index)`
+  - Navigation prev/next : boutons + raccourcis clavier (flèches gauche/droite)
+  - Auto-save quand on change de slide (sauvegarder la slide qu'on quitte)
+  - Suggestions IA → injectées dans `#pl-panel-suggestions` (panneau droit)
+  - Filmstrip collapse/expand toggle
+  - Toutes les fonctions existantes (apply, reject, preview, upload, download, analyze all) adaptées au nouveau layout
+  - Conserver le slide viewer modal, le preview modal, les modals add section et import
+
+---
+
+## 47. Workbench CSS — Layout éditeur 3 colonnes plein écran
+
+- [ ] 47.1 Ajouter les styles CSS pour le layout éditeur dans `workbench-admin.css`
+  - `.pl-editor` : `height: 100vh; display: grid; grid-template-rows: 56px 1fr; overflow: hidden;`
+  - `.pl-editor-header` : header compact flex, fond blanc, border-bottom, z-index
+  - `.pl-editor-body` : `display: grid; grid-template-columns: 220px 1fr 360px; overflow: hidden;`
+  - `.pl-editor-filmstrip` : fond sombre #1a1a2e, overflow-y auto, transition width 300ms
+  - `.pl-editor-filmstrip.collapsed` : width 48px, texte masqué
+  - `.pl-filmstrip-item` : card miniature, hover glow, active accent border
+  - `.pl-editor-canvas` : fond #f0f0f5, flex centré, overflow hidden
+  - `.pl-canvas-slide` : card blanche centrée, max-width 900px, shadow, border-radius 12px
+  - `.pl-canvas-textarea` : style éditeur de slide, pas un form input classique
+  - `.pl-editor-panel` : fond blanc, border-left, overflow-y auto, scroll interne
+  - `.pl-panel-section` : sections du panneau droit avec headers
+  - Responsive : sur mobile, filmstrip et panel cachés, canvas plein écran
+  - Boutons `.pl-editor-btn` : variantes outline, primary, accent, ghost, glow
+
+---
+
+## 48. Dashboard enseignant — Refonte full-width sans scroll
+
+Chaque page du dashboard enseignant doit utiliser 100% de la largeur disponible, sans scroll vertical sur PC. Adapter la taille de chaque élément selon pertinence, harmonie et ergonomie.
+
+- [ ] 48.1 Refonte de `shortcode_teacher_dashboard()` — page Dashboard
+  - KPI cards en grille adaptative (4 colonnes sur grand écran, 2 sur tablette)
+  - Section "Cours récents" avec cards compactes (titre, dernier score, date, bouton Analyser)
+  - Section "Ateliers récents" avec liens rapides vers les derniers workbench utilisés
+  - Bouton "Nouveau cours" plus visible et beau (card CTA avec icône + animation)
+  - Tout doit tenir dans 100vh sans scroll — utiliser des grilles adaptatives
+  - Vérifier via Chrome MCP que rien ne scroll en bas
+
+- [ ] 48.2 Vérifier et corriger `shortcode_courses()` — page Cours & Séances
+  - Utiliser la full largeur, pas de marges excessives
+  - Cards de cours compactes si nécessaire pour tout afficher sans scroll
+  - Vérifier via Chrome MCP
+
+- [ ] 48.3 Vérifier et corriger `shortcode_history()` — page Historique
+  - Tableau compact, filtres en ligne, pas de scroll vertical
+  - Vérifier via Chrome MCP
+
+- [ ] 48.4 Vérifier et corriger `shortcode_settings()` — page Paramètres
+  - Formulaire compact, sections en colonnes si nécessaire
+  - Vérifier via Chrome MCP
+
+- [ ] 48.5 Vérifier et corriger `shortcode_institutional()` — page Lumière institutionnelle
+  - KPI et graphiques en grille, pas de scroll
+  - Vérifier via Chrome MCP
+
+- [ ] 48.6 Vérifier et corriger `shortcode_account()` — page Compte
+  - Card profil compacte, pas de scroll
+  - Vérifier via Chrome MCP
+
+---
+
+## 49. Agent IA Léa — Dashboard prof avec analytics
+
+- [ ] 49.1 Créer un layout 2 panneaux pour la page Agent IA Léa (accessible depuis sidebar enseignant)
+  - Panel gauche : Dashboard analytics — topics les moins bien compris, questions fréquentes, déficits détectés par profil
+  - Panel droit : Chat avec l'agent IA Léa (interface existante du jumeau numérique)
+  - Les données analytics sont basées sur les interactions étudiants avec le LLM (mock en mode mock)
+  - KPI : nombre de sessions, topics problématiques, profils à risque
+
+- [ ] 49.2 Créer les données mock pour le dashboard analytics de Léa
+  - Topics les moins compris : liste avec score de compréhension, nombre de questions
+  - Déficits par profil : barres de score par profil pédagogique
+  - Questions fréquentes : top 5 questions posées par les étudiants
+  - Alertes : étudiants en difficulté, topics critiques
+
+---
+
+## 50. Dashboard étudiant — Refonte et test complet
+
+- [ ] 50.1 Se connecter avec etudiant1/etudiant1! via Chrome MCP et inspecter le dashboard étudiant
+- [ ] 50.2 Refonte du dashboard étudiant — thème plus simple et étudiant
+  - Même palette de couleurs que le site mais design distinct du dashboard prof
+  - Plus simple, plus accueillant, moins de KPI complexes
+  - Profil d'apprentissage avec barres visuelles
+  - Accès rapide à l'agent IA Léa
+  - Cours de l'étudiant avec progression
+- [ ] 50.3 Tester la fonction Agent IA Léa côté étudiant
+  - Vérifier que le chat fonctionne (mode mock)
+  - Corriger les bugs si le chat ne fonctionne pas
+  - Fine-tuner l'interface jusqu'à satisfaction complète
+- [ ] 50.4 Vérifier que le dashboard étudiant ne scroll pas verticalement sur PC
+
+---
+
+## 51. Configuration Bedrock — Settings admin + prompts + credentials
+
+- [ ] 51.1 Ajouter un onglet "Bedrock" dans les settings admin de pedagolens-core
+  - Champ pour AWS Access Key ID
+  - Champ pour AWS Secret Access Key
+  - Champ pour AWS Region (défaut us-east-1)
+  - Sélecteur de modèle Bedrock (Claude 3 Sonnet, Claude 3 Haiku, Claude 3.5 Sonnet, etc.)
+  - Bouton "Tester la connexion"
+  - Les credentials sont stockés en constantes PHP ou env vars (jamais en options WP en clair)
+
+- [ ] 51.2 Créer les prompts système pour chaque type d'analyse
+  - Prompt "Analyse de cours magistral" : analyser un PowerPoint/contenu de cours, détecter les zones de friction par profil pédagogique, générer des suggestions
+  - Prompt "Analyse d'exercice" : analyser des consignes/exercices, évaluer la clarté par profil
+  - Prompt "Jumeau numérique Léa" : agent conversationnel qui aide l'étudiant sans donner les réponses
+  - Chaque prompt est éditable dans les settings admin
+  - Stocker les prompts dans les options WP
+
+- [ ] 51.3 Modifier `class-api-bridge.php` pour supporter le vrai mode Bedrock
+  - Si `pl_ai_mode = bedrock` : appeler AWS Bedrock via le SDK PHP
+  - Utiliser les credentials des settings
+  - Formater les requêtes selon le modèle sélectionné (Claude Messages API)
+  - Parser les réponses et les convertir au format attendu par le workbench
+  - Fallback sur mock si erreur Bedrock
+
+- [ ] 51.4 Configurer les credentials Bedrock sur le serveur EC2
+  - Créer les constantes dans wp-config.php via SSM
+  - Tester la connexion Bedrock depuis le serveur
+
+- [ ] 51.5 Tester le flux complet Bedrock via Chrome MCP
+  - Aller sur le workbench, cliquer Suggestions IA
+  - Vérifier que les suggestions viennent de Bedrock (pas du mock)
+  - Fine-tuner les prompts si les résultats ne sont pas satisfaisants
+
+---
+
+## 52. Version bump + déploiement + test final
+
+- [ ] 52.1 Bump toutes les versions modifiées
+- [ ] 52.2 Commit + push + déploiement SSM
+- [ ] 52.3 Test end-to-end complet via Chrome MCP de toutes les pages
