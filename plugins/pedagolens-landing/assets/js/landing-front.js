@@ -249,30 +249,30 @@
 
 
 // =========================================================================
-// 9. LOGIN / REGISTER PAGE
+// 9. LOGIN / REGISTER PAGE (Stitch v2)
 // =========================================================================
 
 ( function () {
     'use strict';
 
     function initLoginPage() {
-        var loginCard = document.querySelector( '.pl-login-card' );
+        var loginCard = document.querySelector( '.pl-st-login-page' );
         if ( ! loginCard ) return;
 
         // -----------------------------------------------------------------
         // Tabs
         // -----------------------------------------------------------------
-        var tabs   = loginCard.querySelectorAll( '.pl-login-tab' );
-        var panels = loginCard.querySelectorAll( '.pl-login-panel' );
+        var tabs   = loginCard.querySelectorAll( '.pl-st-login-tab' );
+        var panels = loginCard.querySelectorAll( '.pl-st-login-panel' );
 
         tabs.forEach( function ( tab ) {
             tab.addEventListener( 'click', function () {
                 var target = this.getAttribute( 'data-tab' );
-                tabs.forEach( function ( t ) { t.classList.remove( 'pl-login-tab--active' ); } );
-                panels.forEach( function ( p ) { p.classList.remove( 'pl-login-panel--active' ); } );
-                this.classList.add( 'pl-login-tab--active' );
+                tabs.forEach( function ( t ) { t.classList.remove( 'pl-st-login-tab--active' ); } );
+                panels.forEach( function ( p ) { p.classList.remove( 'pl-st-login-panel--active' ); } );
+                this.classList.add( 'pl-st-login-tab--active' );
                 var panel = document.getElementById( 'pl-panel-' + target );
-                if ( panel ) panel.classList.add( 'pl-login-panel--active' );
+                if ( panel ) panel.classList.add( 'pl-st-login-panel--active' );
             } );
         } );
 
@@ -284,19 +284,19 @@
             btn.addEventListener( 'click', function ( e ) {
                 e.preventDefault();
                 var target = this.getAttribute( 'data-switch-tab' );
-                tabs.forEach( function ( t ) { t.classList.remove( 'pl-login-tab--active' ); } );
-                panels.forEach( function ( p ) { p.classList.remove( 'pl-login-panel--active' ); } );
-                var matchTab = loginCard.querySelector( '.pl-login-tab[data-tab="' + target + '"]' );
-                if ( matchTab ) matchTab.classList.add( 'pl-login-tab--active' );
+                tabs.forEach( function ( t ) { t.classList.remove( 'pl-st-login-tab--active' ); } );
+                panels.forEach( function ( p ) { p.classList.remove( 'pl-st-login-panel--active' ); } );
+                var matchTab = loginCard.querySelector( '.pl-st-login-tab[data-tab="' + target + '"]' );
+                if ( matchTab ) matchTab.classList.add( 'pl-st-login-tab--active' );
                 var panel = document.getElementById( 'pl-panel-' + target );
-                if ( panel ) panel.classList.add( 'pl-login-panel--active' );
+                if ( panel ) panel.classList.add( 'pl-st-login-panel--active' );
             } );
         } );
 
         // -----------------------------------------------------------------
         // Role selection
         // -----------------------------------------------------------------
-        var roleCards    = loginCard.querySelectorAll( '.pl-role-card' );
+        var roleCards    = loginCard.querySelectorAll( '.pl-st-role-card' );
         var stepRole     = document.getElementById( 'pl-register-step-role' );
         var stepForm     = document.getElementById( 'pl-register-step-form' );
         var roleInput    = document.getElementById( 'pl-register-role' );
@@ -387,7 +387,7 @@
         function showMsg( id, text, type ) {
             var el = document.getElementById( id );
             if ( ! el ) return;
-            el.className = 'pl-login-msg pl-login-msg--' + type;
+            el.className = 'pl-st-login-msg pl-st-login-msg--' + type;
             el.textContent = text;
             el.style.display = 'block';
         }
@@ -399,7 +399,7 @@
         if ( loginForm ) {
             loginForm.addEventListener( 'submit', function ( e ) {
                 e.preventDefault();
-                var btn   = loginForm.querySelector( '.pl-login-submit' );
+                var btn   = loginForm.querySelector( '.pl-st-login-submit' );
                 var email = loginForm.querySelector( '[name="email"]' ).value.trim();
                 var pass  = loginForm.querySelector( '[name="password"]' ).value;
                 var nonce = loginForm.querySelector( '[name="_wpnonce"]' ).value;
@@ -449,7 +449,7 @@
         if ( registerForm ) {
             registerForm.addEventListener( 'submit', function ( e ) {
                 e.preventDefault();
-                var btn   = registerForm.querySelector( '.pl-login-submit' );
+                var btn   = registerForm.querySelector( '.pl-st-login-submit' );
                 var nonce = registerForm.querySelector( '[name="_wpnonce"]' ).value;
                 var role  = registerForm.querySelector( '[name="role"]' ).value;
                 var name  = registerForm.querySelector( '[name="display_name"]' ).value.trim();
@@ -520,416 +520,6 @@
                 .then( function ( res ) {
                     if ( res.success && res.data && res.data.redirect ) {
                         showMsg( 'pl-register-msg', 'Compte cr\u00e9\u00e9 ! Redirection…', 'success' );
-                        window.location.href = res.data.redirect;
-                    } else {
-                        showMsg( 'pl-register-msg', ( res.data && res.data.message ) || 'Erreur lors de l\'inscription.', 'error' );
-                        btn.disabled = false;
-                        btn.textContent = 'Cr\u00e9er mon compte';
-                    }
-                } )
-                .catch( function () {
-                    showMsg( 'pl-register-msg', 'Erreur r\u00e9seau.', 'error' );
-                    btn.disabled = false;
-                    btn.textContent = 'Cr\u00e9er mon compte';
-                } );
-            } );
-        }
-    }
-
-    // Init on DOM ready
-    if ( document.readyState === 'loading' ) {
-        document.addEventListener( 'DOMContentLoaded', initLoginPage );
-    } else {
-        initLoginPage();
-    }
-
-} )();
-
-// =========================================================================
-// 9. LOGIN / REGISTER PAGE (v1.9.0)
-// =========================================================================
-
-( function () {
-    'use strict';
-
-    function initLoginPage() {
-        var loginCard = document.querySelector( '.pl-login-card' );
-        if ( ! loginCard ) return;
-
-        // -----------------------------------------------------------------
-        // Tabs
-        // -----------------------------------------------------------------
-        var tabs   = loginCard.querySelectorAll( '.pl-login-tab' );
-        var panels = loginCard.querySelectorAll( '.pl-login-panel' );
-
-        tabs.forEach( function ( tab ) {
-            tab.addEventListener( 'click', function () {
-                var target = this.getAttribute( 'data-tab' );
-                tabs.forEach( function ( t ) { t.classList.remove( 'pl-login-tab--active' ); } );
-                panels.forEach( function ( p ) { p.classList.remove( 'pl-login-panel--active' ); } );
-                this.classList.add( 'pl-login-tab--active' );
-                var panel = document.getElementById( 'pl-panel-' + target );
-                if ( panel ) panel.classList.add( 'pl-login-panel--active' );
-            } );
-        } );
-
-        // -----------------------------------------------------------------
-        // "Créer un compte" link → switch to register tab
-        // -----------------------------------------------------------------
-        var switchBtns = loginCard.querySelectorAll( '[data-switch-tab]' );
-        switchBtns.forEach( function ( btn ) {
-            btn.addEventListener( 'click', function ( e ) {
-                e.preventDefault();
-                var target = this.getAttribute( 'data-switch-tab' );
-                tabs.forEach( function ( t ) { t.classList.remove( 'pl-login-tab--active' ); } );
-                panels.forEach( function ( p ) { p.classList.remove( 'pl-login-panel--active' ); } );
-                var matchTab = loginCard.querySelector( '.pl-login-tab[data-tab="' + target + '"]' );
-                if ( matchTab ) matchTab.classList.add( 'pl-login-tab--active' );
-                var panel = document.getElementById( 'pl-panel-' + target );
-                if ( panel ) panel.classList.add( 'pl-login-panel--active' );
-            } );
-        } );
-
-        // -----------------------------------------------------------------
-        // Progress indicator
-        // -----------------------------------------------------------------
-        var progressSteps = loginCard.querySelectorAll( '.pl-progress-step' );
-        var progressLine  = loginCard.querySelector( '.pl-progress-line' );
-
-        function setProgress( stepNum ) {
-            progressSteps.forEach( function ( s ) {
-                var sNum = parseInt( s.getAttribute( 'data-step' ), 10 );
-                s.classList.remove( 'pl-progress-step--active', 'pl-progress-step--done' );
-                if ( sNum < stepNum ) {
-                    s.classList.add( 'pl-progress-step--done' );
-                } else if ( sNum === stepNum ) {
-                    s.classList.add( 'pl-progress-step--active' );
-                }
-            } );
-            if ( progressLine ) {
-                if ( stepNum > 1 ) {
-                    progressLine.classList.add( 'pl-progress-line--filled' );
-                } else {
-                    progressLine.classList.remove( 'pl-progress-line--filled' );
-                }
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // Step transition helper (slide animation)
-        // -----------------------------------------------------------------
-        function transitionStep( fromEl, toEl, direction ) {
-            // direction: 'forward' = slide left, 'back' = slide right
-            var exitClass  = direction === 'forward' ? 'pl-register-step--exit-left' : 'pl-register-step--exit-right';
-            var enterClass = direction === 'forward' ? 'pl-register-step--active' : 'pl-register-step--enter-left';
-
-            fromEl.classList.remove( 'pl-register-step--active', 'pl-register-step--enter-left' );
-            fromEl.classList.add( exitClass );
-
-            setTimeout( function () {
-                fromEl.classList.remove( exitClass );
-                fromEl.style.display = 'none';
-                toEl.style.display = 'block';
-                toEl.classList.remove( 'pl-register-step--exit-left', 'pl-register-step--exit-right' );
-                toEl.classList.add( enterClass );
-            }, 280 );
-        }
-
-        // -----------------------------------------------------------------
-        // Role selection (step 1 → step 2)
-        // -----------------------------------------------------------------
-        var roleCards     = loginCard.querySelectorAll( '.pl-role-card' );
-        var stepRole      = document.getElementById( 'pl-register-step-role' );
-        var stepForm      = document.getElementById( 'pl-register-step-form' );
-        var roleInput     = document.getElementById( 'pl-register-role' );
-        var backBtn       = loginCard.querySelector( '.pl-register-back' );
-        var studentFields = loginCard.querySelectorAll( '.pl-field-student' );
-
-        roleCards.forEach( function ( card ) {
-            card.addEventListener( 'click', function () {
-                var role = this.getAttribute( 'data-role' );
-                roleInput.value = role;
-
-                studentFields.forEach( function ( f ) { f.style.display = role === 'student' ? 'block' : 'none'; } );
-
-                setProgress( 2 );
-                transitionStep( stepRole, stepForm, 'forward' );
-            } );
-        } );
-
-        if ( backBtn ) {
-            backBtn.addEventListener( 'click', function () {
-                roleInput.value = '';
-                setProgress( 1 );
-                transitionStep( stepForm, stepRole, 'back' );
-            } );
-        }
-
-        // -----------------------------------------------------------------
-        // Password strength indicator
-        // -----------------------------------------------------------------
-        var passInput      = document.getElementById( 'pl-reg-password' );
-        var strengthWrap   = document.getElementById( 'pl-password-strength' );
-
-        function getPasswordStrength( pw ) {
-            if ( ! pw ) return { level: '', label: '' };
-            var score = 0;
-            if ( pw.length >= 6 ) score++;
-            if ( pw.length >= 10 ) score++;
-            if ( /[A-Z]/.test( pw ) ) score++;
-            if ( /[0-9]/.test( pw ) ) score++;
-            if ( /[^A-Za-z0-9]/.test( pw ) ) score++;
-
-            if ( score <= 1 ) return { level: 'weak', label: 'Faible' };
-            if ( score === 2 ) return { level: 'fair', label: 'Moyen' };
-            if ( score === 3 ) return { level: 'good', label: 'Bon' };
-            return { level: 'strong', label: 'Fort' };
-        }
-
-        if ( passInput && strengthWrap ) {
-            passInput.addEventListener( 'input', function () {
-                var result = getPasswordStrength( this.value );
-                var textEl = document.getElementById( 'pl-password-strength-text' );
-                strengthWrap.className = 'pl-password-strength';
-                if ( result.level ) {
-                    strengthWrap.classList.add( 'pl-strength-' + result.level );
-                    if ( textEl ) textEl.textContent = result.label;
-                } else {
-                    if ( textEl ) textEl.textContent = '';
-                }
-            } );
-        }
-
-        // -----------------------------------------------------------------
-        // Real-time validation
-        // -----------------------------------------------------------------
-        var emailInput    = document.getElementById( 'pl-reg-email' );
-        var emailValid    = document.getElementById( 'pl-reg-email-validation' );
-        var pass2Input    = document.getElementById( 'pl-reg-password2' );
-        var pass2Valid    = document.getElementById( 'pl-reg-password2-validation' );
-        var emailRegex    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if ( emailInput && emailValid ) {
-            emailInput.addEventListener( 'input', function () {
-                var val = this.value.trim();
-                if ( ! val ) {
-                    emailValid.textContent = '';
-                    emailValid.className = 'pl-field-validation';
-                } else if ( emailRegex.test( val ) ) {
-                    emailValid.textContent = '\u2713 Format valide';
-                    emailValid.className = 'pl-field-validation pl-field-validation--success';
-                } else {
-                    emailValid.textContent = 'Format de courriel invalide';
-                    emailValid.className = 'pl-field-validation pl-field-validation--error';
-                }
-            } );
-        }
-
-        if ( pass2Input && pass2Valid && passInput ) {
-            pass2Input.addEventListener( 'input', function () {
-                var val = this.value;
-                if ( ! val ) {
-                    pass2Valid.textContent = '';
-                    pass2Valid.className = 'pl-field-validation';
-                } else if ( val === passInput.value ) {
-                    pass2Valid.textContent = '\u2713 Les mots de passe correspondent';
-                    pass2Valid.className = 'pl-field-validation pl-field-validation--success';
-                } else {
-                    pass2Valid.textContent = 'Les mots de passe ne correspondent pas';
-                    pass2Valid.className = 'pl-field-validation pl-field-validation--error';
-                }
-            } );
-        }
-
-        // -----------------------------------------------------------------
-        // Difficulties checkbox → open modal
-        // -----------------------------------------------------------------
-        var diffCheck = document.getElementById( 'pl-reg-difficulties-check' );
-        var diffModal = document.getElementById( 'pl-difficulties-modal' );
-
-        if ( diffCheck && diffModal ) {
-            diffCheck.addEventListener( 'change', function () {
-                if ( this.checked ) {
-                    diffModal.style.display = 'flex';
-                }
-            } );
-
-            var closeBtn  = diffModal.querySelector( '.pl-diff-modal-close' );
-            var backdrop  = diffModal.querySelector( '.pl-diff-modal-backdrop' );
-
-            function closeModal() {
-                diffModal.style.display = 'none';
-                var anyChecked = diffModal.querySelectorAll( 'input[name="diff[]"]:checked' );
-                if ( anyChecked.length === 0 ) {
-                    diffCheck.checked = false;
-                }
-            }
-
-            if ( closeBtn ) closeBtn.addEventListener( 'click', closeModal );
-            if ( backdrop ) backdrop.addEventListener( 'click', closeModal );
-
-            var autreCheckbox = diffModal.querySelector( 'input[value="autre"]' );
-            var autreField    = diffModal.querySelector( '.pl-diff-autre-field' );
-            if ( autreCheckbox && autreField ) {
-                autreCheckbox.addEventListener( 'change', function () {
-                    autreField.style.display = this.checked ? 'block' : 'none';
-                } );
-            }
-
-            var moreBtn  = diffModal.querySelector( '.pl-diff-more-btn' );
-            var moreZone = diffModal.querySelector( '.pl-diff-more' );
-            if ( moreBtn && moreZone ) {
-                moreBtn.addEventListener( 'click', function () {
-                    moreZone.style.display = 'block';
-                    this.classList.add( 'pl-hidden' );
-                } );
-            }
-
-            var saveBtn = diffModal.querySelector( '.pl-diff-modal-save' );
-            if ( saveBtn ) {
-                saveBtn.addEventListener( 'click', function () {
-                    diffModal.style.display = 'none';
-                } );
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // Helper: show message
-        // -----------------------------------------------------------------
-        function showMsg( id, text, type ) {
-            var el = document.getElementById( id );
-            if ( ! el ) return;
-            el.className = 'pl-login-msg pl-login-msg--' + type;
-            el.textContent = text;
-            el.style.display = 'block';
-        }
-
-        // -----------------------------------------------------------------
-        // Login form AJAX (unchanged logic)
-        // -----------------------------------------------------------------
-        var loginForm = document.getElementById( 'pl-login-form' );
-        if ( loginForm ) {
-            loginForm.addEventListener( 'submit', function ( e ) {
-                e.preventDefault();
-                var btn   = loginForm.querySelector( '.pl-login-submit' );
-                var email = loginForm.querySelector( '[name="email"]' ).value.trim();
-                var pass  = loginForm.querySelector( '[name="password"]' ).value;
-                var nonce = loginForm.querySelector( '[name="_wpnonce"]' ).value;
-
-                if ( ! email || ! pass ) {
-                    showMsg( 'pl-login-msg', 'Veuillez remplir tous les champs.', 'error' );
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.textContent = 'Connexion\u2026';
-
-                var data = new FormData();
-                data.append( 'action', 'pl_login' );
-                data.append( '_wpnonce', nonce );
-                data.append( 'email', email );
-                data.append( 'password', pass );
-
-                fetch( ( window.plFront && plFront.ajaxUrl ) || '/wp-admin/admin-ajax.php', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    body: data
-                } )
-                .then( function ( r ) { return r.json(); } )
-                .then( function ( res ) {
-                    if ( res.success && res.data && res.data.redirect ) {
-                        showMsg( 'pl-login-msg', 'Connexion r\u00e9ussie ! Redirection\u2026', 'success' );
-                        window.location.href = res.data.redirect;
-                    } else {
-                        showMsg( 'pl-login-msg', ( res.data && res.data.message ) || 'Erreur de connexion.', 'error' );
-                        btn.disabled = false;
-                        btn.textContent = 'Se connecter';
-                    }
-                } )
-                .catch( function () {
-                    showMsg( 'pl-login-msg', 'Erreur r\u00e9seau.', 'error' );
-                    btn.disabled = false;
-                    btn.textContent = 'Se connecter';
-                } );
-            } );
-        }
-
-        // -----------------------------------------------------------------
-        // Register form AJAX (simplified: email + password only)
-        // -----------------------------------------------------------------
-        var registerForm = document.getElementById( 'pl-register-form' );
-        if ( registerForm ) {
-            registerForm.addEventListener( 'submit', function ( e ) {
-                e.preventDefault();
-                var btn   = registerForm.querySelector( '.pl-login-submit' );
-                var nonce = registerForm.querySelector( '[name="_wpnonce"]' ).value;
-                var role  = registerForm.querySelector( '[name="role"]' ).value;
-                var email = registerForm.querySelector( '[name="email"]' ).value.trim();
-                var pass  = registerForm.querySelector( '[name="password"]' ).value;
-                var pass2 = registerForm.querySelector( '[name="password_confirm"]' ).value;
-
-                // Client-side validation
-                if ( ! email || ! pass || ! pass2 ) {
-                    showMsg( 'pl-register-msg', 'Veuillez remplir tous les champs.', 'error' );
-                    return;
-                }
-                if ( ! emailRegex.test( email ) ) {
-                    showMsg( 'pl-register-msg', 'Format de courriel invalide.', 'error' );
-                    return;
-                }
-                if ( pass.length < 6 ) {
-                    showMsg( 'pl-register-msg', 'Le mot de passe doit contenir au moins 6 caract\u00e8res.', 'error' );
-                    return;
-                }
-                if ( pass !== pass2 ) {
-                    showMsg( 'pl-register-msg', 'Les mots de passe ne correspondent pas.', 'error' );
-                    return;
-                }
-
-                // Collect difficulties from modal
-                var difficulties = [];
-                if ( diffModal && role === 'student' ) {
-                    var checked = diffModal.querySelectorAll( 'input[name="diff[]"]:checked' );
-                    var contextText = '';
-                    var contextEl = document.getElementById( 'pl-diff-context' );
-                    if ( contextEl ) contextText = contextEl.value.trim();
-
-                    checked.forEach( function ( cb ) {
-                        var val = cb.value;
-                        if ( val === 'autre' ) {
-                            var autreText = document.getElementById( 'pl-diff-autre-text' );
-                            difficulties.push( { key: 'autre', text: autreText ? autreText.value.trim() : '', context: contextText } );
-                        } else {
-                            difficulties.push( val );
-                        }
-                    } );
-
-                    if ( contextText && difficulties.length > 0 && ! difficulties.some( function(d) { return typeof d === 'object'; } ) ) {
-                        difficulties.push( { key: 'context', text: contextText, context: contextText } );
-                    }
-                }
-
-                btn.disabled = true;
-                btn.textContent = 'Cr\u00e9ation\u2026';
-
-                var data = new FormData();
-                data.append( 'action', 'pl_register' );
-                data.append( '_wpnonce', nonce );
-                data.append( 'role', role );
-                data.append( 'email', email );
-                data.append( 'password', pass );
-                data.append( 'password_confirm', pass2 );
-                data.append( 'difficulties', JSON.stringify( difficulties ) );
-
-                fetch( ( window.plFront && plFront.ajaxUrl ) || '/wp-admin/admin-ajax.php', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    body: data
-                } )
-                .then( function ( r ) { return r.json(); } )
-                .then( function ( res ) {
-                    if ( res.success && res.data && res.data.redirect ) {
-                        showMsg( 'pl-register-msg', 'Compte cr\u00e9\u00e9 ! Redirection\u2026', 'success' );
                         window.location.href = res.data.redirect;
                     } else {
                         showMsg( 'pl-register-msg', ( res.data && res.data.message ) || 'Erreur lors de l\'inscription.', 'error' );

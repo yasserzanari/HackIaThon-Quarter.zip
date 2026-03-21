@@ -4927,7 +4927,7 @@ select.pl-form-input { cursor: pointer; appearance: none; background-image: url(
   flex-direction: column;
   justify-content: center;
   padding: 3rem 4rem;
-  background: var(--pl-gradient-editorial);
+  background: linear-gradient(160deg, #0a1628 0%, #00236f 40%, #1e3a8a 70%, #312e81 100%);
   color: #fff;
   overflow: hidden;
 }

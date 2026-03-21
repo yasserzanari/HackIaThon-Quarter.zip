@@ -143,7 +143,7 @@ class PedagoLens_Landing {
         wp_enqueue_script(
             'pl-landing-front',
             PL_LANDING_PLUGIN_URL . 'assets/js/landing-front.js',
-            [],
+            [ 'jquery' ],
             PL_LANDING_VERSION,
             true
         );

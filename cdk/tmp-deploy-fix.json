@@ -3,10 +3,7 @@
   "DocumentName": "AWS-RunShellScript",
   "Parameters": {
     "commands": [
-      "export HOME=/root && git config --global --add safe.directory /opt/pedagolens && cd /opt/pedagolens && git pull origin main 2>&1",
-      "echo '=== Plugin dir ===' && ls -la /var/www/html/wp-content/plugins/ | grep pedagolens 2>&1",
-      "echo '=== Symlink check ===' && ls -la /opt/pedagolens/plugins/ 2>&1",
-      "echo '=== Syntaxe ===' && php -l /opt/pedagolens/plugins/pedagolens-landing/includes/class-landing.php 2>&1",
+      "export HOME=/root && php -r \"require('/var/www/html/wp-load.php'); \\$plugins = array('pedagolens-core/pedagolens-core.php','pedagolens-api-bridge/pedagolens-api-bridge.php','pedagolens-landing/pedagolens-landing.php','pedagolens-teacher-dashboard/pedagolens-teacher-dashboard.php','pedagolens-course-workbench/pedagolens-course-workbench.php','pedagolens-student-twin/pedagolens-student-twin.php'); update_option('active_plugins', \\$plugins); echo 'ACTIVATED: ' . json_encode(get_option('active_plugins'));\" 2>&1",
       "systemctl restart apache2 && echo 'Apache restarted OK'"
     ]
   }
