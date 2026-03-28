@@ -183,6 +183,14 @@ class PedagoLens_Git_Preconfig {
             }
         }
 
+        if ( $report['success'] ) {
+            $deploy_report = self::deploy_repo_plugins_to_wp( $deploy_path );
+            $report['deploy_plugins'] = $deploy_report;
+            if ( empty( $deploy_report['ok'] ) ) {
+                $report['success'] = false;
+            }
+        }
+
         $report['finished_at'] = gmdate( 'c' );
         self::save_report_and_redirect( $report );
     }
@@ -295,6 +303,100 @@ class PedagoLens_Git_Preconfig {
         }
 
         return file_exists( $path . '/.git' );
+    }
+
+    private static function deploy_repo_plugins_to_wp( string $repo_root ): array {
+        $result = [
+            'ok' => true,
+            'repo_plugins_path' => rtrim( $repo_root, '/\\' ) . '/plugins',
+            'wp_plugins_path' => WP_PLUGIN_DIR,
+            'copied' => [],
+            'errors' => [],
+        ];
+
+        $repo_plugins = $result['repo_plugins_path'];
+        if ( ! is_dir( $repo_plugins ) ) {
+            $result['ok'] = false;
+            $result['errors'][] = 'Repo plugins folder not found: ' . $repo_plugins;
+            return $result;
+        }
+
+        if ( ! is_dir( WP_PLUGIN_DIR ) ) {
+            $result['ok'] = false;
+            $result['errors'][] = 'WP plugin directory not found: ' . WP_PLUGIN_DIR;
+            return $result;
+        }
+
+        $entries = @scandir( $repo_plugins );
+        if ( ! is_array( $entries ) ) {
+            $result['ok'] = false;
+            $result['errors'][] = 'Unable to scan repo plugins folder.';
+            return $result;
+        }
+
+        foreach ( $entries as $entry ) {
+            if ( $entry === '.' || $entry === '..' ) {
+                continue;
+            }
+
+            $source = $repo_plugins . '/' . $entry;
+            if ( ! is_dir( $source ) || strpos( $entry, 'pedagolens-' ) !== 0 ) {
+                continue;
+            }
+
+            $target = rtrim( WP_PLUGIN_DIR, '/\\' ) . '/' . $entry;
+            $ok = self::copy_directory_recursive( $source, $target );
+            if ( $ok ) {
+                $result['copied'][] = $entry;
+            } else {
+                $result['ok'] = false;
+                $result['errors'][] = 'Failed to copy plugin: ' . $entry;
+            }
+        }
+
+        if ( empty( $result['copied'] ) ) {
+            $result['ok'] = false;
+            $result['errors'][] = 'No pedagolens-* plugin folder copied from repo.';
+        }
+
+        return $result;
+    }
+
+    private static function copy_directory_recursive( string $source, string $target ): bool {
+        if ( ! is_dir( $source ) ) {
+            return false;
+        }
+
+        if ( ! is_dir( $target ) && ! wp_mkdir_p( $target ) ) {
+            return false;
+        }
+
+        $entries = @scandir( $source );
+        if ( ! is_array( $entries ) ) {
+            return false;
+        }
+
+        foreach ( $entries as $entry ) {
+            if ( $entry === '.' || $entry === '..' ) {
+                continue;
+            }
+
+            $src = $source . '/' . $entry;
+            $dst = $target . '/' . $entry;
+
+            if ( is_dir( $src ) ) {
+                if ( ! self::copy_directory_recursive( $src, $dst ) ) {
+                    return false;
+                }
+                continue;
+            }
+
+            if ( ! @copy( $src, $dst ) ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static function bootstrap_repo_in_path( string $git, string $deploy_path, string $repo_url, string $branch ): array {
