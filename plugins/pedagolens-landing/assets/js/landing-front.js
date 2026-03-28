@@ -2313,6 +2313,26 @@
 })();
 
 /* ============================================================
+   Landing Canvas Mode - force body class when landing is present
+   ============================================================ */
+(function () {
+    'use strict';
+
+    function applyLandingCanvasClass() {
+        if (!document.querySelector('.pl-stitch-landing')) {
+            return;
+        }
+        document.body.classList.add('pl-landing-canvas');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyLandingCanvasClass);
+    } else {
+        applyLandingCanvasClass();
+    }
+})();
+
+/* ============================================================
    Twin View — Course Panel Toggle & Sync
    ============================================================ */
 (function() {
