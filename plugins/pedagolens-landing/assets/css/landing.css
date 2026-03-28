@@ -790,6 +790,11 @@ body.pl-landing-canvas .wp-site-blocks > main#wp--skip-link--target {
   padding: 0 !important;
 }
 
+/* Remove theme-injected spacer block above shortcode content on app pages. */
+body.pl-landing-canvas .wp-site-blocks > main#wp--skip-link--target > .wp-block-group.has-global-padding.is-layout-constrained.wp-block-group-is-layout-constrained {
+  display: none !important;
+}
+
 body.pl-landing-canvas .wp-site-blocks > main .entry-content {
   margin: 0 !important;
   max-width: none !important;
