@@ -801,6 +801,15 @@ body.pl-landing-canvas .wp-site-blocks > main .entry-content.has-global-padding 
   padding-right: 0 !important;
 }
 
+/* WordPress constrained layout can clamp shortcode children to content width (620px). */
+body.pl-landing-canvas .entry-content.is-layout-constrained > .pl-stitch-landing,
+body.pl-landing-canvas .wp-block-post-content-is-layout-constrained > .pl-stitch-landing {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* ============================================================
    10a. HEADER / NAV
    ============================================================ */
