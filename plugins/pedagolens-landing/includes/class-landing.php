@@ -206,11 +206,24 @@ class PedagoLens_Landing {
     }
 
     public static function add_landing_canvas_body_class( array $classes ): array {
-        if ( self::current_page_has_shortcode( 'pedagolens_landing' ) ) {
+        if ( self::current_page_has_pedagolens_shortcode() ) {
             $classes[] = 'pl-landing-canvas';
         }
 
         return $classes;
+    }
+
+    private static function current_page_has_pedagolens_shortcode(): bool {
+        if ( ! is_singular( 'page' ) ) {
+            return false;
+        }
+
+        $post = get_post( get_queried_object_id() );
+        if ( ! $post instanceof WP_Post ) {
+            return false;
+        }
+
+        return (bool) preg_match( '/\[pedagolens_[a-z0-9_]+/i', (string) $post->post_content );
     }
 
     public static function repair_shortcode_output_encoding( $output, string $tag, array $attr, array $m ) {
