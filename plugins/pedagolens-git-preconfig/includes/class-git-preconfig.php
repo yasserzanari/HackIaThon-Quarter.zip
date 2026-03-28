@@ -174,11 +174,11 @@ class PedagoLens_Git_Preconfig {
         $report['resolved_deploy_path'] = $deploy_path;
 
         $cmds = [
-            [ $git, '-C', $deploy_path, 'rev-parse', '--is-inside-work-tree' ],
-            [ $git, '-C', $deploy_path, 'remote', 'set-url', 'origin', $s['repo_url'] ],
-            [ $git, '-C', $deploy_path, 'fetch', '--all', '--prune' ],
-            [ $git, '-C', $deploy_path, 'checkout', $s['branch'] ],
-            [ $git, '-C', $deploy_path, 'pull', 'origin', $s['branch'] ],
+            self::git_cmd( $git, $deploy_path, [ 'rev-parse', '--is-inside-work-tree' ] ),
+            self::git_cmd( $git, $deploy_path, [ 'remote', 'set-url', 'origin', $s['repo_url'] ] ),
+            self::git_cmd( $git, $deploy_path, [ 'fetch', '--all', '--prune' ] ),
+            self::git_cmd( $git, $deploy_path, [ 'checkout', $s['branch'] ] ),
+            self::git_cmd( $git, $deploy_path, [ 'pull', 'origin', $s['branch'] ] ),
         ];
 
         foreach ( $cmds as $cmd ) {
@@ -445,11 +445,11 @@ class PedagoLens_Git_Preconfig {
         }
 
         $cmds = [
-            [ $git, '-C', $deploy_path, 'init' ],
-            [ $git, '-C', $deploy_path, 'remote', 'remove', 'origin' ],
-            [ $git, '-C', $deploy_path, 'remote', 'add', 'origin', $repo_url ],
-            [ $git, '-C', $deploy_path, 'fetch', 'origin', $branch, '--depth=1' ],
-            [ $git, '-C', $deploy_path, 'checkout', '-B', $branch, '--track', 'origin/' . $branch ],
+            self::git_cmd( $git, $deploy_path, [ 'init' ] ),
+            self::git_cmd( $git, $deploy_path, [ 'remote', 'remove', 'origin' ] ),
+            self::git_cmd( $git, $deploy_path, [ 'remote', 'add', 'origin', $repo_url ] ),
+            self::git_cmd( $git, $deploy_path, [ 'fetch', 'origin', $branch, '--depth=1' ] ),
+            self::git_cmd( $git, $deploy_path, [ 'checkout', '-B', $branch, '--track', 'origin/' . $branch ] ),
         ];
 
         foreach ( $cmds as $idx => $cmd ) {
@@ -522,6 +522,16 @@ class PedagoLens_Git_Preconfig {
             'stdout' => trim( (string) $stdout ),
             'stderr' => trim( (string) $stderr ),
         ];
+    }
+
+    private static function git_cmd( string $git, string $repo_path, array $args ): array {
+        $repo_path = rtrim( $repo_path, '/\\' );
+        if ( $repo_path === '' ) {
+            $repo_path = '.';
+        }
+
+        // Avoid "detected dubious ownership" in shared Docker volumes.
+        return array_merge( [ $git, '-c', 'safe.directory=' . $repo_path, '-C', $repo_path ], $args );
     }
 
     private static function activate_required_plugins(): array {
