@@ -140,14 +140,27 @@ class PedagoLens_Git_Preconfig {
 
         $resolved = self::resolve_repo_path( $s['deploy_path'] );
         if ( ! $resolved['ok'] ) {
-            $report['success'] = false;
-            $report['error'] = 'Git repository not found from deploy path: ' . $s['deploy_path'];
-            $report['hint'] = [
-                'Set Deploy path to the real git repo root (example: /opt/pedagolens).',
-                'Current path exists but is not a git repo: /var/www/html is often only web root.',
-            ];
-            $report['diagnostic'] = $resolved;
-            self::save_report_and_redirect( $report );
+            $bootstrap = self::bootstrap_repo_in_path( $git, $s['deploy_path'], $s['repo_url'], $s['branch'] );
+            $report['bootstrap'] = $bootstrap;
+
+            if ( ! $bootstrap['ok'] ) {
+                $report['success'] = false;
+                $report['error'] = 'Git repository not found from deploy path: ' . $s['deploy_path'];
+                $report['hint'] = [
+                    'Set Deploy path to the real git repo root (example: /opt/pedagolens).',
+                    'Or use a clean directory and let this plugin initialize git there.',
+                ];
+                $report['diagnostic'] = $resolved;
+                self::save_report_and_redirect( $report );
+            }
+
+            $resolved = self::resolve_repo_path( $s['deploy_path'] );
+            if ( ! $resolved['ok'] ) {
+                $report['success'] = false;
+                $report['error'] = 'Repository bootstrap completed but repo path is still unresolved.';
+                $report['diagnostic'] = $resolved;
+                self::save_report_and_redirect( $report );
+            }
         }
 
         $deploy_path = $resolved['path'];
@@ -282,6 +295,56 @@ class PedagoLens_Git_Preconfig {
         }
 
         return file_exists( $path . '/.git' );
+    }
+
+    private static function bootstrap_repo_in_path( string $git, string $deploy_path, string $repo_url, string $branch ): array {
+        $out = [
+            'ok' => false,
+            'path' => $deploy_path,
+            'commands' => [],
+        ];
+
+        $deploy_path = trim( $deploy_path );
+        if ( $deploy_path === '' || ! is_dir( $deploy_path ) ) {
+            $out['error'] = 'Deploy path does not exist.';
+            return $out;
+        }
+
+        if ( self::is_git_repo_path( $deploy_path ) ) {
+            $out['ok'] = true;
+            $out['note'] = 'Already a git repository.';
+            return $out;
+        }
+
+        $cmds = [
+            [ $git, '-C', $deploy_path, 'init' ],
+            [ $git, '-C', $deploy_path, 'remote', 'remove', 'origin' ],
+            [ $git, '-C', $deploy_path, 'remote', 'add', 'origin', $repo_url ],
+            [ $git, '-C', $deploy_path, 'fetch', 'origin', $branch, '--depth=1' ],
+            [ $git, '-C', $deploy_path, 'checkout', '-B', $branch, '--track', 'origin/' . $branch ],
+        ];
+
+        foreach ( $cmds as $idx => $cmd ) {
+            $r = self::run_cmd( $cmd );
+            $out['commands'][] = $r;
+
+            // remote remove origin is best-effort.
+            if ( $idx === 1 ) {
+                continue;
+            }
+
+            if ( $r['exit_code'] !== 0 ) {
+                $out['error'] = 'Bootstrap command failed.';
+                return $out;
+            }
+        }
+
+        $out['ok'] = self::is_git_repo_path( $deploy_path );
+        if ( ! $out['ok'] ) {
+            $out['error'] = 'Bootstrap commands ran but .git was not found.';
+        }
+
+        return $out;
     }
 
     private static function assert_admin(): void {
