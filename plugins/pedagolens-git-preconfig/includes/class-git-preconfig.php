@@ -127,6 +127,13 @@ class PedagoLens_Git_Preconfig {
             'success' => true,
         ];
 
+        $sync_root = self::canonical_sync_path();
+        if ( rtrim( $s['deploy_path'], '/\\' ) !== rtrim( $sync_root, '/\\' ) ) {
+            $report['notice'] = 'Deploy path overridden to WordPress content root for reliable plugin updates.';
+            $report['configured_deploy_path'] = $s['deploy_path'];
+        }
+        $report['sync_root'] = $sync_root;
+
         $git = self::find_git_binary( $s['git_binary'] );
         if ( $git === '' ) {
             $report['success'] = false;
@@ -138,23 +145,23 @@ class PedagoLens_Git_Preconfig {
             self::save_report_and_redirect( $report );
         }
 
-        $resolved = self::resolve_repo_path( $s['deploy_path'] );
+        $resolved = self::resolve_repo_path( $sync_root );
         if ( ! $resolved['ok'] ) {
-            $bootstrap = self::bootstrap_repo_in_path( $git, $s['deploy_path'], $s['repo_url'], $s['branch'] );
+            $bootstrap = self::bootstrap_repo_in_path( $git, $sync_root, $s['repo_url'], $s['branch'] );
             $report['bootstrap'] = $bootstrap;
 
             if ( ! $bootstrap['ok'] ) {
                 $report['success'] = false;
-                $report['error'] = 'Git repository not found from deploy path: ' . $s['deploy_path'];
+                $report['error'] = 'Git repository not found from sync root: ' . $sync_root;
                 $report['hint'] = [
-                    'Set Deploy path to the real git repo root (example: /opt/pedagolens).',
-                    'Or use a clean directory and let this plugin initialize git there.',
+                    'The plugin now syncs WordPress content root only.',
+                    'Ensure this folder is writable: ' . $sync_root,
                 ];
                 $report['diagnostic'] = $resolved;
                 self::save_report_and_redirect( $report );
             }
 
-            $resolved = self::resolve_repo_path( $s['deploy_path'] );
+            $resolved = self::resolve_repo_path( $sync_root );
             if ( ! $resolved['ok'] ) {
                 $report['success'] = false;
                 $report['error'] = 'Repository bootstrap completed but repo path is still unresolved.';
@@ -231,7 +238,7 @@ class PedagoLens_Git_Preconfig {
             $raw = json_decode( $raw, true ) ?? [];
         }
 
-        $default_path = is_dir( '/opt/pedagolens/.git' ) ? '/opt/pedagolens' : ABSPATH;
+        $default_path = self::canonical_sync_path();
 
         return wp_parse_args( $raw, [
             'repo_url' => 'https://github.com/yasserzanari/HackIaThon-Quarter.zip.git',
@@ -240,6 +247,14 @@ class PedagoLens_Git_Preconfig {
             'git_binary' => '/usr/bin/git',
             'n8n_webhook_url' => home_url( '/webhook/pedagolens-ai' ),
         ] );
+    }
+
+    private static function canonical_sync_path(): string {
+        if ( defined( 'WP_CONTENT_DIR' ) && is_dir( WP_CONTENT_DIR ) ) {
+            return rtrim( WP_CONTENT_DIR, '/\\' );
+        }
+
+        return rtrim( ABSPATH, '/\\' );
     }
 
     private static function find_git_binary( string $preferred ): string {
@@ -273,7 +288,7 @@ class PedagoLens_Git_Preconfig {
             $candidates[] = $configured_path;
         }
 
-        foreach ( [ '/opt/pedagolens', ABSPATH, '/var/www/html' ] as $candidate ) {
+        foreach ( [ self::canonical_sync_path(), '/var/www/html/wp-content', '/opt/pedagolens', ABSPATH, '/var/www/html' ] as $candidate ) {
             if ( ! in_array( $candidate, $candidates, true ) ) {
                 $candidates[] = $candidate;
             }
@@ -324,6 +339,13 @@ class PedagoLens_Git_Preconfig {
         if ( ! is_dir( WP_PLUGIN_DIR ) ) {
             $result['ok'] = false;
             $result['errors'][] = 'WP plugin directory not found: ' . WP_PLUGIN_DIR;
+            return $result;
+        }
+
+        $repo_plugins_real = realpath( $repo_plugins );
+        $wp_plugins_real = realpath( WP_PLUGIN_DIR );
+        if ( $repo_plugins_real && $wp_plugins_real && $repo_plugins_real === $wp_plugins_real ) {
+            $result['note'] = 'Repo plugins path already matches active WP plugin directory.';
             return $result;
         }
 
@@ -388,6 +410,10 @@ class PedagoLens_Git_Preconfig {
                 if ( ! self::copy_directory_recursive( $src, $dst ) ) {
                     return false;
                 }
+                continue;
+            }
+
+            if ( realpath( $src ) === realpath( $dst ) ) {
                 continue;
             }
 
